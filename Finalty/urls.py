@@ -29,7 +29,7 @@ from base.routes.acuityscheduling_views import *
 from base.routes.acuityscheduling_del import *
 from base.routes.acuityscheduling_api import *
 from base.routes.acuityscheduling.acuityscheduling_settings import *
-
+from base.routes.acuityscheduling.calendly_auth import *
 
 sitemaps = {
     'static': StaticViewSitemap,
@@ -77,10 +77,16 @@ zoho_urls = [
     path('zoho-callback/', zoho_callback, name='zoho_callback'),
 ]
 
+calendly_urls = [
+    path('oauth/<uuid:credential_id>/', calendly_auth, name='calendly_auth'),
+    path('oauth/callback/', calendly_callback, name='calendly_callback'),
+]
+
 urlpatterns += auth
 urlpatterns += acuityscheduling_urls
 urlpatterns += acuityscheduling_api_urls
 urlpatterns += zoho_urls
+urlpatterns += calendly_urls
 urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 

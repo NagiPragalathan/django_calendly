@@ -82,8 +82,8 @@ DATABASES = {
        'CLIENT': {
            
         #    'host': "mongodb+srv://nagi:nagi@cluster0.ohv5gsc.mongodb.net/LogManagement",
-           'host': "mongodb+srv://ciddarth:applexc@cluster0.mg1di.mongodb.net/AcuitySchedulingDjango",
-           'name':'AcuitySchedulingDjango',
+           'host': "mongodb+srv://ciddarth:applexc@cluster0.mg1di.mongodb.net/CalendlyDjango",
+           'name':'CalendlyDjango',
            'authMechanism': "SCRAM-SHA-1",
         }
    }
@@ -193,4 +193,10 @@ REDIRECT_URI = "http://127.0.0.1:8000/zoho-callback/"
 
 SCOPE = "ZohoCRM.settings.fields.ALL,ZohoCRM.settings.fields.CREATE,ZohoCRM.users.READ,ZohoCRM.settings.fields.READ,ZohoCRM.org.READ,ZohoCRM.modules.READ,ZohoCRM.modules.CREATE,ZohoCRM.modules.UPDATE,ZohoSearch.securesearch.READ,ZohoCRM.settings.custom_views.READ,ZohoCRM.settings.modules.READ,ZohoCRM.modules.ALL,ZohoCRM.signals.ALL"
 
+
+# Calendly OAuth settings
+CALENDLY_CLIENT_ID = 'mmgzH3MGHOl4XxSo_S2Rd88NHkQXNtp2BB1oBcHue_s'
+CALENDLY_CLIENT_SECRET = 'QHe1XUACtSPN_QGEgr7oMfn5xDspp6nBZ-A3YCpawtY'
+CALENDLY_REDIRECT_URI = 'http://localhost:8000/oauth/callback/'
+CALENDLY_WEBHOOK_URI="x-im4xCjbY-adPbU8CvMF088AdwhA-GQeMlAR7MI3RE"
 

@@ -32,7 +32,7 @@ from base.routes.tool_kit.zoho_tool import ensure_field_exists
 #         response = requests.get(url, auth=(user_id, api_key))
 
 #         if response.status_code != 200:
-#             return JsonResponse({'error': 'Invalid Acuity credentials.'}, status=401)
+#             return JsonResponse({'error': 'Invalid Calendly Credentials.'}, status=401)
 
 #         #########################################################################################
 #         # Save image to MongoDB if provided
@@ -126,7 +126,7 @@ def list_appointments(request):
         credentials = CalendlyCredentials.objects.get(email=email)
     except CalendlyCredentials.DoesNotExist:
         return render(request, 'acuityscheduling/appointments.html', {
-            'error': 'No Acuity credentials found for your account. '
+            'error': 'No Calendly Credentials found for your account. '
                      '<a href="/store-credentials/" class="text-blue-600 underline">Store credentials</a>'
         })
 
@@ -267,7 +267,7 @@ def appointment_types_view(request):
         credentials = CalendlyCredentials.objects.get(email=email)
     except CalendlyCredentials.DoesNotExist:
         return render(request, 'acuityscheduling/appointments.html', {
-            'error': 'No Acuity credentials found for your account. '
+            'error': 'No Calendly Credentials found for your account. '
                      '<a href="/store-credentials/" class="text-blue-600 underline">Store credentials</a>'
         })
 
@@ -313,7 +313,7 @@ def acuity_dashboard(request):
         credentials = CalendlyCredentials.objects.get(email=email)
     except CalendlyCredentials.DoesNotExist:
         return render(request, 'acuityscheduling/dashboard.html', {
-            'error': 'No Acuity credentials found for your account. Store credentials by clicking &nbsp;&nbsp;'
+            'error': 'No Calendly Credentials found for your account. Store credentials by clicking &nbsp;&nbsp;'
                      '<a href="/store-credentials/" class="text-blue-600 underline">here</a>'
         })
 
@@ -403,7 +403,7 @@ def acuity_schedule(request):
         credentials = CalendlyCredentials.objects.get(email=email)
     except CalendlyCredentials.DoesNotExist:
         return render(request, 'acuityscheduling/acuity_schedule.html', {
-            'error': 'No Acuity credentials found for your account. Store credentials by clicking &nbsp;&nbsp;'
+            'error': 'No Calendly Credentials found for your account. Store credentials by clicking &nbsp;&nbsp;'
                      '<a href="/store-credentials/" class="text-blue-600 underline">here</a>'
         })
     return render(request, 'acuityscheduling/acuity_schedule.html', {'embedCode': credentials.embedCode})

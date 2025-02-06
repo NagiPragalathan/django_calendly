@@ -4,8 +4,8 @@ import uuid
 class CalendlyCredentials(models.Model):
     unique_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     email = models.EmailField(unique=True)
-    user_id = models.CharField(max_length=20)
-    api_key = models.CharField(max_length=100)
+    access_token = models.CharField(max_length=400)
+    refresh_token = models.CharField(max_length=400)
     created_at = models.DateTimeField(auto_now_add=True)
     base_url = models.URLField(blank=True, null=True)
     embedCode = models.CharField(max_length=400, blank=True, null=True)

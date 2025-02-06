@@ -47,7 +47,7 @@ def get_appointment_details(credential_id, appointment_id):
             logger.error(response.json())
             return None
     except CalendlyCredentials.DoesNotExist:
-        logger.error("Acuity credentials not found for the user.")
+        logger.error("Calendly Credentials not found for the user.")
         return None
     except Exception as e:
         logger.error(f"Error while fetching appointment details: {e}")

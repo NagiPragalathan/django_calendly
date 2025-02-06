@@ -41,7 +41,7 @@ def edit_credentials(request, credential_id):
         response = requests.get(url, auth=(user_id, api_key))
 
         if response.status_code != 200:
-            return JsonResponse({'error': 'Invalid Acuity credentials.'}, status=401)
+            return JsonResponse({'error': 'Invalid Calendly Credentials.'}, status=401)
         
         
         
@@ -85,20 +85,9 @@ def edit_credentials(request, credential_id):
 
 def create_credentials(request):
     if request.method == 'POST':
-        user_id = request.POST.get('user_id')
-        api_key = request.POST.get('api_key')
         image = request.FILES.get('image')
         company_name = request.POST.get('company_name')
         email_template = request.POST.get('email_template')
-
-        if not user_id or not api_key:
-            return JsonResponse({'error': 'User ID and API Key are required.'}, status=400)
-
-        url = "https://acuityscheduling.com/api/v1/me"
-        response = requests.get(url, auth=(user_id, api_key))
-
-        if response.status_code != 200:
-            return JsonResponse({'error': 'Invalid Acuity credentials.'}, status=401)
         
         #########################################################################################
         # Save image to MongoDB if provided
@@ -113,13 +102,9 @@ def create_credentials(request):
         
         get_id = CalendlyCredentials.objects.create(
             email=request.user.email,
-            user_id=user_id,
-            api_key=api_key,
             image_id=image_id,
             company_name=company_name,
-            email_template=email_template,
-            base_url=response.json().get('schedulingPage'),
-            embedCode=response.json().get('embedCode'),
+            email_template=email_template
         )
         
         #########################################################################################
@@ -130,16 +115,16 @@ def create_credentials(request):
             {"event": "appointment.scheduled", "target": base_webhook_events+"acuity-webhook/create-meeting/"+str(get_id.unique_id)+'/'+ str(request.user.id) + '/'},
             {"event": "appointment.canceled", "target": base_webhook_events+"acuity-webhook/create-meeting/"+str(get_id.unique_id)+'/'+ str(request.user.id) + '/'},
         ]
-        created = create_webhooks(events, user_id, api_key)
-        print(created, "created")
+        # created = create_webhooks(events, user_id, api_key)
+        # print(created, "created")
         
         #########################################################################################
         # create custom fields
         #########################################################################################
-        for i in ACUITY_CUSTOM_FIELDS:
-            print(i, "is now being creating...")
-            created = ensure_field_exists(request.user, i)
-            print(created, "created")
+        # for i in ACUITY_CUSTOM_FIELDS:
+        #     print(i, "is now being creating...")
+        #     created = ensure_field_exists(request.user, i)
+        #     print(created, "created")
 
         return JsonResponse({'message': 'Credential created successfully!'}, status=201)
 
@@ -148,11 +133,11 @@ def create_credentials(request):
 
 def delete_credentials(request, credential_id):
     credential = CalendlyCredentials.objects.get(unique_id=credential_id, email=request.user.email)
-    targets = get_webhooks_with_ids(credential.user_id, credential.api_key)
-    print(targets, "targets")
-    for target in targets:
-        print(target, "target")
-        if str(credential.unique_id) in target[1]:
-            delete_webhooks(target[0], credential.user_id, credential.api_key)
+    # targets = get_webhooks_with_ids(credential.user_id, credential.api_key)
+    # print(targets, "targets")
+    # for target in targets:
+    #     print(target, "target")
+        # if str(credential.unique_id) in target[1]:
+        #     delete_webhooks(target[0], credential.user_id, credential.api_key)
     CalendlyCredentials.objects.filter(unique_id=credential_id, email=request.user.email).delete()
     return redirect('list_credentials')

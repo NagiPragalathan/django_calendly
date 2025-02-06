@@ -11,7 +11,7 @@ class UserDataMiddleware:
         # Add user-specific data only if the user is authenticated
         if request.user.is_authenticated:
             try:
-                # Retrieve Acuity credentials for the logged-in user
+                # Retrieve Calendly Credentials for the logged-in user
                 credentials = CalendlyCredentials.objects.filter(email=request.user.email).first()
                 if credentials:
                     # Attach the image URL to the request
