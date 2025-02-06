@@ -86,3 +86,5 @@ secrets.json
 
 # Ignore Docker-related files
 docker-compose.override.yml
+
+client_secret.json
