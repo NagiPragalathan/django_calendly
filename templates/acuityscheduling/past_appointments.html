@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Past Appointments</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <style>
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.1);
+    }
+    .modal-overlay {
+      background-color: rgba(0, 0, 0, 0.6);
+    }
+    #loader {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.9);
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-b from-gray-100 to-gray-200 min-h-screen py-10 flex flex-col items-center">
+
+  <!-- Loader -->
+  <div id="loader">
+    <div class="flex flex-col items-center">
+      <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <p class="mt-4 text-blue-600 text-lg">Loading, please wait...</p>
+    </div>
+  </div>
+
+  <!-- Page Heading -->
+  <h1 class="text-4xl font-semibold text-blue-600 mb-8 text-center">
+    <i class="fas fa-calendar-alt"></i> Your Past Appointments
+  </h1>
+
+  <!-- Search and Filters -->
+  <form method="GET" class="bg-white shadow-lg rounded-lg p-6 mb-8 w-full max-w-6xl space-y-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div class="col-span-1 md:col-span-2 lg:col-span-2">
+        <label for="search-bar" class="block text-gray-700 text-sm font-medium">
+          <i class="fas fa-search"></i> Search
+        </label>
+        <input
+          type="text"
+          id="search-bar"
+          name="q"
+          placeholder="Search by name or service"
+          value="{{ request.GET.q }}"
+          class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label for="start-date" class="block text-gray-700 text-sm font-medium">
+          <i class="fas fa-calendar"></i> Start Date
+        </label>
+        <input
+          type="date"
+          id="start-date"
+          name="start_date"
+          value="{{ request.GET.start_date }}"
+          class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label for="end-date" class="block text-gray-700 text-sm font-medium">
+          <i class="fas fa-calendar-day"></i> End Date
+        </label>
+        <input
+          type="date"
+          id="end-date"
+          name="end_date"
+          value="{{ request.GET.end_date }}"
+          class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label for="service-type" class="block text-gray-700 text-sm font-medium">
+          <i class="fas fa-concierge-bell"></i> Service Type
+        </label>
+        <select
+          id="service-type"
+          name="service_type"
+          class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All Services</option>
+          {% for service in service_types %}
+            <option value="{{ service }}" {% if request.GET.service_type == service %}selected{% endif %}>
+              {{ service }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="min-price" class="block text-gray-700 text-sm font-medium">
+          <i class="fas fa-dollar-sign"></i> Min Price
+        </label>
+        <input
+          type="number"
+          id="min-price"
+          name="min_price"
+          placeholder="Min"
+          value="{{ request.GET.min_price }}"
+          class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label for="max-price" class="block text-gray-700 text-sm font-medium">
+          <i class="fas fa-dollar-sign"></i> Max Price
+        </label>
+        <input
+          type="number"
+          id="max-price"
+          name="max_price"
+          placeholder="Max"
+          value="{{ request.GET.max_price }}"
+          class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+    </div>
+    <div class="flex justify-end">
+      <button
+        type="submit"
+        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+      >
+        <i class="fas fa-search"></i> Search
+      </button>
+    </div>
+  </form>
+
+  {% if error %}
+    <!-- Error Alert -->
+    <div class="bg-red-100 text-red-800 border border-red-400 rounded-lg px-4 py-3 mb-6 max-w-3xl">
+      <span>{{ error }}</span>
+    </div>
+  {% else %}
+    <!-- Appointment Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
+      {% for appointment in page_obj %}
+        <div class="bg-white shadow-lg rounded-lg p-6 card hover:shadow-xl hover:scale-105 transition-transform">
+          <h2 class="text-lg font-semibold text-blue-700">
+            {{ appointment.firstName }} {{ appointment.lastName }}
+          </h2>
+          <p class="text-gray-600 mt-2"><i class="fas fa-calendar-alt"></i> <strong>Date:</strong> {{ appointment.date }}</p>
+          <p class="text-gray-600"><i class="fas fa-clock"></i> <strong>Time:</strong> {{ appointment.time }} - {{ appointment.endTime }}</p>
+          <p class="text-gray-600"><i class="fas fa-concierge-bell"></i> <strong>Service:</strong> {{ appointment.type }}</p>
+          <p class="text-gray-600"><i class="fas fa-tag"></i> <strong>Price:</strong> ₹{{ appointment.price }}</p>
+          <button
+            class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            onclick="openModal('{{ forloop.counter }}')">
+            <i class="fas fa-info-circle"></i> View Details
+          </button>
+        </div>
+
+        <!-- Modal -->
+        <div id="modal-{{ forloop.counter }}" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+          <div class="modal-overlay absolute inset-0"></div>
+          <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative z-10">
+            <button
+              class="absolute top-2 right-2 text-gray-600 hover:text-red-600 text-xl font-bold"
+              onclick="closeModal('{{ forloop.counter }}')">
+              &times;
+            </button>
+            <h3 class="text-lg font-semibold text-blue-700 mb-4">Appointment Details</h3>
+            <p><strong>First Name:</strong> {{ appointment.firstName }}</p>
+            <p><strong>Last Name:</strong> {{ appointment.lastName }}</p>
+            <p><strong>Date:</strong> {{ appointment.date }}</p>
+            <p><strong>Time:</strong> {{ appointment.time }} - {{ appointment.endTime }}</p>
+            <p><strong>Service:</strong> {{ appointment.type }}</p>
+            <p><strong>Price:</strong> ₹{{ appointment.price }}</p>
+            <p><strong>Notes:</strong> {{ appointment.notes|default:"N/A" }}</p>
+            <a href="{{ appointment.confirmationPage }}" target="_blank" class="text-blue-600 underline mt-4 block">
+              View Confirmation Page
+            </a>
+            <button
+              class="mt-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
+              onclick="closeModal('{{ forloop.counter }}')">
+              Close
+            </button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Pagination -->
+  <nav class="mt-10">
+    <ul class="flex justify-center space-x-4">
+      {% if page_obj.has_previous %}
+        <li>
+          <a href="?page={{ page_obj.previous_page_number }}{% for param, value in request.GET.items %}&{{ param }}={{ value }}{% endfor %}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Previous</a>
+        </li>
+      {% endif %}
+      {% for num in page_obj.paginator.page_range %}
+        <li>
+          {% if page_obj.number == num %}
+            <span class="px-4 py-2 bg-blue-700 text-white rounded">{{ num }}</span>
+          {% else %}
+            <a href="?page={{ num }}{% for param, value in request.GET.items %}&{{ param }}={{ value }}{% endfor %}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-blue-600 hover:text-white transition">{{ num }}</a>
+          {% endif %}
+        </li>
+      {% endfor %}
+      {% if page_obj.has_next %}
+        <li>
+          <a href="?page={{ page_obj.next_page_number }}{% for param, value in request.GET.items %}&{{ param }}={{ value }}{% endfor %}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Next</a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <!-- JavaScript for Loader and Modal -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('loader').style.display = 'none';
+    });
+
+    function openModal(id) {
+      document.getElementById(`modal-${id}`).classList.remove("hidden");
+    }
+
+    function closeModal(id) {
+      document.getElementById(`modal-${id}`).classList.add("hidden");
+    }
+  </script>
+
+</body>
+</html>
+{% endblock %}

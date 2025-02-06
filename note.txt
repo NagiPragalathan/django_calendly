@@ -1,0 +1,80 @@
+Api req: https://www.zoho.com/crm/developer/docs/api/v7/get-users.html
+AS : https://developers.acuityscheduling.com/reference/quick-start
+
+
+https://api-console.zoho.com/
+
+
+Client ID:	xdzTMGcRRK2AoMj9
+Client Secret:	MZPuZhB6HMI2A9VQY8YFySDyIyTRaAqZtKe1cEKB
+Redirect URIs:   	http://127.0.0.1:8000/callback
+
+https://acuityscheduling.com/oauth2/authorize?response_type=code&scope=api-v1&client_id=xdzTMGcRRK2AoMj9&redirect_uri=http://127.0.0.1:8000/callback
+
+https://acuityscheduling.com/oauth2/authorize?response_type=code&scope=api-v1 offline_access&client_id=xdzTMGcRRK2AoMj9&redirect_uri=http://127.0.0.1:8000/callback
+
+
+sample output:
+
+{'id': 1407753531, 'firstName': 'Nagi', 'lastName': 'Pragalathan', 'phone': '7401268095', 'email': 'nagipragalatham@gmail.com', 'date': 'January 29, 2025', 'time': '9:00am', 'endTime': '9:30am', 'dateCreated': 'January 28, 2025', 'datetimeCreated': '2025-01-28T09:00:37-0600', 'datetime': '2025-01-29T09:00:00+0530', 'price': '2000.00', 'priceSold': '2000.00', 'paid': 'no', 'amountPaid': '0.00', 'type': 'Real Estate Cunsultaton', 'appointmentTypeID': 14982855, 'classID': None, 'addonIDs': [], 'category': '', 'duration': '30', 'calendar': 'Mano', 'calendarID': 4094700, 'certificate': None, 'confirmationPage': 'https://app.acuityscheduling.com/schedule.php?owner=15632977&action=appt&id%5B%5D=1717229e3467246d67b8d98ff0c8c248', 'confirmationPagePaymentLink': 'https://app.acuityscheduling.com/schedule.php?owner=15632977&action=appt&id%5B%5D=1717229e3467246d67b8d98ff0c8c248&paymentLink=true#payment', 'location': '', 'notes': '', 'timezone': 'Asia/Kolkata', 'calendarTimezone': 'Asia/Kolkata', 'canceled': False, 'canClientCancel': True, 'canClientReschedule': True, 'labels': None, 'forms': [], 'formsText': 'Name: Nagi Pragalathan\nPhone: (740) 126-8095\nEmail: nagipragalatham@gmail.com\nPrice: ₹2,000.00\n', 'isVerified': False, 'scheduledBy': None}
+
+
+Remaining works:
+
+1. Handle multi account for acuity scheduling
+2. Create Meeting in acuity scheduling
+3. when create meeting add the data into zoho crm
+4. edit the zoho data when meeting is rescheduled
+5. need to create the page to show the all of the acuity accounts
+6. dynamic fields update into zoho crm
+7. Multi language support
+8. Dashboard based on zoho's user tag data
+9. Ai implementation for mail writing
+10. setting page to handling the functions of the app
+
+
+[
+    "Customer URL",
+    "AcuityID",
+    "Agent URL",
+    "Calendar Name",
+    "Block time in AcuityScheduling",
+    "Calendar Email",
+    "Event Price"
+]
+
+
+[{'id': '2681636000020030333', 'api_name': 'acuityscheduling1__AcuityID', 'field_label': 'AcuityID'}, {'id': '2681636000020030351', 'api_name': 'acuityscheduling1__ConfirmationPage', 'field_label': 'Customer URL'}, {'id': '2681636000020030369', 'api_name': 'acuityscheduling1__AcuityURL', 'field_label': 'Agent URL'}, {'id': '2681636000020030435', 'api_name': 'acuityscheduling1__Block_time_in_Acuity', 'field_label': 'Block time in AcuityScheduling'}, {'id': '2681636000020030469', 'api_name': 'acuityscheduling1__Calendar_Name', 'field_label': 'Calendar Name'}, {'id': '2681636000020030487', 'api_name': 'acuityscheduling1__Calendar_Email', 'field_label': 'Calendar Email'}, {'id': '2681636000020030537', 'api_name': 'acuityscheduling1__Event_Price', 'field_label': 'Event Price'}, {'id': '2681636000020466001', 'api_name': 'AsdfField', 'field_label': 'AsdfField'}, {'id': '2681636000020467001', 'api_name': 'CustomEventField', 'field_label': 'CustomEventField'}]
+
+
+
+###################################
+Log
+###################################
+
+Customer URL is now being creating...
+7 user_obj
+Field 'Customer URL' already exists in Zoho CRM Events module.
+None created
+Acuity ID is now being creating...
+7 user_obj
+Field 'Acuity ID' does not exist. Creating now...
+{'fields': [{'field_label': 'Acuity ID', 'api_name': 'Acuity_ID', 'data_type': 'text'}]}
+Field 'Acuity ID' created successfully: {'fields': [{'code': 'SUCCESS', 'details': {'id': '2681636000020466019'}, 'message': 'field created', 'status': 'success'}]}
+None created
+Agent URL is now being creating...
+7 user_obj
+Field 'Agent URL' already exists in Zoho CRM Events module.
+None created
+Calendar Name is now being creating...
+7 user_obj
+Field 'Calendar Name' already exists in Zoho CRM Events module.
+None created
+Calendar Email is now being creating...
+7 user_obj
+Field 'Calendar Email' already exists in Zoho CRM Events module.
+None created
+Event Price is now being creating...
+7 user_obj
+Field 'Event Price' already exists in Zoho CRM Events module.
+None created

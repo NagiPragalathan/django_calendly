@@ -1,0 +1,21 @@
+pytz
+djongo==1.3.6
+djangorestframework
+django==4.1.9
+pymongo==3.12.3
+django-cors-headers
+dnspython
+requests
+djangorestframework 
+djangorestframework-jwt
+djangorestframework-simplejwt
+django-meta 
+django-robots-txt
+xlsxwriter
+pandas
+# django-allauth
+google-auth 
+google-auth-oauthlib 
+google-auth-httplib2
+
+pymongo

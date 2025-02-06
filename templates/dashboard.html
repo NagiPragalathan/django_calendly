@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<head>
+    <!-- Tailwind CSS and DaisyUI CDN links -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<div class="p-8">
+    <h1 class="text-2xl font-semibold mb-4">Contacts List</h1>
+    
+    <!-- Search Input -->
+    <div class="mb-4">
+        <input 
+            type="text" 
+            id="search-input" 
+            placeholder="Search contacts..." 
+            class="input input-bordered w-full bg-white text-gray-700 placeholder-gray-500 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent" 
+            oninput="searchContacts()"
+            style="    color: white;"
+        />
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="table w-full">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th>Full Name</th>
+                    <th>Phone</th>
+                    <th>Source</th>
+                    <th>Status</th>
+                    <th>Created Date</th>
+                    <th>Details</th>
+                    <th>Chat</th>
+                    <th>Download</th>
+                </tr>
+            </thead>
+            <tbody id="contacts-table">
+                {% for contact in contacts %}
+                    <tr class="hover:bg-gray-50 cursor-pointer contact-row" data-search="{{ contact.fullName }} {{ contact.phone }} {{ contact.source }} {{ contact.contactStatus }} {{ contact.created }}">
+                        <td>{{ contact.fullName }}</td>
+                        <td>{{ contact.phone }}</td>
+                        <td>{{ contact.source }}</td>
+                        <td>{{ contact.contactStatus }}</td>
+                        <td>{{ contact.created }}</td>
+                        <td><button class="btn btn-warning" onclick="showContactDetails('{{ contact.id }}')">Details</button></td>
+                        <td><button class="btn btn-success" onclick="redirect('{{ contact.phone }}')">Chat</button></td>
+                        <td><button class="btn btn-neutral" onclick="download('{{ contact.phone }}')">Download</button></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Contact Details Modal -->
+    <input type="checkbox" id="contact-modal" class="modal-toggle" />
+    <div class="modal">
+        <div class="modal-box w-11/12 max-w-5xl">
+            <h3 class="text-lg font-bold text-white">Contact Details</h3>
+            <div id="contact-details" class="py-4">
+                <!-- Contact details will be loaded here -->
+            </div>
+            <div class="modal-action">
+                <label for="contact-modal" class="btn">Close</label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function redirect(number){
+        window.location.href = "messages/"+number;
+    }
+    function download(number){
+        window.location.href = "download-messages/"+number;
+    }
+
+    async function showContactDetails(contactId) {
+        const response = await fetch(`/contacts/${contactId}/`);
+        const contact = await response.json();
+
+        document.getElementById('contact-details').innerHTML = `
+            <table style="width: 100%; color: white;">
+                <tr>
+                    <td><strong>Full Name:</strong></td>
+                    <td>${contact.fullName}</td>
+                </tr>
+                <tr>
+                    <td><strong>Phone:</strong></td>
+                    <td>${contact.phone}</td>
+                </tr>
+                <tr>
+                    <td><strong>Source:</strong></td>
+                    <td>${contact.source}</td>
+                </tr>
+                <tr>
+                    <td><strong>Status:</strong></td>
+                    <td>${contact.contactStatus}</td>
+                </tr>
+                <tr>
+                    <td><strong>Created Date:</strong></td>
+                    <td>${contact.created}</td>
+                </tr>
+            </table>
+        `;
+
+        document.getElementById('contact-modal').checked = true;
+    }
+
+    function searchContacts() {
+        const input = document.getElementById('search-input').value.toLowerCase();
+        const rows = document.querySelectorAll('.contact-row');
+
+        rows.forEach(row => {
+            const searchText = row.getAttribute('data-search').toLowerCase();
+            row.style.display = searchText.includes(input) ? '' : 'none';
+        });
+    }
+</script>
+{% endblock %}

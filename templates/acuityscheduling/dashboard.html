@@ -1,0 +1,236 @@
+{% extends 'acuityscheduling/base.html' %}
+
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acuity Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/daisyui@1.19.2/dist/full.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    // Close Error Message function (available globally)
+    function closeErrorMessage() {
+        var errorMessage = document.getElementById('error-message');
+        if (errorMessage) {
+            errorMessage.style.display = 'none';  // Hide the error message
+        }
+    }
+  </script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+  {% if error %}
+  <div id="error-message" class="relative p-4 bg-red-600 border border-red-700 rounded-lg m-3 text-white">
+      <!-- Close Button -->
+      <button onclick="closeErrorMessage()" 
+              class="absolute top-2 right-2 bg-transparent border-none text-white text-2xl font-bold cursor-pointer hover:text-gray-200 transition duration-200">
+          &times;
+      </button>
+      <!-- Error Message Content -->
+      <div>{{ error|safe }}</div>
+  </div>
+  {% endif %}
+  
+  <main class="p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-full mx-auto">
+
+    <!-- Analytics Section -->
+    <section class="col-span-1 sm:col-span-2 lg:col-span-2 space-y-6">
+      <!-- Total Revenue -->
+      <div class="bg-white p-6 shadow-lg rounded-xl">
+        <h2 class="text-2xl font-bold text-gray-700 mb-4 flex items-center"><i class="fa fa-dollar-sign mr-2"></i>Total Revenue</h2>
+        <p id="total-revenue" class="text-3xl font-semibold text-green-500">₹{{ total_revenue }}</p>
+      </div>
+
+      <!-- Service Prices Chart -->
+      <div class="bg-white p-6 shadow-lg rounded-xl">
+        <h2 class="text-2xl font-bold text-gray-700 mb-4 flex items-center"><i class="fa fa-chart-bar mr-2"></i>Service Prices</h2>
+        <canvas id="servicePricesChart"></canvas>
+      </div>
+
+      <!-- Appointment History Chart -->
+      <div class="bg-white p-6 shadow-lg rounded-xl">
+        <h2 class="text-2xl font-bold text-gray-700 mb-4 flex items-center"><i class="fa fa-history mr-2"></i>Appointment History</h2>
+        <canvas id="appointmentHistoryChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Additional Analytics Section -->
+    <section class="space-y-6">
+      <!-- Revenue Over Time -->
+      <div class="bg-white p-6 shadow-lg rounded-xl">
+        <h2 class="text-2xl font-bold text-gray-700 mb-4 flex items-center"><i class="fa fa-calendar-check mr-2"></i>Revenue Over Time</h2>
+        <canvas id="revenueOverTimeChart"></canvas>
+      </div>
+
+      <!-- Number of Appointments Per Client -->
+      <div class="bg-white p-6 shadow-lg rounded-xl">
+        <h2 class="text-2xl font-bold text-gray-700 mb-4 flex items-center"><i class="fa fa-users mr-2"></i>Appointments Per Client</h2>
+        <canvas id="appointmentsPerClientChart"></canvas>
+      </div>
+
+      <!-- Revenue by Service Type (Pie Chart) -->
+      <div class="bg-white p-6 shadow-lg rounded-xl">
+        <h2 class="text-2xl font-bold text-gray-700 mb-4 flex items-center"><i class="fa fa-pie-chart mr-2"></i>Revenue by Service Type</h2>
+        <canvas id="revenueByServiceChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Clients List -->
+    <section class="bg-white p-6 shadow-lg rounded-xl col-span-1 sm:col-span-3">
+      <h2 class="text-2xl font-bold text-gray-700 mb-4 flex items-center"><i class="fa fa-user-circle mr-2"></i>Clients</h2>
+      <div id="client-list" class="max-h-80 overflow-y-auto space-y-4">
+        <!-- Clients dynamically populated here -->
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    
+    // Assuming the context data from Django is passed to JavaScript
+    const data = {
+      "service_price_data": {{ service_price_data|safe }},
+      "appointment_status_data": {{ appointment_status_data|safe }},
+      "total_revenue": {{ total_revenue }},
+      "appointment_history": {{ appointment_history|safe }},
+      "sorted_dates": {{ sorted_dates|safe }},
+      "clients": {{ clients|safe }},
+    };
+
+    // Populate Total Revenue
+    document.getElementById("total-revenue").textContent = `₹${data.total_revenue.toFixed(2)}`;
+
+    // Render Service Prices Chart
+    const serviceCtx = document.getElementById('servicePricesChart').getContext('2d');
+    new Chart(serviceCtx, {
+      type: 'bar',
+      data: {
+        labels: data.service_price_data.map(item => item.name),
+        datasets: [{
+          label: 'Price (₹)',
+          data: data.service_price_data.map(item => item.price),
+          backgroundColor: '#2196f3',
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+    // Render Appointment History Chart (Line chart)
+    const historyCtx = document.getElementById('appointmentHistoryChart').getContext('2d');
+    new Chart(historyCtx, {
+      type: 'line',
+      data: {
+        labels: data.sorted_dates,
+        datasets: [{
+          label: 'Appointments',
+          data: data.appointment_history,
+          borderColor: '#42A5F5',
+          fill: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+    // Render Revenue Over Time Chart (Line chart)
+    const revenueCtx = document.getElementById('revenueOverTimeChart').getContext('2d');
+    new Chart(revenueCtx, {
+      type: 'line',
+      data: {
+        labels: data.sorted_dates,
+        datasets: [{
+          label: 'Revenue (₹)',
+          data: data.appointment_history.map(() => {
+            return data.service_price_data.reduce((total, service) => total + (service.price || 0), 0);
+          }),
+          borderColor: '#ff7043',
+          fill: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+    // Render Number of Appointments Per Client (Bar chart)
+    const appointmentsPerClientCtx = document.getElementById('appointmentsPerClientChart').getContext('2d');
+    new Chart(appointmentsPerClientCtx, {
+      type: 'bar',
+      data: {
+        labels: data.clients.map(client => client.firstName + " " + client.lastName),
+        datasets: [{
+          label: 'Appointments',
+          data: data.clients.map(client => client.appointmentCount),
+          backgroundColor: '#8e24aa',
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+    // New Chart: Revenue by Service Type (Pie chart)
+    const revenueByServiceCtx = document.getElementById('revenueByServiceChart').getContext('2d');
+    new Chart(revenueByServiceCtx, {
+      type: 'pie',
+      data: {
+        labels: data.service_price_data.map(item => item.name),
+        datasets: [{
+          data: data.service_price_data.map(item => item.price),
+          backgroundColor: ['#FF8C00', '#32CD32', '#8A2BE2', '#FF1493', '#FF6347'],
+        }]
+      },
+      options: {
+        responsive: true,
+      }
+    });
+
+    // Render Clients List
+    const clientList = document.getElementById("client-list");
+    data.clients.forEach(client => {
+      const clientItem = document.createElement("div");
+      clientItem.classList.add("flex", "justify-between", "items-center", "p-4", "bg-gray-50", "rounded-lg", "shadow-sm");
+      clientItem.innerHTML = `
+        <div class="flex items-center">
+          <i class="fa fa-user-circle text-blue-600 mr-4"></i>
+          <span>${client.firstName} ${client.lastName}</span>
+        </div>
+        <a href="mailto:${client.email}" class="text-blue-600 hover:underline">
+          <i class="fa fa-envelope"></i> Email
+        </a>
+      `;
+      clientList.appendChild(clientItem);
+    });
+  </script>
+
+</body>
+</html>
+{% endblock %}

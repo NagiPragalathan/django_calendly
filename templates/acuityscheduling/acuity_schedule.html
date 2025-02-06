@@ -1,0 +1,14 @@
+<script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+{{ embedCode|safe }}
+<div class="max-w-7xl mx-auto" style="position: fixed; bottom: 2%; left: 1%;">
+  <div class="relative group">
+    <div class="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+    <div class="relative px-7 py-6 bg-white ring-1 ring-gray-900/5 rounded-lg leading-none flex items-top justify-start space-x-6">
+      <img src="{{ request.image_url }}" alt="Profile Image" class="w-10 h-10 rounded-full" style="border-radius: 5px;">
+      <div class="space-y-2">
+        <h1 class="text-slate-800" style="font-size: 18px; font-weight: bold;">{{ request.company_name }}</h1>
+        <a href="{% url 'acuity_dashboard' %}" class="block text-indigo-400 group-hover:text-slate-800 transition duration-200" target="_blank">Dashboard →</a>
+      </div>
+    </div>
+  </div>
+</div>

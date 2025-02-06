@@ -1,0 +1,88 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg
+*.egg-info/
+dist/
+build/
+*.tar.gz
+*.zip
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# If you're using PostgreSQL:
+*.pgdata
+
+# If you're using MySQL:
+*.mysql
+
+# Media uploads
+media/
+
+# Static files
+staticfiles/
+static/
+
+# Ignore the virtual environment directory
+venv/
+.venv/
+env/
+.env/
+
+# Secrets / Environment settings:
+.env
+.env.*
+*.env
+
+# VS Code settings folder
+.vscode/
+
+# PyCharm settings
+.idea/
+
+# Ignore migrations files (optional - remove if you want to track migrations)
+**/migrations/*
+
+# Ignore node_modules folder (if you use frontend tools like npm or yarn)
+node_modules/
+
+# Ignore coverage files
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+
+# Test output
+.junit.xml
+test-reports/
+
+# Ignore any files with the name secrets.json
+secrets.json
+
+# Ignore any compiled translation files
+*.mo
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore compiled C extensions
+*.pyd
+
+# Ignore Docker-related files
+docker-compose.override.yml

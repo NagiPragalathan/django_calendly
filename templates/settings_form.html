@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+        }
+        form {
+            width: 300px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            margin-top: 15px;
+            padding: 10px;
+            width: 100%;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>User Settings</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+        
+        <label for="leads_to_store">Leads to Store:</label>
+        <select name="leads_to_store" id="leads_to_store">
+            <option value="Leads" {% if settings and settings.leads_to_store == "Leads" %}selected{% endif %}>Leads</option>
+            <option value="Contacts" {% if settings and settings.leads_to_store == "Contacts" %}selected{% endif %}>Contacts</option>
+        </select>
+
+        <label for="lead_source">Lead Source:</label>
+        {% if settings.lead_source %}
+        <input type="text" name="lead_source" id="lead_source" 
+               value="{{ settings.lead_source }}" required>
+        {% else %}
+        <input type="text" name="lead_source" id="lead_source" 
+               value="Acuity Scheduling" required>
+        {% endif %}
+
+
+        <button type="submit">Save Settings</button>
+    </form>
+
+</body>
+</html>

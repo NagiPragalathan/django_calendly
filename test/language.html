@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Google Translate Dropdown</title>
+
+    <!-- Google Translate Widget Script -->
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en', // Default language of your page
+                includedLanguages: 'en,es,fr,de,it,pt,zh-CN,ja', // Languages to include in dropdown
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false // Don't automatically show the widget
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        /* Customize the Google Translate dropdown */
+        #google_translate_element select {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #007BFF;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+
+        #google_translate_element select:focus {
+            border-color: #0056b3;
+        }
+
+        /* Add some custom spacing */
+        #google_translate_element {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Welcome to Our Website</h1>
+    <p>This page demonstrates multi-language support using Google Translate.</p>
+
+    <!-- Google Translate Dropdown Widget -->
+    <div id="google_translate_element"></div>
+
+    <p>Feel free to try out the language switcher above.</p>
+</body>
+</html>
