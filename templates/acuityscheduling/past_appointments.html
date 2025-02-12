@@ -144,82 +144,195 @@
   {% if error %}
     <!-- Error Alert -->
     <div class="bg-red-100 text-red-800 border border-red-400 rounded-lg px-4 py-3 mb-6 max-w-3xl">
-      <span>{{ error }}</span>
+      <span>{{ error|safe }}</span>
     </div>
   {% else %}
     <!-- Appointment Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
+    <div class="grid grid-cols-1 gap-6 w-full max-w-6xl">
       {% for appointment in page_obj %}
-        <div class="bg-white shadow-lg rounded-lg p-6 card hover:shadow-xl hover:scale-105 transition-transform">
-          <h2 class="text-lg font-semibold text-blue-700">
-            {{ appointment.firstName }} {{ appointment.lastName }}
-          </h2>
-          <p class="text-gray-600 mt-2"><i class="fas fa-calendar-alt"></i> <strong>Date:</strong> {{ appointment.date }}</p>
-          <p class="text-gray-600"><i class="fas fa-clock"></i> <strong>Time:</strong> {{ appointment.time }} - {{ appointment.endTime }}</p>
-          <p class="text-gray-600"><i class="fas fa-concierge-bell"></i> <strong>Service:</strong> {{ appointment.type }}</p>
-          <p class="text-gray-600"><i class="fas fa-tag"></i> <strong>Price:</strong> ₹{{ appointment.price }}</p>
-          <button
-            class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-            onclick="openModal('{{ forloop.counter }}')">
-            <i class="fas fa-info-circle"></i> View Details
-          </button>
-        </div>
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow">
+          <!-- Header Section -->
+          <div class="bg-blue-600 text-white px-6 py-4">
+            <h2 class="text-xl font-semibold">{{ appointment.name }}</h2>
+            <p class="text-sm opacity-90">Event ID: {{ appointment.event_uri|slice:"-8:" }}</p>
+          </div>
 
-        <!-- Modal -->
-        <div id="modal-{{ forloop.counter }}" class="hidden fixed inset-0 z-50 flex items-center justify-center">
-          <div class="modal-overlay absolute inset-0"></div>
-          <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative z-10">
-            <button
-              class="absolute top-2 right-2 text-gray-600 hover:text-red-600 text-xl font-bold"
-              onclick="closeModal('{{ forloop.counter }}')">
-              &times;
-            </button>
-            <h3 class="text-lg font-semibold text-blue-700 mb-4">Appointment Details</h3>
-            <p><strong>First Name:</strong> {{ appointment.firstName }}</p>
-            <p><strong>Last Name:</strong> {{ appointment.lastName }}</p>
-            <p><strong>Date:</strong> {{ appointment.date }}</p>
-            <p><strong>Time:</strong> {{ appointment.time }} - {{ appointment.endTime }}</p>
-            <p><strong>Service:</strong> {{ appointment.type }}</p>
-            <p><strong>Price:</strong> ₹{{ appointment.price }}</p>
-            <p><strong>Notes:</strong> {{ appointment.notes|default:"N/A" }}</p>
-            <a href="{{ appointment.confirmationPage }}" target="_blank" class="text-blue-600 underline mt-4 block">
-              View Confirmation Page
-            </a>
-            <button
-              class="mt-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
-              onclick="closeModal('{{ forloop.counter }}')">
-              Close
-            </button>
+          <!-- Main Content -->
+          <div class="p-6">
+            <!-- Basic Info -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 class="font-semibold text-lg mb-3">Attendee Information</h3>
+                <p><strong>Name:</strong> {{ appointment.firstName }} {{ appointment.lastName }}</p>
+                <p><strong>Email:</strong> {{ appointment.email }}</p>
+                <p><strong>Status:</strong> <span class="px-2 py-1 rounded-full text-sm {% if appointment.status == 'active' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">{{ appointment.status }}</span></p>
+              </div>
+
+              <div>
+                <h3 class="font-semibold text-lg mb-3">Schedule Details</h3>
+                <p><strong>Date:</strong> {{ appointment.date }}</p>
+                <p><strong>Time:</strong> {{ appointment.time }} - {{ appointment.endTime }}</p>
+                <p><strong>Created:</strong> {{ appointment.created_at|slice:":16"|default:"N/A" }}</p>
+                <p><strong>Last Updated:</strong> {{ appointment.updated_at|slice:":16"|default:"N/A" }}</p>
+              </div>
+            </div>
+
+            <!-- Location Information -->
+            <div class="mt-6">
+              <h3 class="font-semibold text-lg mb-3">Location Details</h3>
+              <div class="bg-gray-50 rounded-lg p-4">
+                <p><strong>Type:</strong> {{ appointment.location_type|default:"Not specified" }}</p>
+                <p><strong>Address:</strong> {{ appointment.location_address|default:"Not specified" }}</p>
+                {% if appointment.location_info %}
+                  <p><strong>Additional Info:</strong> {{ appointment.location_info }}</p>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Meeting Notes -->
+            {% if appointment.meeting_notes_plain %}
+              <div class="mt-6">
+                <h3 class="font-semibold text-lg mb-3">Meeting Notes</h3>
+                <div class="bg-yellow-50 rounded-lg p-4">
+                  {{ appointment.meeting_notes_html|safe }}
+                </div>
+              </div>
+            {% endif %}
+
+            <!-- Invitees Information -->
+            <div class="mt-6">
+              <h3 class="font-semibold text-lg mb-3">Invitees Information</h3>
+              <div class="grid grid-cols-3 gap-4 text-center">
+                <div class="bg-blue-50 rounded-lg p-3">
+                  <p class="text-sm text-gray-600">Total</p>
+                  <p class="text-xl font-bold">{{ appointment.invitees_total }}</p>
+                </div>
+                <div class="bg-green-50 rounded-lg p-3">
+                  <p class="text-sm text-gray-600">Active</p>
+                  <p class="text-xl font-bold">{{ appointment.invitees_active }}</p>
+                </div>
+                <div class="bg-purple-50 rounded-lg p-3">
+                  <p class="text-sm text-gray-600">Limit</p>
+                  <p class="text-xl font-bold">{{ appointment.invitees_limit }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Event Members -->
+            {% if appointment.event_members %}
+              <div class="mt-6">
+                <h3 class="font-semibold text-lg mb-3">Event Members</h3>
+                <div class="space-y-3">
+                  {% for member in appointment.event_members %}
+                    <div class="bg-gray-50 rounded-lg p-4">
+                      <p><strong>Name:</strong> {{ member.name }}</p>
+                      <p><strong>Email:</strong> {{ member.email }}</p>
+                      <p class="text-sm text-gray-600">
+                        <strong>Buffer Time:</strong> 
+                        {{ member.buffered_start|slice:":16" }} - {{ member.buffered_end|slice:":16" }}
+                      </p>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            <!-- Event Guests -->
+            {% if appointment.event_guests %}
+              <div class="mt-6">
+                <h3 class="font-semibold text-lg mb-3">Event Guests</h3>
+                <div class="space-y-3">
+                  {% for guest in appointment.event_guests %}
+                    <div class="bg-gray-50 rounded-lg p-4">
+                      <p><strong>Email:</strong> {{ guest.email }}</p>
+                      <p class="text-sm text-gray-600">
+                        Added: {{ guest.created_at|slice:":16" }}
+                      </p>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            <!-- Calendar Information -->
+            {% if appointment.calendar_type %}
+              <div class="mt-6">
+                <h3 class="font-semibold text-lg mb-3">Calendar Details</h3>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <p><strong>Calendar Type:</strong> {{ appointment.calendar_type }}</p>
+                  <p><strong>Calendar ID:</strong> {{ appointment.calendar_id }}</p>
+                </div>
+              </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="mt-6 flex gap-4">
+              {% if appointment.cancel_url %}
+                <a href="{{ appointment.cancel_url }}" target="_blank" 
+                   class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+                  Cancel Meeting
+                </a>
+              {% endif %}
+              {% if appointment.reschedule_url %}
+                <a href="{{ appointment.reschedule_url }}" target="_blank"
+                   class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                  Reschedule
+                </a>
+              {% endif %}
+              {% if appointment.scheduling_url %}
+                <a href="{{ appointment.scheduling_url }}" target="_blank"
+                   class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+                  View Details
+                </a>
+              {% endif %}
+            </div>
           </div>
         </div>
       {% endfor %}
     </div>
-  {% endif %}
 
-  <!-- Pagination -->
-  <nav class="mt-10">
-    <ul class="flex justify-center space-x-4">
-      {% if page_obj.has_previous %}
-        <li>
-          <a href="?page={{ page_obj.previous_page_number }}{% for param, value in request.GET.items %}&{{ param }}={{ value }}{% endfor %}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Previous</a>
-        </li>
-      {% endif %}
-      {% for num in page_obj.paginator.page_range %}
-        <li>
-          {% if page_obj.number == num %}
-            <span class="px-4 py-2 bg-blue-700 text-white rounded">{{ num }}</span>
-          {% else %}
-            <a href="?page={{ num }}{% for param, value in request.GET.items %}&{{ param }}={{ value }}{% endfor %}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-blue-600 hover:text-white transition">{{ num }}</a>
-          {% endif %}
-        </li>
-      {% endfor %}
-      {% if page_obj.has_next %}
-        <li>
-          <a href="?page={{ page_obj.next_page_number }}{% for param, value in request.GET.items %}&{{ param }}={{ value }}{% endfor %}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Next</a>
-        </li>
-      {% endif %}
-    </ul>
-  </nav>
+    <!-- Pagination -->
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="mt-10 flex justify-center" aria-label="Pagination">
+        <ul class="flex items-center space-x-2">
+            {% if page_obj.has_previous %}
+                <li>
+                    <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                       class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                        Previous
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li>
+                        <span class="px-4 py-2 bg-blue-700 text-white rounded">
+                            {{ num }}
+                        </span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li>
+                        <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                           class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-blue-600 hover:text-white transition">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li>
+                    <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                       class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                        Next
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+  {% endif %}
 
   <!-- JavaScript for Loader and Modal -->
   <script>

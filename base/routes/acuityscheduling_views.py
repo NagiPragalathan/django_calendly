@@ -15,246 +15,403 @@ from base.routes.tool_kit.acuityscheduling_tool import create_webhooks
 from base.routes.tool_kit.secract_del import delete_all_webhooks
 from base.routes.tool_kit.mongo_tool import store_image_in_mongodb, get_image_from_mongodb
 from base.routes.tool_kit.zoho_tool import ensure_field_exists
-    
-# def store_credentials(request):
-#     if request.method == 'POST':
-#         user_id = request.POST.get('user_id')
-#         api_key = request.POST.get('api_key')
-#         image = request.FILES.get('image')
-#         company_name = request.POST.get('company_name')
-#         email_template = request.POST.get('email_template')
-
-#         # Validate inputs
-#         if not user_id or not api_key:
-#             return JsonResponse({'error': 'Both User ID and API Key are required.'}, status=400)
-
-#         url = "https://acuityscheduling.com/api/v1/me"
-#         response = requests.get(url, auth=(user_id, api_key))
-
-#         if response.status_code != 200:
-#             return JsonResponse({'error': 'Invalid Calendly Credentials.'}, status=401)
-
-#         #########################################################################################
-#         # Save image to MongoDB if provided
-#         #########################################################################################
-#         image_id = None
-#         if image:
-#             image_id = store_image_in_mongodb(image, request.user.email)
-#             print(image_id, "image_id stored")
-            
-            
-#         #########################################################################################
-#         # Save credentials to the database
-#         #########################################################################################
-#         try:
-#             obj = CalendlyCredentials.objects.get(email=request.user.email)
-#             print(obj, obj.user_id, obj.image_id, obj.base_url, obj.embedCode, obj.api_key)
-#             if image == None:
-#                 image_id = obj.image_id
-#             if company_name == None:
-#                 company_name = obj.company_name
-#             if email_template == None:
-#                 email_template = obj.email_template
-                
-#             CalendlyCredentials.objects.filter(email=request.user.email).update(
-#                 user_id=user_id,
-#                 image_id=image_id,
-#                 base_url=response.json().get('schedulingPage'),
-#                 embedCode=response.json().get('embedCode'),
-#                 api_key=api_key,
-#                 company_name=company_name,
-#                 email_template=email_template
-#             )
-#         except CalendlyCredentials.DoesNotExist:
-#             created = CalendlyCredentials.objects.create(
-#                 email=request.user.email,
-#                 user_id=user_id,
-#                 image_id=image_id,
-#                 base_url=response.json().get('schedulingPage'),
-#                 embedCode=response.json().get('embedCode'),
-#                 api_key=api_key,
-#                 company_name=company_name,
-#                 email_template=email_template
-#             )
-#             print("created:", created)
-#         #########################################################################################
-#         # create webhooks
-#         #########################################################################################
-#         created = create_webhooks(ACUITY_WEBHOOK_EVENTS, user_id, api_key)
-#         print(created, "created")
-        
-#         #########################################################################################
-#         # create custom fields
-#         #########################################################################################
-#         for i in ACUITY_CUSTOM_FIELDS:
-#             print(i, "is now being creating...")
-#             created = ensure_field_exists(request.user, i)
-#             print(created, "created")
-
-#         return JsonResponse({'message': 'Credentials and image saved successfully!'}, status=201)
-    
-#     try:
-#         obj = CalendlyCredentials.objects.get(email=request.user.email)
-#         out_data = {
-#             'user_id': obj.user_id,
-#             'api_key': obj.api_key,
-#             'image_id': obj.image_id,
-#             'base_url': obj.base_url,
-#             'embedCode': obj.embedCode,
-#             'company_name': obj.company_name,
-#             'email_template': obj.email_template
-#         }
-#     except CalendlyCredentials.DoesNotExist:
-#         out_data = {
-#             'user_id': '',
-#             'api_key': '',
-#             'image_id': '',
-#             'base_url': '',
-#             'embedCode': '',
-#             'company_name': '',
-#             'email_template': ''
-#         }
-
-#     return render(request, 'acuityscheduling/store_credentials.html', out_data)
-
+import base64
+from django.conf import settings
 
 @login_required
 def list_appointments(request):
     email = request.user.email
 
     try:
-        credentials = CalendlyCredentials.objects.get(email=email)
-    except CalendlyCredentials.DoesNotExist:
+        # Get credentials
+        credentials = CalendlyCredentials.objects.filter(email=email).first()
+        if not credentials:
+            return render(request, 'acuityscheduling/appointments.html', {
+                'error': 'No Calendly Credentials found for your account. '
+                         '<a href="/store-credentials/" class="text-blue-600 underline">Store credentials</a>'
+            })
+
+        # Check if access token is expired and refresh if needed
+        headers = check_and_refresh_token(credentials)
+        if not headers:
+            return render(request, 'acuityscheduling/appointments.html', {
+                'error': 'Failed to authenticate with Calendly. Please try storing your credentials again.'
+            })
+
+        # Get user's information and organization
+        user_url = 'https://api.calendly.com/users/me'
+        user_response = requests.get(user_url, headers=headers)
+        user_response.raise_for_status()
+        user_data = user_response.json()
+        organization_uri = user_data['resource']['current_organization']
+
+        # Get upcoming appointments for next 30 days
+        now = datetime.now(timezone.utc)
+        end_date = now + timedelta(days=30)
+
+        # Format dates for Calendly API
+        start_date = now.strftime('%Y-%m-%dT%H:%M:%S.000000Z')
+        end_date = end_date.strftime('%Y-%m-%dT%H:%M:%S.000000Z')
+
+        # Make API request to Calendly
+        url = 'https://api.calendly.com/scheduled_events'
+        params = {
+            'min_start_time': start_date,
+            'max_start_time': end_date,
+            'organization': organization_uri,
+            'status': 'active',
+            'count': 100,
+            'sort': 'start_time:asc'  # Sort by start time ascending for upcoming events
+        }
+
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        data = response.json()
+        appointments = []
+
+        # Get event types for service filtering
+        event_types_url = 'https://api.calendly.com/event_types'
+        event_types_response = requests.get(
+            event_types_url,
+            headers=headers,
+            params={'organization': organization_uri}
+        )
+        event_types_data = event_types_response.json()
+        service_types = sorted({et['name'] for et in event_types_data.get('collection', [])})
+
+        # Process appointments
+        for event in data.get('collection', []):
+            event_start = datetime.fromisoformat(event['start_time'].replace('Z', '+00:00'))
+            event_end = datetime.fromisoformat(event['end_time'].replace('Z', '+00:00'))
+            
+            # Get invitee details
+            invitee_response = requests.get(
+                f"{event['uri']}/invitees",
+                headers=headers
+            ).json()
+            
+            invitees = invitee_response.get('collection', [{}])
+            for invitee in invitees:
+                try:
+                    appointment = {
+                        # Basic Info
+                        'firstName': invitee.get('first_name', ''),
+                        'lastName': invitee.get('last_name', ''),
+                        'email': invitee.get('email', ''),
+                        
+                        # Time Information
+                        'datetime': event['start_time'],
+                        'date': event_start.date(),
+                        'time': event_start.time(),
+                        'endTime': event_end.time(),
+                        'created_at': event.get('created_at'),
+                        'updated_at': event.get('updated_at'),
+                        
+                        # Event Details
+                        'event_uri': event['uri'],
+                        'name': event.get('name', ''),
+                        'type': event.get('name', ''),
+                        'status': event.get('status', ''),
+                        'meeting_notes_plain': event.get('meeting_notes_plain', ''),
+                        'meeting_notes_html': event.get('meeting_notes_html', ''),
+                        
+                        # Location
+                        'location_type': event.get('location', {}).get('type', ''),
+                        'location_address': event.get('location', {}).get('location', ''),
+                        'location_info': event.get('location', {}).get('additional_info', ''),
+                        
+                        # URLs
+                        'cancel_url': invitee.get('cancel_url', ''),
+                        'reschedule_url': invitee.get('reschedule_url', ''),
+                        'scheduling_url': invitee.get('scheduling_url', ''),
+                        
+                        # Counter Information
+                        'invitees_total': event.get('invitees_counter', {}).get('total', 0),
+                        'invitees_active': event.get('invitees_counter', {}).get('active', 0),
+                        'invitees_limit': event.get('invitees_counter', {}).get('limit', 0),
+                        
+                        # Event Members
+                        'event_members': [{
+                            'name': member.get('user_name', ''),
+                            'email': member.get('user_email', ''),
+                            'buffered_start': member.get('buffered_start_time', ''),
+                            'buffered_end': member.get('buffered_end_time', '')
+                        } for member in event.get('event_memberships', [])],
+                        
+                        # Event Guests
+                        'event_guests': [{
+                            'email': guest.get('email', ''),
+                            'created_at': guest.get('created_at', ''),
+                            'updated_at': guest.get('updated_at', '')
+                        } for guest in event.get('event_guests', [])]
+                    }
+                    appointments.append(appointment)
+                except (ValueError, KeyError) as e:
+                    print(f"Error processing appointment: {str(e)}")
+                    continue
+
+        # Pagination
+        paginator = Paginator(appointments, 10)  # Show 10 appointments per page
+        page_number = request.GET.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+
         return render(request, 'acuityscheduling/appointments.html', {
-            'error': 'No Calendly Credentials found for your account. '
-                     '<a href="/store-credentials/" class="text-blue-600 underline">Store credentials</a>'
+            'page_obj': page_obj,
+            'request': request,
+            'service_types': service_types,
+            'start_date': start_date,
+            'end_date': end_date
         })
 
-    user_id = credentials.user_id
-    api_key = credentials.api_key
-
-    base_url = 'https://acuityscheduling.com/api/v1'
-    appointments_endpoint = f'{base_url}/appointments'
-
-    now = datetime.now(timezone.utc)
-    end_date = now + timedelta(days=30)
-
-    start_date_str = now.isoformat()
-    end_date_str = end_date.isoformat()
-
-    auth = (user_id, api_key)
-    params = {
-        'minDate': start_date_str,
-        'maxDate': end_date_str,
-        'direction': 'ASC' 
-    }
-
-    try:
-        response = requests.get(appointments_endpoint, auth=auth, params=params)
-        response.raise_for_status()  # Raise an HTTPError for bad responses
-        appointments = response.json()
     except requests.exceptions.RequestException as e:
-        # Handle API errors gracefully
         return render(request, 'acuityscheduling/appointments.html', {
             'error': f"Failed to fetch appointments. Please try again later.<br>Error: {str(e)}"
         })
 
-    # Render the appointments page with the fetched appointments
-    return render(request, 'acuityscheduling/appointments.html', {
-        'appointments': appointments,
-        'start_date': start_date_str,
-        'end_date': end_date_str
-    })
-    
+def check_and_refresh_token(credentials):
+    """Helper function to check token expiration and refresh if needed"""
+    try:
+        # Try to decode the access token to check expiration
+        token_parts = credentials.access_token.split('.')
+        if len(token_parts) != 3:
+            raise ValueError("Invalid token format")
+            
+        # Decode the payload
+        payload = json.loads(base64.b64decode(token_parts[1] + '=' * (-len(token_parts[1]) % 4)).decode('utf-8'))
+        
+        # Check if token is expired
+        exp_timestamp = payload.get('exp')
+        if not exp_timestamp:
+            raise ValueError("No expiration time in token")
+            
+        if datetime.fromtimestamp(exp_timestamp) <= datetime.now():
+            # Token is expired, refresh it
+            refresh_url = 'https://auth.calendly.com/oauth/token'
+            refresh_data = {
+                'client_id': settings.CALENDLY_CLIENT_ID,
+                'client_secret': settings.CALENDLY_CLIENT_SECRET,
+                'grant_type': 'refresh_token',
+                'refresh_token': credentials.refresh_token
+            }
+            
+            response = requests.post(refresh_url, data=refresh_data)
+            response.raise_for_status()
+            
+            token_data = response.json()
+            
+            CalendlyCredentials.objects.filter(unique_id=credentials.unique_id).update(
+                access_token=token_data['access_token'],
+                refresh_token=token_data['refresh_token']
+            )
+            
+        # Return headers for API requests
+        return {
+            'Authorization': f'Bearer {credentials.access_token}',
+            'Content-Type': 'application/json'
+        }
+        
+    except Exception as e:
+        print(f"Token refresh error: {str(e)}")
+        return None
 
 
 @login_required
 def past_appointments(request):
-    try:
-        credentials = CalendlyCredentials.objects.get(email=request.user.email)
-        user_id = credentials.user_id
-        api_key = credentials.api_key
-    except CalendlyCredentials.DoesNotExist:
-        return render(request, 'acuityscheduling/past_appointments.html', {
-            'error': 'No credentials found. Please store your credentials first.'
-        })
-
-    # API call
-    base_url = 'https://acuityscheduling.com/api/v1'
-    appointments_endpoint = f'{base_url}/appointments'
-    now = datetime.now()
-    auth = (user_id, api_key)
-    params = {'maxDate': now.isoformat(), 'direction': 'DESC'}
+    email = request.user.email
 
     try:
-        response = requests.get(appointments_endpoint, auth=auth, params=params)
-        response.raise_for_status()
-        appointments = response.json()
-    except requests.RequestException as e:
-        return render(request, 'acuityscheduling/past_appointments.html', {
-            'error': f"Failed to fetch appointments. Error: {str(e)}"
-        })
+        # Get credentials
+        credentials = CalendlyCredentials.objects.filter(email=email).first()
+        if not credentials:
+            return render(request, 'acuityscheduling/past_appointments.html', {
+                'error': 'No Calendly Credentials found for your account. '
+                         '<a href="/store-credentials/" class="text-blue-600 underline">Store credentials</a>'
+            })
 
-    service_types = sorted({appt['type'] for appt in appointments if appt['type']})
+        # Check if access token is expired and refresh if needed
+        headers = check_and_refresh_token(credentials)
+        if not headers:
+            return render(request, 'acuityscheduling/past_appointments.html', {
+                'error': 'Failed to authenticate with Calendly. Please try storing your credentials again.'
+            })
 
-    query = request.GET.get('q', '').strip()
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-    start_time = request.GET.get('start_time')  # Format: HH:MM
-    end_time = request.GET.get('end_time')  # Format: HH:MM
-    service_type = request.GET.get('service_type')  # Selected service type
-    min_price = request.GET.get('min_price')
-    max_price = request.GET.get('max_price')
+        # Get user's information and organization
+        user_url = 'https://api.calendly.com/users/me'
+        user_response = requests.get(user_url, headers=headers)
+        user_response.raise_for_status()
+        user_data = user_response.json()
+        organization_uri = user_data['resource']['current_organization']
 
-    if query:
-        appointments = [
-            appt for appt in appointments
-            if query.lower() in str(appt.values()).lower()
-        ]
-
-    if start_date:
-        appointments = [
-            appt for appt in appointments
-            if parse_datetime(appt['datetime']).date() >= datetime.strptime(start_date, '%Y-%m-%d').date()
-        ]
-    if end_date:
-        appointments = [
-            appt for appt in appointments
-            if parse_datetime(appt['datetime']).date() <= datetime.strptime(end_date, '%Y-%m-%d').date()
-        ]
-
-    if start_time:
-        start_time_dt = datetime.strptime(start_time, '%H:%M').time()
-        appointments = [
-            appt for appt in appointments
-            if parse_datetime(appt['datetime']).time() >= start_time_dt
-        ]
-    if end_time:
-        end_time_dt = datetime.strptime(end_time, '%H:%M').time()
-        appointments = [
-            appt for appt in appointments
-            if parse_datetime(appt['datetime']).time() <= end_time_dt
-        ]
-
-    if service_type:
-        appointments = [appt for appt in appointments if appt['type'] == service_type]
-
-    if min_price:
-        appointments = [appt for appt in appointments if float(appt['price']) >= float(min_price)]
-    if max_price:
-        appointments = [appt for appt in appointments if float(appt['price']) <= float(max_price)]
+        # Set up date parameters
+        now = datetime.now(timezone.utc)
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
         
-    print(appointments)
+        # Default to past 30 days if no dates specified
+        if not end_date:
+            end_date = now
+        else:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').replace(hour=23, minute=59, second=59, tzinfo=timezone.utc)
+            
+        if not start_date:
+            start_date = now - timedelta(days=30)
+        else:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').replace(hour=0, minute=0, second=0, tzinfo=timezone.utc)
 
-    paginator = Paginator(appointments, 21)
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
+        # Format dates properly for Calendly API
+        min_start_time = start_date.strftime('%Y-%m-%dT%H:%M:%S.000000Z')
+        max_start_time = end_date.strftime('%Y-%m-%dT%H:%M:%S.000000Z')
 
-    return render(request, 'acuityscheduling/past_appointments.html', {
-        'page_obj': page_obj,
-        'request': request,
-        'service_types': service_types
-    })
+        # Make API request to Calendly
+        url = 'https://api.calendly.com/scheduled_events'
+        params = {
+            'min_start_time': min_start_time,
+            'max_start_time': max_start_time,
+            'organization': organization_uri,
+            'status': 'active',
+            'count': 100,
+            'sort': 'start_time:desc'
+        }
+
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        data = response.json()
+        appointments = []
+
+        # Get event types for service filtering
+        event_types_url = 'https://api.calendly.com/event_types'
+        event_types_response = requests.get(
+            event_types_url,
+            headers=headers,
+            params={'organization': organization_uri}
+        )
+        event_types_data = event_types_response.json()
+        
+        # Fix: Correctly access the event type names
+        service_types = set()
+        for event_type in event_types_data.get('collection', []):
+            if 'name' in event_type:  # Direct access to name
+                service_types.add(event_type['name'])
+        service_types = sorted(service_types)
+
+        # Process appointments
+        for event in data.get('collection', []):
+            # Get event details and memberships
+            event_memberships = event.get('event_memberships', [])
+            event_guests = event.get('event_guests', [])
+            
+            # Get invitee details
+            invitee_response = requests.get(
+                f"{event['uri']}/invitees",
+                headers=headers
+            ).json()
+            
+            invitees = invitee_response.get('collection', [{}])
+            for invitee in invitees:
+                try:
+                    event_start = datetime.strptime(event['start_time'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                    event_end = datetime.strptime(event['end_time'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                    
+                    # Create a more detailed appointment dictionary
+                    appointment = {
+                        # Basic Info
+                        'firstName': invitee.get('first_name', ''),
+                        'lastName': invitee.get('last_name', ''),
+                        'email': invitee.get('email', ''),
+                        
+                        # Time Information
+                        'datetime': event['start_time'],
+                        'date': event_start.date(),
+                        'time': event_start.time(),
+                        'endTime': event_end.time(),
+                        'created_at': event.get('created_at'),
+                        'updated_at': event.get('updated_at'),
+                        
+                        # Event Details
+                        'event_uri': event['uri'],
+                        'name': event.get('name', ''),
+                        'type': event.get('name', ''),
+                        'status': event.get('status', ''),
+                        'meeting_notes_plain': event.get('meeting_notes_plain', ''),
+                        'meeting_notes_html': event.get('meeting_notes_html', ''),
+                        
+                        # Location
+                        'location_type': event.get('location', {}).get('type', ''),
+                        'location_address': event.get('location', {}).get('location', ''),
+                        'location_info': event.get('location', {}).get('additional_info', ''),
+                        
+                        # URLs
+                        'cancel_url': invitee.get('cancel_url', ''),
+                        'reschedule_url': invitee.get('reschedule_url', ''),
+                        'scheduling_url': invitee.get('scheduling_url', ''),
+                        
+                        # Counter Information
+                        'invitees_total': event.get('invitees_counter', {}).get('total', 0),
+                        'invitees_active': event.get('invitees_counter', {}).get('active', 0),
+                        'invitees_limit': event.get('invitees_counter', {}).get('limit', 0),
+                        
+                        # Event Members
+                        'event_members': [{
+                            'name': member.get('user_name', ''),
+                            'email': member.get('user_email', ''),
+                            'buffered_start': member.get('buffered_start_time', ''),
+                            'buffered_end': member.get('buffered_end_time', '')
+                        } for member in event_memberships],
+                        
+                        # Event Guests
+                        'event_guests': [{
+                            'email': guest.get('email', ''),
+                            'created_at': guest.get('created_at', ''),
+                            'updated_at': guest.get('updated_at', '')
+                        } for guest in event_guests],
+                        
+                        # Calendar Information
+                        'calendar_type': event.get('calendar_event', {}).get('kind', ''),
+                        'calendar_id': event.get('calendar_event', {}).get('external_id', '')
+                    }
+                    appointments.append(appointment)
+                except (ValueError, KeyError) as e:
+                    print(f"Error processing appointment: {str(e)}")
+                    continue
+
+        # Apply filters
+        query = request.GET.get('q', '').strip()
+        start_time = request.GET.get('start_time')
+        end_time = request.GET.get('end_time')
+        service_type = request.GET.get('service_type')
+
+        if query:
+            appointments = [
+                appt for appt in appointments
+                if query.lower() in f"{appt['firstName']} {appt['lastName']} {appt['type']}".lower()
+            ]
+
+        if start_time:
+            start_time_dt = datetime.strptime(start_time, '%H:%M').time()
+            appointments = [appt for appt in appointments if appt['time'] >= start_time_dt]
+            
+        if end_time:
+            end_time_dt = datetime.strptime(end_time, '%H:%M').time()
+            appointments = [appt for appt in appointments if appt['time'] <= end_time_dt]
+
+        if service_type:
+            appointments = [appt for appt in appointments if appt['type'] == service_type]
+
+        # Pagination
+        paginator = Paginator(appointments, 21)
+        page_number = request.GET.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+
+        return render(request, 'acuityscheduling/past_appointments.html', {
+            'page_obj': page_obj,
+            'request': request,
+            'service_types': service_types
+        })
+
+    except requests.exceptions.RequestException as e:
+        return render(request, 'acuityscheduling/past_appointments.html', {
+            'error': f"Failed to fetch appointments. Please try again later.<br>Error: {str(e)}"
+        })
 
 
 def appointment_types_view(request):
