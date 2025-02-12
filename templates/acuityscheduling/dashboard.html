@@ -1,236 +1,243 @@
-{% extends 'acuityscheduling/base.html' %}
+{% extends 'base.html' %}
 
 {% block content %}
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Acuity Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/daisyui@1.19.2/dist/full.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/font-awesome/css/font-awesome.min.css" rel="stylesheet">
-  <script>
-    // Close Error Message function (available globally)
-    function closeErrorMessage() {
-        var errorMessage = document.getElementById('error-message');
-        if (errorMessage) {
-            errorMessage.style.display = 'none';  // Hide the error message
-        }
-    }
-  </script>
-</head>
-<body class="bg-gray-100 min-h-screen">
-
-  {% if error %}
-  <div id="error-message" class="relative p-4 bg-red-600 border border-red-700 rounded-lg m-3 text-white">
-      <!-- Close Button -->
-      <button onclick="closeErrorMessage()" 
-              class="absolute top-2 right-2 bg-transparent border-none text-white text-2xl font-bold cursor-pointer hover:text-gray-200 transition duration-200">
-          &times;
-      </button>
-      <!-- Error Message Content -->
-      <div>{{ error|safe }}</div>
-  </div>
-  {% endif %}
-  
-  <main class="p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-full mx-auto">
-
-    <!-- Analytics Section -->
-    <section class="col-span-1 sm:col-span-2 lg:col-span-2 space-y-6">
-      <!-- Total Revenue -->
-      <div class="bg-white p-6 shadow-lg rounded-xl">
-        <h2 class="text-2xl font-bold text-gray-700 mb-4 flex items-center"><i class="fa fa-dollar-sign mr-2"></i>Total Revenue</h2>
-        <p id="total-revenue" class="text-3xl font-semibold text-green-500">₹{{ total_revenue }}</p>
-      </div>
-
-      <!-- Service Prices Chart -->
-      <div class="bg-white p-6 shadow-lg rounded-xl">
-        <h2 class="text-2xl font-bold text-gray-700 mb-4 flex items-center"><i class="fa fa-chart-bar mr-2"></i>Service Prices</h2>
-        <canvas id="servicePricesChart"></canvas>
-      </div>
-
-      <!-- Appointment History Chart -->
-      <div class="bg-white p-6 shadow-lg rounded-xl">
-        <h2 class="text-2xl font-bold text-gray-700 mb-4 flex items-center"><i class="fa fa-history mr-2"></i>Appointment History</h2>
-        <canvas id="appointmentHistoryChart"></canvas>
-      </div>
-    </section>
-
-    <!-- Additional Analytics Section -->
-    <section class="space-y-6">
-      <!-- Revenue Over Time -->
-      <div class="bg-white p-6 shadow-lg rounded-xl">
-        <h2 class="text-2xl font-bold text-gray-700 mb-4 flex items-center"><i class="fa fa-calendar-check mr-2"></i>Revenue Over Time</h2>
-        <canvas id="revenueOverTimeChart"></canvas>
-      </div>
-
-      <!-- Number of Appointments Per Client -->
-      <div class="bg-white p-6 shadow-lg rounded-xl">
-        <h2 class="text-2xl font-bold text-gray-700 mb-4 flex items-center"><i class="fa fa-users mr-2"></i>Appointments Per Client</h2>
-        <canvas id="appointmentsPerClientChart"></canvas>
-      </div>
-
-      <!-- Revenue by Service Type (Pie Chart) -->
-      <div class="bg-white p-6 shadow-lg rounded-xl">
-        <h2 class="text-2xl font-bold text-gray-700 mb-4 flex items-center"><i class="fa fa-pie-chart mr-2"></i>Revenue by Service Type</h2>
-        <canvas id="revenueByServiceChart"></canvas>
-      </div>
-    </section>
-
-    <!-- Clients List -->
-    <section class="bg-white p-6 shadow-lg rounded-xl col-span-1 sm:col-span-3">
-      <h2 class="text-2xl font-bold text-gray-700 mb-4 flex items-center"><i class="fa fa-user-circle mr-2"></i>Clients</h2>
-      <div id="client-list" class="max-h-80 overflow-y-auto space-y-4">
-        <!-- Clients dynamically populated here -->
-      </div>
-    </section>
-
-  </main>
-
-  <script>
-    
-    // Assuming the context data from Django is passed to JavaScript
-    const data = {
-      "service_price_data": {{ service_price_data|safe }},
-      "appointment_status_data": {{ appointment_status_data|safe }},
-      "total_revenue": {{ total_revenue }},
-      "appointment_history": {{ appointment_history|safe }},
-      "sorted_dates": {{ sorted_dates|safe }},
-      "clients": {{ clients|safe }},
-    };
-
-    // Populate Total Revenue
-    document.getElementById("total-revenue").textContent = `₹${data.total_revenue.toFixed(2)}`;
-
-    // Render Service Prices Chart
-    const serviceCtx = document.getElementById('servicePricesChart').getContext('2d');
-    new Chart(serviceCtx, {
-      type: 'bar',
-      data: {
-        labels: data.service_price_data.map(item => item.name),
-        datasets: [{
-          label: 'Price (₹)',
-          data: data.service_price_data.map(item => item.price),
-          backgroundColor: '#2196f3',
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true
-          }
-        }
-      }
-    });
-
-    // Render Appointment History Chart (Line chart)
-    const historyCtx = document.getElementById('appointmentHistoryChart').getContext('2d');
-    new Chart(historyCtx, {
-      type: 'line',
-      data: {
-        labels: data.sorted_dates,
-        datasets: [{
-          label: 'Appointments',
-          data: data.appointment_history,
-          borderColor: '#42A5F5',
-          fill: false,
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true
-          }
-        }
-      }
-    });
-
-    // Render Revenue Over Time Chart (Line chart)
-    const revenueCtx = document.getElementById('revenueOverTimeChart').getContext('2d');
-    new Chart(revenueCtx, {
-      type: 'line',
-      data: {
-        labels: data.sorted_dates,
-        datasets: [{
-          label: 'Revenue (₹)',
-          data: data.appointment_history.map(() => {
-            return data.service_price_data.reduce((total, service) => total + (service.price || 0), 0);
-          }),
-          borderColor: '#ff7043',
-          fill: false,
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true
-          }
-        }
-      }
-    });
-
-    // Render Number of Appointments Per Client (Bar chart)
-    const appointmentsPerClientCtx = document.getElementById('appointmentsPerClientChart').getContext('2d');
-    new Chart(appointmentsPerClientCtx, {
-      type: 'bar',
-      data: {
-        labels: data.clients.map(client => client.firstName + " " + client.lastName),
-        datasets: [{
-          label: 'Appointments',
-          data: data.clients.map(client => client.appointmentCount),
-          backgroundColor: '#8e24aa',
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true
-          }
-        }
-      }
-    });
-
-    // New Chart: Revenue by Service Type (Pie chart)
-    const revenueByServiceCtx = document.getElementById('revenueByServiceChart').getContext('2d');
-    new Chart(revenueByServiceCtx, {
-      type: 'pie',
-      data: {
-        labels: data.service_price_data.map(item => item.name),
-        datasets: [{
-          data: data.service_price_data.map(item => item.price),
-          backgroundColor: ['#FF8C00', '#32CD32', '#8A2BE2', '#FF1493', '#FF6347'],
-        }]
-      },
-      options: {
-        responsive: true,
-      }
-    });
-
-    // Render Clients List
-    const clientList = document.getElementById("client-list");
-    data.clients.forEach(client => {
-      const clientItem = document.createElement("div");
-      clientItem.classList.add("flex", "justify-between", "items-center", "p-4", "bg-gray-50", "rounded-lg", "shadow-sm");
-      clientItem.innerHTML = `
-        <div class="flex items-center">
-          <i class="fa fa-user-circle text-blue-600 mr-4"></i>
-          <span>${client.firstName} ${client.lastName}</span>
+<div class="min-h-screen bg-gray-50">
+    <!-- Top Navigation Bar -->
+    <div class="bg-white shadow-sm">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">Calendly Dashboard</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-500">Last updated: {{ now|date:"g:i A" }}</span>
+                    <button onclick="location.reload()" class="p-2 text-gray-400 hover:text-gray-500">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
-        <a href="mailto:${client.email}" class="text-blue-600 hover:underline">
-          <i class="fa fa-envelope"></i> Email
-        </a>
-      `;
-      clientList.appendChild(clientItem);
-    });
-  </script>
+    </div>
 
-</body>
-</html>
+    <!-- Main Content -->
+    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% if error %}
+        <div id="error-message" class="mb-8 relative bg-red-50 border-l-4 border-red-400 p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-red-700">{{ error|safe }}</p>
+                </div>
+                <div class="ml-auto pl-3">
+                    <button onclick="closeErrorMessage()" class="text-red-400 hover:text-red-500">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Meetings Card -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Total Meetings</p>
+                        <h3 class="mt-2 text-3xl font-bold text-gray-900">
+                            {% with completed=appointment_status_data.completed|default:0 %}
+                            {% with upcoming=appointment_status_data.upcoming|default:0 %}
+                            {{ completed|add:upcoming }}
+                            {% endwith %}
+                            {% endwith %}
+                        </h3>
+                        <p class="mt-1 text-sm text-gray-500">All time</p>
+                    </div>
+                    <div class="bg-blue-50 rounded-lg p-3">
+                        <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Similar styling for other stat cards... -->
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Meeting History Chart -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Meeting History</h3>
+                <div class="relative" style="height: 300px;">
+                    <canvas id="appointmentHistoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Event Types Chart -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Event Types Distribution</h3>
+                <div class="relative" style="height: 300px;">
+                    <canvas id="eventTypesChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Events Table -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-900">Recent Events</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for event in recent_events|slice:":5" %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ event.name }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-500">{{ event.start_time|date:"M d, Y" }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {% if event.status == 'active' %}bg-green-100 text-green-800
+                                    {% elif event.status == 'canceled' %}bg-red-100 text-red-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ event.status|title }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('appointmentHistoryChart')) {
+        const appointmentHistoryCtx = document.getElementById('appointmentHistoryChart').getContext('2d');
+        new Chart(appointmentHistoryCtx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_data.dates|safe|default:"[]" }},
+                datasets: [{
+                    label: 'Number of Meetings',
+                    data: {{ chart_data.counts|safe|default:"[]" }},
+                    borderColor: '#3B82F6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14
+                        },
+                        bodyFont: {
+                            size: 13
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                size: 12
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    if (document.getElementById('eventTypesChart')) {
+        const eventTypesCtx = document.getElementById('eventTypesChart').getContext('2d');
+        new Chart(eventTypesCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ chart_data.event_types.labels|safe|default:"[]" }},
+                datasets: [{
+                    data: {{ chart_data.event_types.data|safe|default:"[]" }},
+                    backgroundColor: [
+                        '#3B82F6',
+                        '#10B981',
+                        '#8B5CF6',
+                        '#F59E0B',
+                        '#EF4444'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+
+function closeErrorMessage() {
+    document.getElementById('error-message').style.display = 'none';
+}
+</script>
 {% endblock %}

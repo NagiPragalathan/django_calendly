@@ -1,187 +1,215 @@
 {% extends 'base.html' %}
 
 {% block content %}
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Appointment Types</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-  <style>
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
-    }
-    .loading-spinner {
-      border: 4px solid rgba(255, 255, 255, 0.3);
-      border-left-color: #2563eb;
-      border-radius: 50%;
-      width: 2rem;
-      height: 2rem;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-  </style>
-</head>
-<body class="bg-gradient-to-b from-gray-100 to-gray-200 min-h-screen py-10 flex flex-col items-center">
-
-  <!-- Page Heading -->
-  <h1 class="text-5xl font-bold text-blue-600 mb-8 text-center drop-shadow-md">Appointment Types</h1>
-
-  <!-- Search and Filters -->
-  <div class="bg-white shadow-lg rounded-lg p-6 mb-8 space-y-4 w-full max-w-6xl">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <!-- Search by Name or Price -->
-      <input
-        id="search-bar"
-        type="text"
-        placeholder="Search by name or price..."
-        oninput="filterResults()"
-        class="col-span-2 border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-
-      <!-- Min-Max Duration -->
-      <div class="flex items-center gap-4 col-span-2">
-        <div class="w-1/2">
-          <label for="min-duration" class="block text-gray-700 text-sm font-medium">Min Duration</label>
-          <input
-            id="min-duration"
-            type="number"
-            placeholder="Min"
-            oninput="filterResults()"
-            class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">Event Types</h1>
+            <p class="text-gray-600">Schedule your meetings efficiently with our pre-configured event types</p>
         </div>
-        <div class="w-1/2">
-          <label for="max-duration" class="block text-gray-700 text-sm font-medium">Max Duration</label>
-          <input
-            id="max-duration"
-            type="number"
-            placeholder="Max"
-            oninput="filterResults()"
-            class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-    </div>
 
-    <!-- Color Filter -->
-    <div class="flex gap-4 mt-4">
-      {% for color in colors %}
-        <div
-          class="w-8 h-8 rounded-full cursor-pointer border-2 border-gray-300 hover:border-blue-500"
-          style="background-color: {{ color }}"
-          onclick="filterByColor('{{ color }}')"
-        ></div>
-      {% endfor %}
-      <button
-        onclick="filterByColor('')"
-        class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center hover:border-blue-500"
-      >
-        <i class="fas fa-times text-gray-500"></i>
-      </button>
-    </div>
-  </div>
+        {% if error %}
+            <div class="max-w-2xl mx-auto mb-8">
+                <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-red-700">{{ error|safe }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- Filters Section -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Search -->
+                    <div>
+                        <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search Event Types</label>
+                        <div class="relative">
+                            <input type="text" id="search" 
+                                   class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-10"
+                                   placeholder="Search by name or description..."
+                                   oninput="filterResults()">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Duration Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Duration (minutes)</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="relative">
+                                <input type="number" id="min-duration" placeholder="Min"
+                                       class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                       oninput="filterResults()">
+                            </div>
+                            <div class="relative">
+                                <input type="number" id="max-duration" placeholder="Max"
+                                       class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                       oninput="filterResults()">
+                            </div>
+                        </div>
+                    </div>
 
-  {% if error %}
-    <!-- Error Alert -->
-    <div class="bg-red-100 text-red-800 border border-red-400 rounded-lg px-4 py-3 mb-6">
-      <div class="flex items-center space-x-2">
-        <i class="fas fa-exclamation-triangle text-red-600"></i>
-        <span>{{ error }}</span>
-      </div>
-    </div>
-  {% else %}
-    <!-- Appointment Types List -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
-      {% for appt_type in appointment_types %}
-        <div
-          class="bg-white shadow-lg rounded-lg p-6 card hover:shadow-xl hover:scale-105 transition-transform"
-          style="border-left: 4px solid {{ appt_type.color }}"
-          data-name="{{ appt_type.name }}"
-          data-duration="{{ appt_type.duration }}"
-          data-price="{{ appt_type.price }}"
-          data-color="{{ appt_type.color }}"
-        >
-          <h2 class="text-2xl font-bold text-gray-800">{{ appt_type.name }}</h2>
-          <p class="text-gray-600"><strong>Duration:</strong> {{ appt_type.duration }} minutes</p>
-          <p class="text-gray-600"><strong>Price:</strong> ₹{{ appt_type.price }}</p>
-          <div class="mt-6 flex justify-between">
-            <button
-              class="btn flex items-center space-x-2 bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 transition relative"
-              onclick="navigator.clipboard.writeText('{{ appt_type.link }}'); showToast('Link copied to clipboard!', 'success')">
-              <i class="fas fa-copy"></i>
-              <span>Copy Link</span>
-            </button>
-            <button
-              class="btn flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition relative"
-              onclick="window.open('{{ appt_type.link }}', '_blank')">
-              <i class="fas fa-external-link-alt"></i>
-              <span>Open</span>
-            </button>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-  {% endif %}
+                    <!-- Color Filters -->
+                    {% if colors %}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Color</label>
+                        <div class="flex flex-wrap gap-3">
+                            {% for color in colors %}
+                                <button onclick="filterByColor('{{ color }}')"
+                                        class="w-8 h-8 rounded-full shadow-sm hover:ring-2 hover:ring-offset-2 hover:ring-blue-500 transition-all"
+                                        style="background-color: {{ color }}">
+                                </button>
+                            {% endfor %}
+                            <button onclick="filterByColor('')"
+                                    class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center hover:border-blue-500 transition-all">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
 
-  <script>
-    function filterResults() {
-      const query = document.getElementById("search-bar").value.toLowerCase();
-      const minDuration = parseInt(document.getElementById("min-duration").value) || 0;
-      const maxDuration = parseInt(document.getElementById("max-duration").value) || Infinity;
+            <!-- Event Types Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for event_type in appointment_types %}
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 card"
+                         data-name="{{ event_type.name|lower }}"
+                         data-duration="{{ event_type.duration }}"
+                         data-color="{{ event_type.color }}">
+                        
+                        <!-- Event Type Header -->
+                        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+                            <h3 class="text-lg font-semibold text-white truncate">{{ event_type.name }}</h3>
+                            <p class="text-blue-100 text-sm">{{ event_type.duration }} minutes</p>
+                        </div>
 
-      const cards = document.querySelectorAll(".card");
-      cards.forEach(card => {
-        const name = card.dataset.name.toLowerCase();
-        const price = parseFloat(card.dataset.price);
+                        <!-- Event Type Content -->
+                        <div class="p-6">
+                            <div class="space-y-4">
+                                <!-- Description -->
+                                <p class="text-gray-600 text-sm">{{ event_type.description|default:"No description available" }}</p>
+
+                                <!-- Details -->
+                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                    <div class="flex items-center text-gray-600">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        {{ event_type.duration }} mins
+                                    </div>
+                                    <div class="flex items-center text-gray-600">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                        </svg>
+                                        {{ event_type.kind|default:"Standard" }}
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="flex justify-between items-center pt-4">
+                                    {% if event_type.scheduling_url %}
+                                        <button onclick="copyToClipboard('{{ event_type.scheduling_url }}')"
+                                                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                                            </svg>
+                                            Copy
+                                        </button>
+                                        <a href="{{ event_type.scheduling_url }}" target="_blank"
+                                           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                            Schedule
+                                            <svg class="ml-2 -mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                                            </svg>
+                                        </a>
+                                    {% else %}
+                                        <span class="text-sm text-gray-500">Scheduling link unavailable</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Empty State -->
+            {% if not appointment_types %}
+            <div class="text-center py-16 bg-white rounded-2xl shadow-sm">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+                    <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No Event Types Found</h3>
+                <p class="text-gray-500 max-w-sm mx-auto">Create your first event type to start scheduling meetings.</p>
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function filterResults() {
+    const query = document.getElementById("search").value.toLowerCase();
+    const minDuration = parseInt(document.getElementById("min-duration").value) || 0;
+    const maxDuration = parseInt(document.getElementById("max-duration").value) || Infinity;
+
+    document.querySelectorAll('.card').forEach(card => {
+        const name = card.dataset.name;
         const duration = parseInt(card.dataset.duration);
+        const shouldShow = 
+            name.includes(query) &&
+            duration >= minDuration &&
+            (!maxDuration || duration <= maxDuration);
+        
+        card.style.display = shouldShow ? 'block' : 'none';
+    });
+}
 
-        if (
-          (query === "" || name.includes(query) || price.toString().includes(query)) &&
-          duration >= minDuration &&
-          duration <= maxDuration
-        ) {
-          card.classList.remove("hidden");
-        } else {
-          card.classList.add("hidden");
-        }
-      });
-    }
-
-    function filterByColor(color) {
-      const cards = document.querySelectorAll(".card");
-      cards.forEach(card => {
+function filterByColor(color) {
+    document.querySelectorAll('.card').forEach(card => {
         const cardColor = card.dataset.color;
-        if (color === "" || cardColor === color) {
-          card.classList.remove("hidden");
-        } else {
-          card.classList.add("hidden");
-        }
-      });
-    }
+        card.style.display = (!color || cardColor === color) ? 'block' : 'none';
+    });
+}
 
-    function showToast(message, type) {
-      const toast = document.createElement("div");
-      toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white ${
-        type === "success" ? "bg-green-500" : "bg-red-500"
-      }`;
-      toast.innerText = message;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
-  </script>
-</body>
-</html>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('Link copied to clipboard!');
+    }).catch(() => {
+        showToast('Failed to copy link', 'error');
+    });
+}
 
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white transform transition-all duration-300 ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    }`;
+    toast.style.zIndex = '50';
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 2000);
+}
+</script>
 {% endblock %}
