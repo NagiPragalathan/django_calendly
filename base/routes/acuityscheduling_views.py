@@ -17,6 +17,7 @@ from base.routes.tool_kit.mongo_tool import store_image_in_mongodb, get_image_fr
 from base.routes.tool_kit.zoho_tool import ensure_field_exists
 import base64
 from django.conf import settings
+from django.utils.safestring import mark_safe
 
 @login_required
 def list_appointments(request):
@@ -506,7 +507,7 @@ def appointment_types_view(request):
 
 def acuity_dashboard(request):
     """
-    Fetch and display data for Calendly Dashboard.
+    Fetch and display data for the Calendly Dashboard.
     """
     email = request.user.email
 
@@ -514,11 +515,9 @@ def acuity_dashboard(request):
         credentials = CalendlyCredentials.objects.get(email=email)
     except CalendlyCredentials.DoesNotExist:
         return render(request, 'acuityscheduling/dashboard.html', {
-            'error': 'No Calendly Credentials found for your account. Store credentials by clicking &nbsp;&nbsp;'
-                     '<a href="/store-credentials/" class="text-blue-600 underline">here</a>'
+            'error': 'No Calendly Credentials found. Store credentials <a href="/store-credentials/" class="text-blue-600 underline">here</a>'
         })
 
-    # Check and refresh token if needed
     headers = check_and_refresh_token(credentials)
     if not headers:
         return render(request, 'acuityscheduling/dashboard.html', {
@@ -526,7 +525,7 @@ def acuity_dashboard(request):
         })
 
     try:
-        # Get user info and organization
+        # Get user info
         user_response = requests.get('https://api.calendly.com/users/me', headers=headers)
         user_response.raise_for_status()
         user_data = user_response.json()['resource']
@@ -535,16 +534,12 @@ def acuity_dashboard(request):
 
         # Get event types
         event_types_url = 'https://api.calendly.com/event_types'
-        params = {
-            'organization': organization_uri,
-            'user': user_uri,
-            'active': True
-        }
+        params = {'organization': organization_uri, 'user': user_uri, 'active': True}
         event_types_response = requests.get(event_types_url, headers=headers, params=params)
         event_types_response.raise_for_status()
         event_types = event_types_response.json()['collection']
 
-        # Get scheduled events
+        # Get scheduled events (last 30 days)
         now = datetime.now(timezone.utc)
         thirty_days_ago = now - timedelta(days=30)
         events_url = 'https://api.calendly.com/scheduled_events'
@@ -559,18 +554,17 @@ def acuity_dashboard(request):
         events_response.raise_for_status()
         scheduled_events = events_response.json()['collection']
 
-        # Get organization invitations
+        # Get pending invitations
         org_uuid = organization_uri.split('/')[-1]
         invitations_url = f'https://api.calendly.com/organizations/{org_uuid}/invitations'
         invitations_response = requests.get(invitations_url, headers=headers)
         invitations_response.raise_for_status()
         invitations = invitations_response.json()['collection']
 
-        # Process data for visualizations
+        # Data processing
         event_type_stats = {
             'total': len(event_types),
-            'active': sum(1 for et in event_types if et.get('active', False)),
-            'inactive': sum(1 for et in event_types if not et.get('active', True))
+            'active': sum(1 for et in event_types if et.get('active', False))
         }
 
         event_status_data = {
@@ -578,50 +572,43 @@ def acuity_dashboard(request):
             'canceled': sum(1 for event in scheduled_events if event['status'] == 'canceled')
         }
 
-        # Process events by date
         events_by_date = {}
         for event in scheduled_events:
-            date = event['start_time'][:10]  # Get just the date part
+            date = event['start_time'][:10]
             events_by_date[date] = events_by_date.get(date, 0) + 1
 
-        # Get unique invitees
-        unique_invitees = set()
-        for event in scheduled_events:
-            for membership in event.get('event_memberships', []):
-                unique_invitees.add(membership.get('user_email'))
+        unique_invitees = {membership.get('user_email') for event in scheduled_events for membership in event.get('event_memberships', [])}
 
-        # Process scheduled events and calculate durations
         processed_events = []
         for event in scheduled_events:
-            # Parse start and end times
             start_time = datetime.fromisoformat(event['start_time'].replace('Z', '+00:00'))
             end_time = datetime.fromisoformat(event['end_time'].replace('Z', '+00:00'))
-            
-            # Calculate duration in minutes
             duration = int((end_time - start_time).total_seconds() / 60)
-            
+
             processed_events.append({
                 'name': event['name'],
                 'start_time': start_time,
                 'end_time': end_time,
                 'status': event['status'],
-                'duration': duration,  # Duration in minutes
-                'location': event.get('location', {}).get('type', 'Not specified'),
+                'duration': duration,
                 'uri': event['uri']
             })
 
+        # Stats cards
+        stats = [
+            {'label': 'Total Events', 'value': len(scheduled_events), 'icon': '📅'},
+            {'label': 'Unique Invitees', 'value': len(unique_invitees), 'icon': '👥'},
+            {'label': 'Event Types', 'value': f"{event_type_stats['active']}/{event_type_stats['total']}", 'icon': '📌'},
+            {'label': 'Pending Invitations', 'value': sum(1 for inv in invitations if inv['status'] == 'pending'), 'icon': '⏳'}
+        ]
+
         context = {
             'user_data': user_data,
-            'event_types': event_types,
-            'scheduled_events': processed_events,  # Use processed events instead of raw events
+            'scheduled_events': processed_events,
             'event_type_stats': event_type_stats,
-            'event_status_data': event_status_data,
-            'events_by_date': dict(sorted(events_by_date.items())),
-            'total_events': len(scheduled_events),
-            'unique_invitees': len(unique_invitees),
-            'total_invitations': len(invitations),
-            'pending_invitations': sum(1 for inv in invitations if inv['status'] == 'pending'),
-            'now': now.isoformat()
+            'event_status_data': mark_safe(json.dumps(event_status_data)),
+            'events_by_date': mark_safe(json.dumps(events_by_date)),
+            'stats': stats
         }
 
         return render(request, 'acuityscheduling/dashboard.html', context)
