@@ -53,6 +53,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'corsheaders.middleware.CorsMiddleware',
     'base.middlewares.UserDataMiddleware',
+    'base.middlewares.CalendlyUserMiddleware',
 ]
 
 ROOT_URLCONF = "Finalty.urls"

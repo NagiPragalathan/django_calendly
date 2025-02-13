@@ -21,9 +21,9 @@
     <div class="flex min-h-screen">
         <!-- Sidebar (hidden on mobile by default) -->
         <div id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full lg:translate-x-0 lg:relative lg:flex lg:flex-col 
-                                w-72 bg-white shadow-xl transition-transform duration-300 ease-in-out z-40">
+                                w-72 bg-white shadow-xl transition-transform duration-300 ease-in-out z-40 flex flex-col h-screen">
             <!-- Logo Section -->
-            <div class="px-6 py-8 border-b border-gray-100">
+            <div class="flex-shrink-0 px-6 py-8 border-b border-gray-100">
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -37,7 +37,7 @@
                 </div>
             </div>
 
-            <!-- Navigation (same as before but with mobile optimization) -->
+            <!-- Navigation (scrollable) -->
             <div class="flex-1 overflow-y-auto px-4 py-6">
                 <!-- Main Navigation -->
                 <div class="space-y-6 flex-1 overflow-y-auto">
@@ -156,23 +156,66 @@
                     
                     <!-- User Profile -->
                     <div class="flex items-center space-x-4">
-                        <span class="hidden sm:inline text-sm text-gray-600">Welcome back</span>
-                        <div class="relative group">
-                            <button class="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 
-                                         flex items-center justify-center text-white hover:shadow-lg transition-shadow">
-                                <span class="text-sm font-medium">
-                                    {{ request.user.email|slice:":1"|upper }}
-                                </span>
-                            </button>
-                            <!-- Dropdown Menu -->
-                            <div class="hidden group-hover:block absolute right-0 mt-2 w-48 bg-white rounded-lg 
-                                      shadow-lg border border-gray-100 py-1">
-                                <a href="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
-                                <a href="/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Settings</a>
-                                <hr class="my-1">
-                                <a href="/logout" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Logout</a>
+                        {% if request.calendly_user %}
+                            <div class="hidden md:flex items-center space-x-3">
+                                <span class="text-sm text-gray-600">Welcome back,</span>
+                                <span class="text-sm font-medium text-gray-900">{{ request.calendly_user.name }}</span>
                             </div>
-                        </div>
+                            <div class="relative group">
+                                <button class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
+                                    {% if request.calendly_user.avatar_url %}
+                                        <img src="{{ request.calendly_user.avatar_url }}" 
+                                             alt="{{ request.calendly_user.name }}" 
+                                             class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm">
+                                    {% else %}
+                                        <div class="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 
+                                                   flex items-center justify-center text-white">
+                                            <span class="text-sm font-medium">
+                                                {{ request.calendly_user.name|slice:":1"|upper }}
+                                            </span>
+                                        </div>
+                                    {% endif %}
+                                    <div class="hidden md:block text-left">
+                                        <p class="text-sm font-medium text-gray-900">{{ request.calendly_user.name }}</p>
+                                        <p class="text-xs text-gray-500">{{ request.calendly_user.email }}</p>
+                                    </div>
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </button>
+
+                                <!-- Enhanced Dropdown Menu -->
+                                <div class="hidden group-hover:block absolute right-0 mt-2 w-64 bg-white rounded-xl 
+                                            shadow-lg border border-gray-100 py-2 z-50">
+                                    <div class="px-4 py-3 border-b border-gray-100">
+                                        <p class="text-sm font-medium text-gray-900">{{ request.calendly_user.name }}</p>
+                                        <p class="text-xs text-gray-500">{{ request.calendly_user.email }}</p>
+                                    </div>
+                                    
+                                    <div class="px-4 py-2">
+                                        <div class="text-xs text-gray-500 uppercase tracking-wider">Timezone</div>
+                                        <div class="text-sm text-gray-700">{{ request.calendly_user.timezone }}</div>
+                                    </div>
+
+                                    <div class="px-4 py-2">
+                                        <a href="{{ request.calendly_user.scheduling_url }}" 
+                                           target="_blank"
+                                           class="text-sm text-blue-600 hover:text-blue-700">
+                                            View Scheduling Page
+                                        </a>
+                                    </div>
+
+                                    <div class="border-t border-gray-100 mt-2 pt-2">
+                                        <a href="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                            Profile Settings
+                                        </a>
+                                        <a href="/logout" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                            Sign Out
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </header>

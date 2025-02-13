@@ -1,4 +1,7 @@
 from .models import CalendlyCredentials
+import requests
+from django.core.cache import cache
+from datetime import datetime, timedelta
 
 class UserDataMiddleware:
     """
@@ -34,3 +37,104 @@ class UserDataMiddleware:
 
         response = self.get_response(request)
         return response
+
+
+class CalendlyUserMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def refresh_access_token(self, credentials):
+        """Refresh the access token using the refresh token."""
+        try:
+            response = requests.post(
+                'https://auth.calendly.com/oauth/token',
+                data={
+                    'client_id': 'your_client_id',  # Get from settings
+                    'client_secret': 'your_client_secret',  # Get from settings
+                    'grant_type': 'refresh_token',
+                    'refresh_token': credentials.refresh_token
+                }
+            )
+
+            if response.status_code == 200:
+                token_data = response.json()
+                # Update credentials in database
+                credentials.access_token = token_data['access_token']
+                if token_data.get('refresh_token'):  # Some OAuth providers send new refresh tokens
+                    credentials.refresh_token = token_data['refresh_token']
+                credentials.save()
+                return credentials.access_token
+            return None
+        except requests.RequestException:
+            return None
+
+    def is_token_valid(self, access_token):
+        """Check if the access token is still valid."""
+        try:
+            response = requests.get(
+                'https://api.calendly.com/users/me',
+                headers={
+                    'Authorization': f'Bearer {access_token}',
+                    'Content-Type': 'application/json'
+                }
+            )
+            return response.status_code == 200
+        except requests.RequestException:
+            return False
+
+    def get_user_data(self, access_token):
+        """Fetch user data from Calendly API."""
+        try:
+            response = requests.get(
+                'https://api.calendly.com/users/me',
+                headers={
+                    'Authorization': f'Bearer {access_token}',
+                    'Content-Type': 'application/json'
+                }
+            )
+            if response.status_code == 200:
+                return response.json().get('resource', {})
+            return None
+        except requests.RequestException:
+            return None
+
+    def __call__(self, request):
+        if request.user.is_authenticated:
+            # Try to get cached user data
+            cache_key = f'calendly_user_{request.user.email}'
+            user_data = cache.get(cache_key)
+
+            if not user_data:
+                # Get the most recent credentials for the user
+                credentials = CalendlyCredentials.objects.filter(
+                    email=request.user.email,
+                    refresh_token__isnull=False
+                ).first()
+
+                if credentials:
+                    access_token = credentials.access_token
+                    
+                    # Check if token is valid
+                    if not self.is_token_valid(access_token):
+                        # Try to refresh the token
+                        access_token = self.refresh_access_token(credentials)
+                    
+                    if access_token:
+                        # Fetch user data with valid token
+                        user_data = self.get_user_data(access_token)
+                        if user_data:
+                            # Cache for 1 hour
+                            cache.set(cache_key, user_data, 3600)
+                            
+                            # Also cache the token status
+                            token_cache_key = f'calendly_token_valid_{request.user.email}'
+                            cache.set(token_cache_key, True, 3300)  # Cache for 55 minutes
+                    else:
+                        # If we couldn't refresh the token, clear the cache
+                        cache.delete(cache_key)
+                        cache.delete(f'calendly_token_valid_{request.user.email}')
+
+            # Add user data to request
+            request.calendly_user = user_data
+
+        return self.get_response(request) 
