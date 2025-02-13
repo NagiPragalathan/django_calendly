@@ -23,7 +23,6 @@ def list_appointments(request):
     email = request.user.email
 
     try:
-        # Get credentials
         credentials = CalendlyCredentials.objects.filter(email=email).first()
         if not credentials:
             return render(request, 'acuityscheduling/appointments.html', {
@@ -38,36 +37,42 @@ def list_appointments(request):
                 'error': 'Failed to authenticate with Calendly. Please try storing your credentials again.'
             })
 
-        # Get user's information and organization
+        # Get user's information using the correct API endpoint
         user_url = 'https://api.calendly.com/users/me'
         user_response = requests.get(user_url, headers=headers)
         user_response.raise_for_status()
         user_data = user_response.json()
-        organization_uri = user_data['resource']['current_organization']
+        
+        # Get organization URI from user data
+        organization_uri = user_data.get('resource', {}).get('current_organization')
+        user_uri = user_data.get('resource', {}).get('uri')
 
-        # Get upcoming appointments for next 30 days
-        now = datetime.now(timezone.utc)
-        end_date = now + timedelta(days=30)
-
-        # Format dates for Calendly API
-        start_date = now.strftime('%Y-%m-%dT%H:%M:%S.000000Z')
-        end_date = end_date.strftime('%Y-%m-%dT%H:%M:%S.000000Z')
-
-        # Make API request to Calendly
-        url = 'https://api.calendly.com/scheduled_events'
-        params = {
-            'min_start_time': start_date,
-            'max_start_time': end_date,
+        # Get activity log entries for the organization
+        activity_url = 'https://api.calendly.com/activity_log_entries'
+        activity_params = {
             'organization': organization_uri,
-            'status': 'active',
-            'count': 100,
-            'sort': 'start_time:asc'  # Sort by start time ascending for upcoming events
+            'count': 100,  # Adjust as needed
+            'sort': ['occurred_at:desc']
         }
 
-        response = requests.get(url, headers=headers, params=params)
-        response.raise_for_status()
-        data = response.json()
-        appointments = []
+        # Get scheduled events for next 30 days
+        now = datetime.now(timezone.utc)
+        end_date = now + timedelta(days=30)
+        
+        events_url = 'https://api.calendly.com/scheduled_events'
+        events_params = {
+            'organization': organization_uri,
+            'min_start_time': now.isoformat(),
+            'max_start_time': end_date.isoformat(),
+            'user': user_uri,
+            'status': 'active',
+            'count': 100
+        }
+
+        events_response = requests.get(events_url, headers=headers, params=events_params)
+        events_response.raise_for_status()
+        events_data = events_response.json()
+        scheduled_events = events_data.get('collection', [])
 
         # Get event types for service filtering
         event_types_url = 'https://api.calendly.com/event_types'
@@ -80,7 +85,8 @@ def list_appointments(request):
         service_types = sorted({et['name'] for et in event_types_data.get('collection', [])})
 
         # Process appointments
-        for event in data.get('collection', []):
+        appointments = []
+        for event in scheduled_events:
             event_start = datetime.fromisoformat(event['start_time'].replace('Z', '+00:00'))
             event_end = datetime.fromisoformat(event['end_time'].replace('Z', '+00:00'))
             
@@ -159,8 +165,8 @@ def list_appointments(request):
             'page_obj': page_obj,
             'request': request,
             'service_types': service_types,
-            'start_date': start_date,
-            'end_date': end_date
+            'start_date': now.isoformat(),
+            'end_date': end_date.isoformat()
         })
 
     except requests.exceptions.RequestException as e:
@@ -423,41 +429,79 @@ def appointment_types_view(request):
     try:
         credentials = CalendlyCredentials.objects.get(email=email)
     except CalendlyCredentials.DoesNotExist:
-        return render(request, 'acuityscheduling/appointments.html', {
+        return render(request, 'acuityscheduling/appointment_types.html', {
             'error': 'No Calendly Credentials found for your account. '
                      '<a href="/store-credentials/" class="text-blue-600 underline">Store credentials</a>'
         })
 
-    user_id = credentials.user_id
-    api_key = credentials.api_key
-    base_url = "https://acuityscheduling.com/api/v1"
-    appointment_types_endpoint = f"{base_url}/appointment-types"
-    auth = HTTPBasicAuth(user_id, api_key)
+    # Check and refresh token if needed
+    headers = check_and_refresh_token(credentials)
+    if not headers:
+        return render(request, 'acuityscheduling/appointment_types.html', {
+            'error': 'Failed to authenticate with Calendly. Please reconnect your account.'
+        })
 
     try:
-        response = requests.get(appointment_types_endpoint, auth=auth)
+        # Get user info first
+        user_response = requests.get('https://api.calendly.com/users/me', headers=headers)
+        user_response.raise_for_status()
+        user_data = user_response.json()
+        organization_uri = user_data['resource']['current_organization']
+        user_uri = user_data['resource']['uri']
+
+        # Get event types
+        event_types_url = 'https://api.calendly.com/event_types'
+        params = {
+            'organization': organization_uri,
+            'user': user_uri,
+            'active': True
+        }
+        
+        response = requests.get(event_types_url, headers=headers, params=params)
         response.raise_for_status()
-        appointment_types = response.json()
+        event_types = response.json().get('collection', [])
 
-        # Add links and color tags
-        for appt_type in appointment_types:
-            appt_type["link"] = f"https://app.acuityscheduling.com/schedule.php?owner={user_id}&appointmentType={appt_type.get('id')}"
+        # Process event types and create single-use links
+        appointment_types = []
+        for event in event_types:
+            # Create single-use scheduling link
+            scheduling_link_data = {
+                "max_event_count": 1,
+                "owner": event['uri'],
+                "owner_type": "EventType"
+            }
+            
+            try:
+                link_response = requests.post(
+                    'https://api.calendly.com/scheduling_links',
+                    headers=headers,
+                    json=scheduling_link_data
+                )
+                link_response.raise_for_status()
+                single_use_link = link_response.json()['resource']['booking_url']
+            except:
+                single_use_link = event['scheduling_url']  # Fallback to regular link
 
-        # Get unique colors for filter
-        unique_colors = list(set(appt_type["color"] for appt_type in appointment_types if appt_type["color"]))
-
-        # Filter by color if specified
-        selected_color = request.GET.get("color")
-        if selected_color:
-            appointment_types = [appt for appt in appointment_types if appt["color"] == selected_color]
+            appointment_types.append({
+                'name': event['name'],
+                'description': event.get('description', ''),
+                'duration': event['duration'],
+                'color': event.get('color', '#3B82F6'),
+                'scheduling_url': event['scheduling_url'],
+                'single_use_url': single_use_link,
+                'type': event['type'],
+                'slug': event['slug'],
+                'active': event.get('active', True)
+            })
 
         return render(request, 'acuityscheduling/appointment_types.html', {
             'appointment_types': appointment_types,
-            'colors': unique_colors,
+            'user_name': user_data['resource'].get('name', '')
         })
 
     except requests.RequestException as e:
-        return render(request, 'acuityscheduling/appointment_types.html', {'error': f"Failed to fetch appointment types: {str(e)}"})
+        return render(request, 'acuityscheduling/appointment_types.html', 
+                     {'error': f"Failed to fetch appointment types: {str(e)}"})
 
 
 def acuity_dashboard(request):

@@ -78,3 +78,9 @@ Event Price is now being creating...
 7 user_obj
 Field 'Event Price' already exists in Zoho CRM Events module.
 None created
+
+
+
+
+
+https://api.calendly.com/activity_log_entries
