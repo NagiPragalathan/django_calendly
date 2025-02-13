@@ -506,7 +506,7 @@ def appointment_types_view(request):
 
 def acuity_dashboard(request):
     """
-    Fetch and display data for Acuity Scheduling Dashboard.
+    Fetch and display data for Calendly Dashboard.
     """
     email = request.user.email
 
@@ -518,61 +518,110 @@ def acuity_dashboard(request):
                      '<a href="/store-credentials/" class="text-blue-600 underline">here</a>'
         })
 
-    USER_ID = credentials.user_id
-    API_KEY = credentials.api_key
-    base_url = "https://acuityscheduling.com/api/v1"
-    auth = HTTPBasicAuth(USER_ID, API_KEY)
-
-    # Endpoints
-    appointment_types_endpoint = f"{base_url}/appointment-types"
-    past_appointments_endpoint = f"{base_url}/appointments"
-
-    service_types = []
-    past_appointments = []
-    total_revenue = 0
+    # Check and refresh token if needed
+    headers = check_and_refresh_token(credentials)
+    if not headers:
+        return render(request, 'acuityscheduling/dashboard.html', {
+            'error': 'Failed to authenticate with Calendly. Please reconnect your account.'
+        })
 
     try:
-        # Fetch service types
-        response = requests.get(appointment_types_endpoint, auth=auth)
-        response.raise_for_status()
-        service_types = response.json()
+        # Get user info and organization
+        user_response = requests.get('https://api.calendly.com/users/me', headers=headers)
+        user_response.raise_for_status()
+        user_data = user_response.json()['resource']
+        organization_uri = user_data['current_organization']
+        user_uri = user_data['uri']
 
-        # Fetch past appointments
-        params = {'maxDate': '2024-11-26', 'direction': 'DESC'}
-        response = requests.get(past_appointments_endpoint, auth=auth, params=params)
-        response.raise_for_status()
-        past_appointments = response.json()
+        # Get event types
+        event_types_url = 'https://api.calendly.com/event_types'
+        params = {
+            'organization': organization_uri,
+            'user': user_uri,
+            'active': True
+        }
+        event_types_response = requests.get(event_types_url, headers=headers, params=params)
+        event_types_response.raise_for_status()
+        event_types = event_types_response.json()['collection']
 
-        # Calculate total revenue from service types
-        total_revenue = sum(float(service.get("price", 0)) for service in service_types)
+        # Get scheduled events
+        now = datetime.now(timezone.utc)
+        thirty_days_ago = now - timedelta(days=30)
+        events_url = 'https://api.calendly.com/scheduled_events'
+        events_params = {
+            'organization': organization_uri,
+            'min_start_time': thirty_days_ago.isoformat(),
+            'max_start_time': now.isoformat(),
+            'user': user_uri,
+            'count': 100
+        }
+        events_response = requests.get(events_url, headers=headers, params=events_params)
+        events_response.raise_for_status()
+        scheduled_events = events_response.json()['collection']
+
+        # Get organization invitations
+        org_uuid = organization_uri.split('/')[-1]
+        invitations_url = f'https://api.calendly.com/organizations/{org_uuid}/invitations'
+        invitations_response = requests.get(invitations_url, headers=headers)
+        invitations_response.raise_for_status()
+        invitations = invitations_response.json()['collection']
 
         # Process data for visualizations
-        service_price_data = [
-            {"name": service["name"], "price": float(service.get("price", 0))} for service in service_types
-        ]
-        appointment_status_data = {
-            "completed": sum(1 for appt in past_appointments if appt.get("status") == "completed"),
-            "upcoming": sum(1 for appt in past_appointments if appt.get("status") == "upcoming"),
-            "cancelled": sum(1 for appt in past_appointments if appt.get("status") == "cancelled"),
+        event_type_stats = {
+            'total': len(event_types),
+            'active': sum(1 for et in event_types if et.get('active', False)),
+            'inactive': sum(1 for et in event_types if not et.get('active', True))
         }
 
-        # Process appointment history data
-        sorted_dates = sorted(set(appt['date'] for appt in past_appointments))
-        appointment_history = [sum(1 for appt in past_appointments if appt['date'] == date) for date in sorted_dates]
+        event_status_data = {
+            'active': sum(1 for event in scheduled_events if event['status'] == 'active'),
+            'canceled': sum(1 for event in scheduled_events if event['status'] == 'canceled')
+        }
 
-        # Process clients data
-        clients = [{"firstName": appt.get("firstName"), "lastName": appt.get("lastName"), "email": appt.get("email")} for appt in past_appointments]
+        # Process events by date
+        events_by_date = {}
+        for event in scheduled_events:
+            date = event['start_time'][:10]  # Get just the date part
+            events_by_date[date] = events_by_date.get(date, 0) + 1
 
-        # Pass all processed data to the template
+        # Get unique invitees
+        unique_invitees = set()
+        for event in scheduled_events:
+            for membership in event.get('event_memberships', []):
+                unique_invitees.add(membership.get('user_email'))
+
+        # Process scheduled events and calculate durations
+        processed_events = []
+        for event in scheduled_events:
+            # Parse start and end times
+            start_time = datetime.fromisoformat(event['start_time'].replace('Z', '+00:00'))
+            end_time = datetime.fromisoformat(event['end_time'].replace('Z', '+00:00'))
+            
+            # Calculate duration in minutes
+            duration = int((end_time - start_time).total_seconds() / 60)
+            
+            processed_events.append({
+                'name': event['name'],
+                'start_time': start_time,
+                'end_time': end_time,
+                'status': event['status'],
+                'duration': duration,  # Duration in minutes
+                'location': event.get('location', {}).get('type', 'Not specified'),
+                'uri': event['uri']
+            })
+
         context = {
-            "service_types": service_types,
-            "past_appointments": past_appointments,
-            "total_revenue": total_revenue,
-            "service_price_data": service_price_data,
-            "appointment_status_data": appointment_status_data,
-            "appointment_history": appointment_history,
-            "sorted_dates": sorted_dates,
-            "clients": clients,
+            'user_data': user_data,
+            'event_types': event_types,
+            'scheduled_events': processed_events,  # Use processed events instead of raw events
+            'event_type_stats': event_type_stats,
+            'event_status_data': event_status_data,
+            'events_by_date': dict(sorted(events_by_date.items())),
+            'total_events': len(scheduled_events),
+            'unique_invitees': len(unique_invitees),
+            'total_invitations': len(invitations),
+            'pending_invitations': sum(1 for inv in invitations if inv['status'] == 'pending'),
+            'now': now.isoformat()
         }
 
         return render(request, 'acuityscheduling/dashboard.html', context)
