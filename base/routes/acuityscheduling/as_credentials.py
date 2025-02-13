@@ -19,7 +19,17 @@ def list_credentials(request):
         return JsonResponse({'error': 'Unauthorized'}, status=403)
 
     credentials = CalendlyCredentials.objects.filter(email=request.user.email)
-    return render(request, 'acuityscheduling/list_credentials.html', {'credentials': credentials})
+    
+    # Get connection status for each credential
+    for credential in credentials:
+        credential.is_connected = bool(credential.refresh_token)
+        credential.status_class = 'bg-green-400' if credential.is_connected else 'bg-red-400'
+        credential.status_text = 'Connected' if credential.is_connected else 'Not Connected'
+
+    return render(request, 'acuityscheduling/list_credentials.html', {
+        'credentials': credentials,
+        'user': request.user
+    })
 
 def edit_credentials(request, credential_id):
     try:
