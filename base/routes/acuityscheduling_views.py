@@ -11,7 +11,7 @@ from django.db.models import Q
 from datetime import datetime
 from django.utils.dateparse import parse_datetime
 from requests.auth import HTTPBasicAuth
-from base.routes.tool_kit.acuityscheduling_tool import create_webhooks
+from base.routes.tool_kit.calendly_tool import create_webhooks
 from base.routes.tool_kit.secract_del import delete_all_webhooks
 from base.routes.tool_kit.mongo_tool import store_image_in_mongodb, get_image_from_mongodb
 from base.routes.tool_kit.zoho_tool import ensure_field_exists
@@ -519,6 +519,7 @@ def acuity_dashboard(request):
         })
 
     headers = check_and_refresh_token(credentials)
+    print(headers)
     if not headers:
         return render(request, 'acuityscheduling/dashboard.html', {
             'error': 'Failed to authenticate with Calendly. Please reconnect your account.'

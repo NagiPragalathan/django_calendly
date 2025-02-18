@@ -150,6 +150,8 @@ MEDIA_URL = '/media/'
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+LOGIN_URL = '/login/'
+
 # Redirect to this URL after login
 LOGIN_REDIRECT_URL = '/dashboard/'
 
@@ -167,6 +169,12 @@ GOOGLE_SCOPES = [
 GOOGLE_REDIRECT_URI = 'https://django-acuity-scheduling.vercel.app/google/callback/'
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+X_FRAME_OPTIONS = 'ALLOWALL'
+CSRF_COOKIE_SAMESITE = 'None'  # Allow the CSRF cookie to be sent in cross-origin requests
+CSRF_COOKIE_SECURE = True      # Set this to True if you're using HTTPS
+SESSION_COOKIE_SAMESITE = 'None'  # SameSite for session cookies
+SESSION_COOKIE_SECURE = True   # Secure the session cookie if using HTTPS
 
 
 # Acuity Scheduling

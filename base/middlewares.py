@@ -1,7 +1,7 @@
 from .models import CalendlyCredentials
 import requests
 from django.core.cache import cache
-from datetime import datetime, timedelta
+from django.shortcuts import redirect
 
 class UserDataMiddleware:
     """
@@ -11,10 +11,19 @@ class UserDataMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        # Initialize default user_data
+        request.user_data = {
+            'name': 'Guest',
+            'timezone': 'UTC',
+            'timeFormat': '24h',
+            'firstDayOfWeek': 0,
+            'schedulingPage': '#'
+        }
+
         # Add user-specific data only if the user is authenticated
         if request.user.is_authenticated:
             try:
-                # Retrieve Calendly Credentials for the logged-in user
+                # Retrieve Acuity credentials for the logged-in user
                 credentials = CalendlyCredentials.objects.filter(email=request.user.email).first()
                 if credentials:
                     # Attach the image URL to the request
@@ -25,6 +34,28 @@ class UserDataMiddleware:
 
                     # Attach the company name to the request
                     request.company_name = credentials.company_name
+
+                    # Add new Acuity profile data fetch
+                    try:
+                        response = requests.get(
+                            "https://acuityscheduling.com/api/v1/me",
+                            auth=(credentials.user_id, credentials.api_key)
+                        )
+                        if response.status_code == 200:
+                            acuity_data = response.json()
+                            request.user_data = {
+                                'name': acuity_data.get('name', credentials.company_name),
+                                'timezone': acuity_data.get('timezone', 'UTC'),
+                                'timeFormat': acuity_data.get('timeFormat', '24h'),
+                                'firstDayOfWeek': acuity_data.get('firstDayOfWeek', 0),
+                                'schedulingPage': acuity_data.get('schedulingPage', '#'),
+                                'plan': acuity_data.get('plan', 'Free'),
+                                'email': acuity_data.get('email', credentials.email)
+                            }
+                            print(request.user_data)
+                    except:
+                        # If API call fails, keep default user_data
+                        pass
                 else:
                     request.image_url = "https://avatars.githubusercontent.com/u/150781803?s=200&v=4"
                     request.company_name = 'susanoox'
@@ -34,6 +65,9 @@ class UserDataMiddleware:
         else:
             request.image_url = "https://avatars.githubusercontent.com/u/150781803?s=200&v=4"
             request.company_name = 'susanoox'
+            if request.path not in ['/login/', '/signup/']:
+                response = redirect('login')
+                return response
 
         response = self.get_response(request)
         return response

@@ -44,6 +44,7 @@ auth = [
 ]
 
 urlpatterns = [
+    path('', acuity_dashboard, name='dashboard'),
     path("admin/", admin.site.urls),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
 ]
