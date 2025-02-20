@@ -1,79 +1,22 @@
 import requests
-import json
-from typing import Dict, Any
 
-def get_calendly_webhooks(access_token: str) -> Dict[str, Any]:
-    """
-    Retrieve all webhooks for the given Calendly access token.
-    
-    Args:
-        access_token (str): The Calendly access token
-        
-    Returns:
-        Dict[str, Any]: Response containing webhooks or error information
-    """
-    try:
-        # API endpoint for webhooks
-        url = "https://api.calendly.com/webhook_subscriptions"
-        
-        # Headers with authorization
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json"
-        }
-        
-        # Make the GET request
-        response = requests.get(url, headers=headers)
-        
-        # Check if request was successful
-        if response.status_code == 200:
-            webhooks = response.json()
-            return {
-                "success": True,
-                "data": webhooks,
-                "message": f"Found {len(webhooks.get('collection', []))} webhooks"
-            }
-        else:
-            return {
-                "success": False,
-                "error": f"Failed to get webhooks: {response.status_code}",
-                "details": response.json()
-            }
-            
-    except Exception as e:
-        return {
-            "success": False,
-            "error": f"Error occurred: {str(e)}"
-        }
+url = "https://api.calendly.com/webhook_subscriptions"
 
-if __name__ == "__main__":
-    # Your access token
-    ACCESS_TOKEN = "eyJraWQiOiIxY2UxZTEzNjE3ZGNmNzY2YjNjZWJjY2Y4ZGM1YmFmYThhNjVlNjg0MDIzZjdjMzJiZTgzNDliMjM4MDEzNWI0IiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJodHRwczovL2F1dGguY2FsZW5kbHkuY29tIiwiaWF0IjoxNzM5NjEwODM0LCJqdGkiOiJhMzQ0YWM0MS03YTMxLTQyYjMtYmU3YS1iZjE1N2MxNTk1NzQiLCJ1c2VyX3V1aWQiOiI0NWQzOTEzZC00ZWVhLTRmZGYtOTQ1Zi0wNGUyZGUyYmNmZjYiLCJhcHBfdWlkIjoibW1nekgzTUdIT2w0WHhTb19TMlJkODhOSGtRWE50cDJCQjFvQmNIdWVfcyIsImV4cCI6MTczOTYxODAzNH0.BAU1DBbsRB1lC7Dgk8JxbdH816KtvCmWJqx85Yx6v64VMwsRuizo8T11agnY39YvF544_fIC4OR96h04Lv2Leg"
-    
-    # Get the webhooks
-    result = get_calendly_webhooks(ACCESS_TOKEN)
-    
-    # Print results in a formatted way
-    if result["success"]:
-        print("\nSuccessfully retrieved webhooks:")
-        webhooks = result["data"]["collection"]
-        
-        if not webhooks:
-            print("No webhooks found.")
-        else:
-            for webhook in webhooks:
-                print("\nWebhook Details:")
-                print(f"URI: {webhook.get('uri')}")
-                print(f"Callback URL: {webhook.get('callback_url')}")
-                print(f"Created At: {webhook.get('created_at')}")
-                print(f"State: {webhook.get('state')}")
-                print(f"Events: {', '.join(webhook.get('events', []))}")
-                print(f"Scope: {webhook.get('scope')}")
-                print(f"Organization: {webhook.get('organization')}")
-                print(f"User: {webhook.get('user')}")
-                print("-" * 50)
-    else:
-        print("\nError retrieving webhooks:")
-        print(f"Error message: {result.get('error')}")
-        if result.get('details'):
-            print(f"Details: {json.dumps(result['details'], indent=2)}")
+# Replace this with your actual user URI
+user_uri = "https://api.calendly.com/users/51521379-e318-4ff2-a52b-59865a2bfdb1"
+
+querystring = {
+    "organization": "https://api.calendly.com/organizations/3f0ebc83-99f6-4b0f-9d3a-ccf2df1f383f", 
+    "count": "1", 
+    "scope": "user",
+    "user": user_uri  # Add the user parameter
+}
+
+headers = {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer eyJraWQiOiIxY2UxZTEzNjE3ZGNmNzY2YjNjZWJjY2Y4ZGM1YmFmYThhNjVlNjg0MDIzZjdjMzJiZTgzNDliMjM4MDEzNWI0IiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJodHRwczovL2F1dGguY2FsZW5kbHkuY29tIiwiaWF0IjoxNzQwMDMyOTcwLCJqdGkiOiJkN2Y0MDUwMi01MzI0LTRmYmYtOWUxMC0wMWI3ZTBkNGQzZjUiLCJ1c2VyX3V1aWQiOiI1MTUyMTM3OS1lMzE4LTRmZjItYTUyYi01OTg2NWEyYmZkYjEiLCJhcHBfdWlkIjoibW1nekgzTUdIT2w0WHhTb19TMlJkODhOSGtRWE50cDJCQjFvQmNIdWVfcyIsImV4cCI6MTc0MDA0MDE3MH0.waIwdjVAjx8iYzPXuhXwwv-PfFBD48-nucuiyjI0d6hlojI00ECHcStLBGvEOEo6h4HlCMfFbWMzIqFnNL1b7g"
+}
+
+response = requests.get(url, headers=headers, params=querystring)
+
+print(response.text)
