@@ -1,75 +1,112 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings Form</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            padding: 20px;
-        }
-        form {
-            width: 300px;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background: #f9f9f9;
-        }
-        label {
-            font-weight: bold;
-            display: block;
-            margin-top: 10px;
-        }
-        input, select {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            margin-top: 15px;
-            padding: 10px;
-            width: 100%;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-    </style>
-</head>
-<body>
+{% extends 'base.html' %}
 
-    <h2>User Settings</h2>
+{% block title %}Settings - Calendly Integration{% endblock %}
 
-    <form method="POST">
-        {% csrf_token %}
-        
-        <label for="leads_to_store">Leads to Store:</label>
-        <select name="leads_to_store" id="leads_to_store">
-            <option value="Leads" {% if settings and settings.leads_to_store == "Leads" %}selected{% endif %}>Leads</option>
-            <option value="Contacts" {% if settings and settings.leads_to_store == "Contacts" %}selected{% endif %}>Contacts</option>
-        </select>
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto">
+        <!-- Header Section -->
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-extrabold text-gray-900 mb-2">
+                Integration Settings
+            </h2>
+            <p class="text-gray-600">
+                Configure your Calendly integration preferences
+            </p>
+        </div>
 
-        <label for="lead_source">Lead Source:</label>
-        {% if settings.lead_source %}
-        <input type="text" name="lead_source" id="lead_source" 
-               value="{{ settings.lead_source }}" required>
-        {% else %}
-        <input type="text" name="lead_source" id="lead_source" 
-               value="Acuity Scheduling" required>
-        {% endif %}
+        <!-- Settings Form -->
+        <div class="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
 
+                <!-- Leads to Store Selection -->
+                <div>
+                    <label for="leads_to_store" class="block text-sm font-medium text-gray-700">
+                        Store Leads In
+                    </label>
+                    <div class="mt-1">
+                        <select 
+                            name="leads_to_store" 
+                            id="leads_to_store"
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        >
+                            <option value="Leads" {% if settings and settings.leads_to_store == "Leads" %}selected{% endif %}>
+                                Leads Module
+                            </option>
+                            <option value="Contacts" {% if settings and settings.leads_to_store == "Contacts" %}selected{% endif %}>
+                                Contacts Module
+                            </option>
+                        </select>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">
+                        Choose where new entries will be stored in your CRM
+                    </p>
+                </div>
 
-        <button type="submit">Save Settings</button>
-    </form>
+                <!-- Lead Source Input -->
+                <div>
+                    <label for="lead_source" class="block text-sm font-medium text-gray-700">
+                        Lead Source
+                    </label>
+                    <div class="mt-1">
+                        <input 
+                            type="text" 
+                            name="lead_source" 
+                            id="lead_source"
+                            value="{% if settings.lead_source %}{{ settings.lead_source }}{% else %}Calendly{% endif %}"
+                            required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        >
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">
+                        Specify the source identifier for new leads
+                    </p>
+                </div>
 
-</body>
-</html>
+                <!-- Save Button -->
+                <div class="flex items-center justify-end">
+                    <button 
+                        type="submit"
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
+                    >
+                        Save Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Help Section -->
+        <div class="mt-8 text-center">
+            <p class="text-sm text-gray-500">
+                Need help? 
+                <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">
+                    View Documentation
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Success Notification -->
+{% if messages %}
+<div class="fixed bottom-0 right-0 m-6">
+    {% for message in messages %}
+    <div class="{% if message.tags %}{{ message.tags }}{% endif %} bg-green-50 p-4 rounded-lg shadow-lg border border-green-200">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm font-medium text-green-800">
+                    {{ message }}
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

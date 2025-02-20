@@ -65,9 +65,6 @@ def calendly_callback(request):
                 # Set up webhooks
                 webhook_manager = CalendlyWebhookManager(access_token)
                 
-                # Hardcoded base URL
-                base_webhook_url = "https://api.zintlr.com"
-
                 # First, cleanup any existing webhooks
                 existing_webhooks = webhook_manager.list_webhooks()
                 if existing_webhooks.get('success'):
@@ -85,7 +82,7 @@ def calendly_callback(request):
                             "invitee_no_show.created",
                             "invitee_no_show.deleted"
                         ],
-                        "target": f"{base_webhook_url}/calendly-webhook/meeting//{credential_id}/{request.user.id}/"
+                        "target": f"{settings.HOSTED_CALENDLY_CLIENT_ID}/calendly-webhook/meeting/{credential_id}/{request.user.id}/"
                     }
                 ]
 

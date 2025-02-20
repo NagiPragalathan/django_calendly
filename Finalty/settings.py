@@ -206,6 +206,7 @@ SCOPE = "ZohoCRM.settings.fields.ALL,ZohoCRM.settings.fields.CREATE,ZohoCRM.user
 
 
 # Calendly OAuth settings
+HOSTED_CALENDLY_CLIENT_ID = 'https://calendly-iota-ten.vercel.app/'
 CALENDLY_CLIENT_ID = 'mmgzH3MGHOl4XxSo_S2Rd88NHkQXNtp2BB1oBcHue_s'
 CALENDLY_CLIENT_SECRET = 'QHe1XUACtSPN_QGEgr7oMfn5xDspp6nBZ-A3YCpawtY'
 CALENDLY_REDIRECT_URI = 'http://localhost:8000/oauth/callback/'
