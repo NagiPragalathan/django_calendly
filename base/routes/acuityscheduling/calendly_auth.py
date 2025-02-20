@@ -15,7 +15,7 @@ def calendly_auth(request, credential_id):
     request.session['credential_id'] = credential_id
     request.session.modified = True  # Ensure session updates are committed
 
-    print(f"✅ Storing credential_id in session: {credential_id}",  "session:", request.session['credential_id'])
+    print(f"✅ Storing credential_id in session: {credential_id}", "session:", request.session['credential_id'])
 
     # Generate the authorization URL
     auth_url = f"https://auth.calendly.com/oauth/authorize"
@@ -27,6 +27,9 @@ def calendly_auth(request, credential_id):
 def calendly_callback(request):
     """Step 2: Handle OAuth callback and set up webhooks."""
     try:
+        # Log session data before processing
+        print(f"📌 Session Data Before Callback: {dict(request.session)}")
+
         code = request.GET.get('code')
         credential_id = request.session.get('credential_id')
 
@@ -71,8 +74,6 @@ def calendly_callback(request):
                     refresh_token=refresh_token
                 )
 
-                print(f"✅ Tokens saved for credential ID: {credential_id}")
-
                 # Set up webhooks
                 webhook_manager = CalendlyWebhookManager(access_token)
                 
@@ -85,7 +86,9 @@ def calendly_callback(request):
 
                 # Define webhook configurations
                 base_url = settings.HOSTED_CALENDLY_CLIENT_ID.rstrip('/')
+                
                 credential = CalendlyCredentials.objects.filter(unique_id=credential_id).first()
+
                 webhook_configs = [
                     {
                         "scope": "user",
@@ -121,6 +124,7 @@ def calendly_callback(request):
                 request.session.pop('credential_id', None)
                 request.session.modified = True
                 print(f"✅ Session cleared. Session data: {dict(request.session)}")
+
                 return redirect("list_credentials")
 
             except CalendlyCredentials.DoesNotExist:

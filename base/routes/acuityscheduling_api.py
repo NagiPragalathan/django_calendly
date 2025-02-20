@@ -62,8 +62,10 @@ def calendly_webhook_create_meeting(request, credential_id, user_id):
     """
     Module = "Contacts"
     app_user_id = user_id
+    print("user_id", request.user.id)
     
     if request.method == "POST":
+        print("about to create meeting")
         try:
             # Parse JSON data from Calendly
             data = json.loads(request.body)
@@ -77,11 +79,11 @@ def calendly_webhook_create_meeting(request, credential_id, user_id):
             scheduled_event = payload.get("scheduled_event", {})
             
             try:
-                settings = Settings.objects.get(user_id=user_id) 
+                settings = Settings.objects.get(user=user_id) 
                 Module = settings.leads_to_store   
             except Exception as e:
                 Module = "Contacts"
-                
+                print("No settings found for the user")
             print(f"Search the data in CRM of {Module}")
 
             # Extract participant details
@@ -96,12 +98,13 @@ def calendly_webhook_create_meeting(request, credential_id, user_id):
             join_url = location.get("join_url", "")
 
             # Format questions and answers
-            questions_and_answers = payload.get("questions_and_answers", [])
-            description = "\n".join([
-                f"Q: {qa['question']}\nA: {qa['answer']}"
-                for qa in questions_and_answers
-            ])
-
+            description = f"""☢ Meeting with {first_name} {last_name if last_name else ""} on {scheduled_event.get('start_time')}
+            ↦ Name: {first_name} {last_name if last_name else ""}
+            ↦ Email: {email}
+            ↦ Location: {location_type}
+            ↦ Join URL: {join_url}
+            """
+            print("description", description)
             # Convert datetime strings to datetime objects
             start_dt = datetime.strptime(scheduled_event.get("start_time"), "%Y-%m-%dT%H:%M:%S.%fZ")
             end_dt = datetime.strptime(scheduled_event.get("end_time"), "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -111,7 +114,7 @@ def calendly_webhook_create_meeting(request, credential_id, user_id):
             end_datetime_str = end_dt.strftime("%Y-%m-%dT%H:%M:%S+00:00")
 
             # Check and add email to CRM
-            who_id = check_and_add_email({"email": email, "firstName": first_name, "lastName": last_name}, Module, only_contact=True)
+            who_id = check_and_add_email({"email": email, "firstName": first_name, "lastName": last_name if last_name else ""}, Module, user_id, only_contact=True)
 
             # Construct event data
             event_data = {
@@ -130,7 +133,7 @@ def calendly_webhook_create_meeting(request, credential_id, user_id):
                 "Timezone": payload.get("timezone"),
             }
 
-            print(event_data)
+            print(event_data, event_type)
 
             if event_type == "invitee.created":
                 print("Creating new appointment in Zoho CRM...")

@@ -1,3 +1,4 @@
+from django.urls import resolve
 from .models import CalendlyCredentials
 import requests
 from django.core.cache import cache
@@ -65,9 +66,18 @@ class UserDataMiddleware:
         else:
             request.image_url = "https://avatars.githubusercontent.com/u/150781803?s=200&v=4"
             request.company_name = 'susanoox'
-            if request.path not in ['/login/', '/signup/']:
-                response = redirect('login')
-                return response
+            public_url_names = [
+                'login',
+                'signup',
+                'calendly_callback',  # Add the name from your urls.py
+                'calendly_auth',      # Add the name from your urls.py
+                'calendly_webhook_create_meeting'
+            ]
+            current_url_name = resolve(request.path_info).url_name
+            print(f"Current URL name: {current_url_name}", request.path_info)
+
+            if not request.user.is_authenticated and current_url_name not in public_url_names:
+                return redirect('login')
 
         response = self.get_response(request)
         return response

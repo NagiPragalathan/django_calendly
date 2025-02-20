@@ -63,8 +63,10 @@ def create_event(access_token, event_data):
         return False
 
 def add_meeting_to_zoho_crm(event_data, user_id):
+    print("adding meeting to zoho")
     zoho_token = ZohoToken.objects.get(user=user_id)
     access_token = zoho_token.access_token
+    print("access_token", access_token)
     check = check_access_token_validity(access_token)
     if not check:
         access_token = get_access_token(CLIENT_ID, CLIENT_SECRET, zoho_token.refresh_token)
@@ -295,15 +297,15 @@ def create_new_record(access_token, module, user_data):
         print(f"❌ Error creating record in {module}: {e}")
         return None
 
-def check_and_add_email(user_data, module, only_contact=False):
+def check_and_add_email(user_data, module, user_id, only_contact=False):
     """Check if the email exists, if not, create a new record."""
     print(user_data, "user_data")
-    zoho_token = ZohoToken.objects.get(user=user_data.get("app_user_id"))
+    zoho_token = ZohoToken.objects.get(user=user_id)
     access_token = zoho_token.access_token
     check = check_access_token_validity(access_token)
     if not check:
         access_token = get_access_token(CLIENT_ID, CLIENT_SECRET, zoho_token.refresh_token)
-        ZohoToken.objects.filter(user=user_data.get("app_user_id")).update(access_token=access_token)
+        ZohoToken.objects.filter(user=user_id).update(access_token=access_token)
     else:
         access_token = zoho_token.access_token
 
