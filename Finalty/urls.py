@@ -70,7 +70,7 @@ acuityscheduling_urls = [
 ]
 
 acuityscheduling_api_urls = [
-    path('acuity-webhook/create-meeting/<uuid:credential_id>/<int:user_id>/', acuity_webhook_create_meeting, name='acuity_webhook_create_meeting'),
+    path('calendly-webhook/meeting/<uuid:credential_id>/<int:user_id>/', calendly_webhook_create_meeting, name='calendly_webhook_create_meeting'),
 ]
 
 zoho_urls = [

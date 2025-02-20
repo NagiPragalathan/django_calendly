@@ -9,7 +9,7 @@ from base.models import CalendlyCredentials
 from base.routes.tool_kit.mongo_tool import store_image_in_mongodb
 from base.routes.tool_kit.calendly_tool import create_webhooks, get_webhooks_with_ids, delete_webhooks, CalendlyWebhookManager
 from base.routes.tool_kit.zoho_tool import ensure_field_exists
-from Finalty.settings import ACUITY_CUSTOM_FIELDS
+from Finalty.settings import CALENDLY_CUSTOM_FIELDS
 from base.routes.tool_kit.calendly_tool import setup_calendly_webhooks, cleanup_webhooks
 
 

@@ -55,27 +55,26 @@ def get_appointment_details(credential_id, appointment_id):
 
 
 @csrf_exempt
-def acuity_webhook_create_meeting(request, credential_id, user_id):
+def calendly_webhook_create_meeting(request, credential_id, user_id):
     """
-    View to handle incoming webhooks from Acuity Scheduling.
-    Supports both scheduled and rescheduled appointments.
+    View to handle incoming webhooks from Calendly.
+    Supports created, canceled, and rescheduled appointments.
     """
     Module = "Contacts"
     app_user_id = user_id
     
     if request.method == "POST":
         try:
-            # Parse form-encoded data
-            data = request.POST
-            action = data.get("action")  # 'appointment.scheduled' or 'appointment.rescheduled'
-            appointment_id = data.get("id")
+            # Parse JSON data from Calendly
+            data = json.loads(request.body)
+            event_type = data.get("event")  # 'invitee.created', 'invitee.canceled', etc.
+            payload = data.get("payload", {})
 
-            if not action or not appointment_id:
+            if not event_type or not payload:
                 return JsonResponse({"message": "Missing required data in the webhook payload."}, status=400)
 
-            # Fetch updated appointment details
-            appointment_data = get_appointment_details(credential_id, appointment_id)
-            appointment_data["app_user_id"] = user_id  # Store user ID in the appointment data
+            # Extract appointment details from payload
+            scheduled_event = payload.get("scheduled_event", {})
             
             try:
                 settings = Settings.objects.get(user_id=user_id) 
@@ -85,65 +84,81 @@ def acuity_webhook_create_meeting(request, credential_id, user_id):
                 
             print(f"Search the data in CRM of {Module}")
 
-            user_id = check_and_add_email(appointment_data, Module)
-            candidate_name = f"{appointment_data.get('firstName', '')} {appointment_data.get('lastName', '')}"
-            
-            # Convert datetime string to datetime object
-            start_dt = datetime.strptime(appointment_data.get("datetime"), "%Y-%m-%dT%H:%M:%S%z")
-            end_dt = start_dt + timedelta(minutes=int(appointment_data.get("duration")))
+            # Extract participant details
+            email = payload.get("email")
+            name = payload.get("name", "").split()
+            first_name = name[0] if name else payload.get("first_name", "")
+            last_name = " ".join(name[1:]) if len(name) > 1 else payload.get("last_name", "")
+
+            # Get location details
+            location = scheduled_event.get("location", {})
+            location_type = location.get("type", "")
+            join_url = location.get("join_url", "")
+
+            # Format questions and answers
+            questions_and_answers = payload.get("questions_and_answers", [])
+            description = "\n".join([
+                f"Q: {qa['question']}\nA: {qa['answer']}"
+                for qa in questions_and_answers
+            ])
+
+            # Convert datetime strings to datetime objects
+            start_dt = datetime.strptime(scheduled_event.get("start_time"), "%Y-%m-%dT%H:%M:%S.%fZ")
+            end_dt = datetime.strptime(scheduled_event.get("end_time"), "%Y-%m-%dT%H:%M:%S.%fZ")
 
             # Format timezone correctly
-            start_datetime_str = start_dt.strftime("%Y-%m-%dT%H:%M:%S") + start_dt.strftime("%z")[:3] + ":" + start_dt.strftime("%z")[3:]
-            end_datetime_str = end_dt.strftime("%Y-%m-%dT%H:%M:%S") + end_dt.strftime("%z")[:3] + ":" + end_dt.strftime("%z")[3:]
+            start_datetime_str = start_dt.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+            end_datetime_str = end_dt.strftime("%Y-%m-%dT%H:%M:%S+00:00")
 
-            who_id = check_and_add_email(appointment_data, Module, only_contact=True)
+            # Check and add email to CRM
+            who_id = check_and_add_email({"email": email, "firstName": first_name, "lastName": last_name}, Module, only_contact=True)
 
             # Construct event data
             event_data = {
-                "Event_Title": f"Meeting: {appointment_data.get('type')} with {candidate_name}",
-                "Subject": f"Meeting: {appointment_data.get('type')} with {candidate_name}",
-                "Start_DateTime": start_datetime_str,  
-                "End_DateTime": end_datetime_str,      
-                "Participants": [{"participant": str(appointment_data.get("email")), "type": "email"}],
-                "Location": str(appointment_data.get("location")),
-                "Description": str(appointment_data.get("formsText")),
+                "Event_Title": f"Meeting: {scheduled_event.get('name')} with {first_name} {last_name}",
+                "Subject": f"Meeting: {scheduled_event.get('name')} with {first_name} {last_name}",
+                "Start_DateTime": start_datetime_str,
+                "End_DateTime": end_datetime_str,
+                "Participants": [{"participant": email, "type": "email"}],
+                "Location": join_url if join_url else location_type,
+                "Description": description,
                 "Who_Id": who_id,
-                "Acuity_Client_Link": str(appointment_data.get("confirmationPage")),
-                "Acuity_ID": str(appointment_data.get("id")),
-                "Acuity_Agent_Link": "https://secure.acuityscheduling.com/appointments/view/" + str(appointment_data.get("id")),
-                "Acuity_Calendar_Name": str(appointment_data.get("calendar")),
-                "Acuity_Calendar_Email": str(appointment_data.get("email")),
-                "Acuity_Event_Price": str(appointment_data.get("price")),
+                "Calendly_Event_URI": scheduled_event.get("uri"),
+                "Calendly_Invitee_URI": payload.get("uri"),
+                "Calendly_Cancel_URL": payload.get("cancel_url"),
+                "Calendly_Reschedule_URL": payload.get("reschedule_url"),
+                "Timezone": payload.get("timezone"),
             }
 
             print(event_data)
 
-            if action == "appointment.scheduled":
+            if event_type == "invitee.created":
                 print("Creating new appointment in Zoho CRM...")
                 appointment_data_created = add_meeting_to_zoho_crm(event_data, app_user_id)
 
-            elif action == "appointment.rescheduled":
+            elif event_type == "invitee.canceled":
+                print("Canceling appointment in Zoho CRM...")
+                appointment_data_created = delete_meeting_from_zoho_crm(scheduled_event.get("uri"), app_user_id)
+
+            elif event_type == "invitee.rescheduled":
                 print("Rescheduling appointment in Zoho CRM...")
                 appointment_data_created = update_meeting_in_zoho_crm(event_data, app_user_id)
-                
-            elif action == "appointment.canceled":
-                print("Canceling appointment in Zoho CRM...")
-                appointment_data_created = delete_meeting_from_zoho_crm(appointment_data["id"], app_user_id)
 
             if appointment_data_created:
-                return JsonResponse(
-                    {
-                        "message": f"Appointment {action.replace('appointment.', '')} successfully.",
-                        "appointment_data": appointment_data,
-                    }
-                )
+                return JsonResponse({
+                    "message": f"Appointment {event_type.replace('invitee.', '')} successfully.",
+                    "event_data": event_data,
+                })
             else:
                 return JsonResponse(
-                    {"message": f"Failed to {action.replace('appointment.', '')} appointment."}, status=500
+                    {"message": f"Failed to {event_type.replace('invitee.', '')} appointment."}, 
+                    status=500
                 )
 
+        except json.JSONDecodeError:
+            return JsonResponse({"message": "Invalid JSON payload."}, status=400)
         except Exception as e:
             logger.error(f"Error while handling the webhook: {e}")
-            return JsonResponse({"message": "Internal server error."}, status=500)
+            return JsonResponse({"message": f"Internal server error: {str(e)}"}, status=500)
 
     return HttpResponseBadRequest("Invalid request method.")

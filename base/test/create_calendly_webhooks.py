@@ -8,7 +8,7 @@ ACCESS_TOKEN = "eyJraWQiOiIxY2UxZTEzNjE3ZGNmNzY2YjNjZWJjY2Y4ZGM1YmFmYThhNjVlNjg0
 BASE_URL = "https://api.calendly.com"
 
 # Define webhook URL (this will be your endpoint where the events will be sent)
-WEBHOOK_URL = "http://your_webhook_url.com/webhook"  # Replace with your actual webhook receiver URL
+WEBHOOK_URL = "https://webhook.site/1306eab1-748b-4c6a-a82d-fbe7aed74bf0"  # Replace with your actual webhook receiver URL
 
 # Step 1: Retrieve user info to get organization and user URI
 def get_user_info(access_token: str):

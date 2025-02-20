@@ -179,18 +179,20 @@ SESSION_COOKIE_SECURE = True   # Secure the session cookie if using HTTPS
 
 # Acuity Scheduling
 
-ACUITY_WEBHOOK_EVENTS = [
+CALENDLY_WEBHOOK_EVENTS = [
     {"event": "appointment.rescheduled", "target": "https://yourwebhookendpoint.com/rescheduled"},
     {"event": "appointment.scheduled", "target": "https://yourwebhookendpoint.com/scheduled"},
     {"event": "appointment.canceled", "target": "https://yourwebhookendpoint.com/canceled"},
 ]
-ACUITY_CUSTOM_FIELDS = [
-    "Acuity Client Link",
-    "Acuity ID",
-    "Acuity Agent Link",
-    "Acuity Calendar Name",
-    "Acuity Calendar Email",
-    "Acuity Event Price"
+
+# Calendly Custom Fields
+CALENDLY_CUSTOM_FIELDS = [
+    "Calendly Client Link",
+    "Calendly ID",
+    "Calendly Agent Link",
+    "Calendly Calendar Name",
+    "Calendly Calendar Email",
+    "Calendly Event Price"
 ]
 
 # Zoho credentials

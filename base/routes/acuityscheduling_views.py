@@ -1,23 +1,20 @@
-from django.shortcuts import render
+
 from django.http import JsonResponse, HttpResponse
-from Finalty.settings import ACUITY_WEBHOOK_EVENTS, ACUITY_CUSTOM_FIELDS
+from django.shortcuts import render
+from Finalty.settings import CALENDLY_WEBHOOK_EVENTS, CALENDLY_CUSTOM_FIELDS
 from base.models import CalendlyCredentials
 import requests, json
 from django.contrib.auth.decorators import login_required
 from datetime import datetime, timedelta, timezone
 from django.core.paginator import Paginator
-from django.utils.html import escape
-from django.db.models import Q
 from datetime import datetime
-from django.utils.dateparse import parse_datetime
-from requests.auth import HTTPBasicAuth
-from base.routes.tool_kit.calendly_tool import create_webhooks
 from base.routes.tool_kit.secract_del import delete_all_webhooks
-from base.routes.tool_kit.mongo_tool import store_image_in_mongodb, get_image_from_mongodb
-from base.routes.tool_kit.zoho_tool import ensure_field_exists
+from base.routes.tool_kit.mongo_tool import get_image_from_mongodb
 import base64
 from django.conf import settings
 from django.utils.safestring import mark_safe
+
+
 
 @login_required
 def list_appointments(request):
