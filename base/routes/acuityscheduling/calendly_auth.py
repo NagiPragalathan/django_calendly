@@ -10,27 +10,44 @@ def calendly_auth(request, credential_id):
     """Step 1: Redirect user to Calendly's OAuth authorization page."""
     if isinstance(credential_id, UUID):
         credential_id = str(credential_id)
-    
+
+    # Store credential ID in the session before redirecting
     request.session['credential_id'] = credential_id
+    request.session.modified = True  # Ensure session updates are committed
+
+    print(f"✅ Storing credential_id in session: {credential_id}",  "session:", request.session['credential_id'])
+
+    # Generate the authorization URL
     auth_url = f"https://auth.calendly.com/oauth/authorize"
     redirect_url = f"{auth_url}?client_id={settings.CALENDLY_CLIENT_ID}&response_type=code&redirect_uri={settings.CALENDLY_REDIRECT_URI}"
+    
+    print(f"✅ Redirecting to: {redirect_url}")
     return redirect(redirect_url)
 
 def calendly_callback(request):
     """Step 2: Handle OAuth callback and set up webhooks."""
     try:
         code = request.GET.get('code')
+
+        # Retrieve credential_id from the session
         credential_id = request.session.get('credential_id')
 
+        # Debugging: Print session data to track credential_id
+        print(f"🔍 Retrieved credential_id from session: {credential_id}")
+        print(f"📌 All session data: {dict(request.session)}")
+
         if not code:
-            return JsonResponse({'error': 'Authorization code not received.'})
+            return JsonResponse({'error': 'Authorization code not received.'}, status=400)
+
+        if not credential_id:
+            return JsonResponse({'error': 'Credential ID not found in session.'}, status=400)
 
         # Convert credential_id back to UUID
         try:
-            if credential_id:
-                credential_id = UUID(credential_id)
+            credential_id = UUID(credential_id)
+            print(f"🔄 Converted credential_id to UUID: {credential_id}")
         except ValueError:
-            return JsonResponse({'error': 'Invalid credential ID format.'})
+            return JsonResponse({'error': 'Invalid credential ID format.'}, status=400)
 
         # Exchange code for tokens
         token_url = 'https://auth.calendly.com/oauth/token'
@@ -48,23 +65,26 @@ def calendly_callback(request):
             tokens = token_response.json()
             access_token = tokens.get('access_token')
             refresh_token = tokens.get('refresh_token')
-            print(access_token,'\n\n', refresh_token)
-            
-            try:
-                # Update credentials with tokens - Using get() and save() instead of filter().update()
-                credential = CalendlyCredentials.objects.filter(unique_id=credential_id).update(
-                    access_token=access_token,
-                    refresh_token=refresh_token
-                )
-                print(credential)
 
-                print(f"Tokens saved for credential ID: {credential_id}")
-                print(f"Access Token: {access_token}")
-                print(f"Refresh Token: {refresh_token}")
+            print(f"✅ Tokens received. Access Token: {access_token}, Refresh Token: {refresh_token}")
+
+            # Verify credential_id matches an existing object
+            try:
+                credential = CalendlyCredentials.objects.get(unique_id=credential_id)
+                credential.access_token = access_token
+                credential.refresh_token = refresh_token
+                credential.save()
+
+                print(f"✅ Tokens saved for credential ID: {credential_id}")
+
+                # Verify token storage immediately after saving
+                credential.refresh_from_db()
+                if not credential.access_token:
+                    raise Exception("⚠️ Failed to save access token")
 
                 # Set up webhooks
                 webhook_manager = CalendlyWebhookManager(access_token)
-                
+
                 # First, cleanup any existing webhooks
                 existing_webhooks = webhook_manager.list_webhooks()
                 if existing_webhooks.get('success'):
@@ -72,7 +92,7 @@ def calendly_callback(request):
                         webhook_uuid = webhook['uri'].split('/')[-1]
                         webhook_manager.delete_webhook(webhook_uuid)
 
-                # Define webhook configurations with correct event names
+                # Define webhook configurations
                 webhook_configs = [
                     {
                         "scope": "user",
@@ -95,22 +115,17 @@ def calendly_callback(request):
                         scope=config['scope']
                     )
                     webhook_results.append(result)
-                    print(f"Webhook creation result for {config['scope']}: {result}")
-
-                # Verify token storage
-                updated_credential = CalendlyCredentials.objects.get(unique_id=credential_id)
-                print(f"Stored access token: {updated_credential.access_token}")
-                print(f"Stored refresh token: {updated_credential.refresh_token}")
+                    print(f"✅ Webhook created for {config['scope']}: {result}")
 
                 # Check webhook creation results
                 webhook_status = 'success'
                 if not all(result.get('success') for result in webhook_results):
                     failed_webhooks = [
-                        result.get('error') 
-                        for result in webhook_results 
+                        result.get('error')
+                        for result in webhook_results
                         if not result.get('success')
                     ]
-                    print(f"Warning: Some webhooks failed to create: {failed_webhooks}")
+                    print(f"⚠️ Warning: Some webhooks failed to create: {failed_webhooks}")
                     webhook_status = 'partial'
 
                 return JsonResponse({
@@ -122,23 +137,19 @@ def calendly_callback(request):
                 })
 
             except CalendlyCredentials.DoesNotExist:
-                return JsonResponse({
-                    'error': 'Credential not found in database.'
-                }, status=404)
+                print(f"❌ No credential found with ID: {credential_id}")
+                return JsonResponse({'error': f'No credential found with ID: {credential_id}'}, status=404)
             except Exception as e:
-                print(f"Error saving tokens or creating webhooks: {str(e)}")
-                return JsonResponse({
-                    'error': f'Error saving tokens or creating webhooks: {str(e)}'
-                }, status=500)
+                print(f"❌ Error saving tokens or creating webhooks: {str(e)}")
+                return JsonResponse({'error': f'Error saving tokens or creating webhooks: {str(e)}'}, status=500)
 
         else:
+            print("❌ Token response error:", token_response.json())
             return JsonResponse({
                 'error': 'Failed to get access token',
                 'details': token_response.json()
             }, status=400)
 
     except Exception as e:
-        print(f"Error in calendly_callback: {str(e)}")
-        return JsonResponse({
-            'error': f'An error occurred: {str(e)}'
-        }, status=500)
+        print(f"❌ Error in calendly_callback: {str(e)}")
+        return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)

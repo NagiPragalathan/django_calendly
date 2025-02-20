@@ -212,3 +212,7 @@ CALENDLY_CLIENT_SECRET = 'QHe1XUACtSPN_QGEgr7oMfn5xDspp6nBZ-A3YCpawtY'
 CALENDLY_REDIRECT_URI = 'http://localhost:8000/oauth/callback/'
 CALENDLY_WEBHOOK_URI="x-im4xCjbY-adPbU8CvMF088AdwhA-GQeMlAR7MI3RE"
 
+# Session settings
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 3600  # 1 hour in seconds
+SESSION_SAVE_EVERY_REQUEST = True 
