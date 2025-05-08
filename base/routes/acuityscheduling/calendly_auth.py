@@ -11,15 +11,15 @@ def calendly_auth(request, credential_id):
     if isinstance(credential_id, UUID):
         credential_id = str(credential_id)
 
-    # Store credential ID in the session before redirecting
-    request.session['credential_id'] = credential_id
-    request.session.modified = True  # Ensure session updates are committed
-
-    print(f"✅ Storing credential_id in session: {credential_id}", "session:", request.session['credential_id'])
-
-    # Generate the authorization URL
-    auth_url = f"https://auth.calendly.com/oauth/authorize"
-    redirect_url = f"{auth_url}?client_id={settings.CALENDLY_CLIENT_ID}&response_type=code&redirect_uri={settings.CALENDLY_REDIRECT_URI}"
+    # Include credential_id in the state parameter
+    auth_url = "https://auth.calendly.com/oauth/authorize"
+    redirect_url = (
+        f"{auth_url}?"
+        f"client_id={settings.CALENDLY_CLIENT_ID}&"
+        f"response_type=code&"
+        f"redirect_uri={settings.CALENDLY_REDIRECT_URI}&"
+        f"state={credential_id}"  # Pass credential_id in state parameter
+    )
     
     print(f"✅ Redirecting to: {redirect_url}")
     return redirect(redirect_url)
@@ -27,20 +27,16 @@ def calendly_auth(request, credential_id):
 def calendly_callback(request):
     """Step 2: Handle OAuth callback and set up webhooks."""
     try:
-        # Log session data before processing
-        print(f"📌 Session Data Before Callback: {dict(request.session)}")
-
         code = request.GET.get('code')
-        credential_id = request.session.get('credential_id')
+        credential_id = request.GET.get('state')  # Get credential_id from state parameter
 
-        print(f"🔍 Retrieved credential_id from session: {credential_id}")
-        print(f"📌 All session data: {dict(request.session)}")
+        print(f"🔍 Retrieved credential_id from state: {credential_id}")
 
         if not code:
             return JsonResponse({'error': 'Authorization code not received.'}, status=400)
 
         if not credential_id:
-            return JsonResponse({'error': 'Credential ID not found in session.'}, status=400)
+            return JsonResponse({'error': 'Credential ID not found in state parameter.'}, status=400)
 
         try:
             credential_id = UUID(credential_id)
@@ -119,11 +115,6 @@ def calendly_callback(request):
 
                 # Check webhook creation results
                 webhook_status = 'success' if all(result.get('success') for result in webhook_results) else 'partial'
-
-                # Clear the session after successful processing
-                request.session.pop('credential_id', None)
-                request.session.modified = True
-                print(f"✅ Session cleared. Session data: {dict(request.session)}")
 
                 return redirect("list_credentials")
 
