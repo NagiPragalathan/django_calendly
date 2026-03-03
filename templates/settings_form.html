@@ -1,110 +1,116 @@
 {% extends 'base.html' %}
 
-{% block title %}Settings - Calendly Integration{% endblock %}
+{% block title %}Integration Orchestration Settings{% endblock %}
+{% block breadcrumb %}Global Settings{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md mx-auto">
-        <!-- Header Section -->
-        <div class="text-center mb-8">
-            <h2 class="text-3xl font-extrabold text-gray-900 mb-2">
-                Integration Settings
-            </h2>
-            <p class="text-gray-600">
-                Configure your Calendly integration preferences
-            </p>
-        </div>
+<div class="max-w-2xl mx-auto py-8">
+    <div class="mb-10">
+        <h1 class="text-3xl font-black text-slate-900 tracking-tight">Integration Logic</h1>
+        <p class="text-sm font-medium text-slate-500 mt-2">Customized routing and metadata extraction for your sync pipeline.</p>
+    </div>
 
-        <!-- Settings Form -->
-        <div class="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
-            <form method="POST" class="space-y-6">
-                {% csrf_token %}
+    <!-- Main Settings Form -->
+    <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-indigo-50 rounded-full blur-3xl opacity-50"></div>
+        
+        <form method="POST" class="space-y-10 relative">
+            {% csrf_token %}
 
-                <!-- Leads to Store Selection -->
-                <div>
-                    <label for="leads_to_store" class="block text-sm font-medium text-gray-700">
-                        Store Leads In
-                    </label>
-                    <div class="mt-1">
-                        <select 
-                            name="leads_to_store" 
-                            id="leads_to_store"
-                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        >
-                            <option value="Leads" {% if settings and settings.leads_to_store == "Leads" %}selected{% endif %}>
-                                Leads Module
-                            </option>
-                            <option value="Contacts" {% if settings and settings.leads_to_store == "Contacts" %}selected{% endif %}>
-                                Contacts Module
-                            </option>
+            <!-- Leads to Store Selection -->
+            <div class="space-y-6">
+                <div class="flex items-center space-x-3 pb-2 border-b border-slate-50">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                        <i class="ri-database-2-line text-lg"></i>
+                    </div>
+                    <h2 class="text-lg font-extrabold text-slate-900">Destination Module</h2>
+                </div>
+                
+                <div class="space-y-2">
+                    <label for="leads_to_store" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Primary Data Container</label>
+                    <div class="relative">
+                        <select name="leads_to_store" id="leads_to_store"
+                                class="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-semibold focus:ring-4 focus:ring-indigo-500/10 transition-all appearance-none cursor-pointer">
+                            <option value="Leads" {% if settings and settings.leads_to_store == "Leads" %}selected{% endif %}>Store as CRM Leads</option>
+                            <option value="Contacts" {% if settings and settings.leads_to_store == "Contacts" %}selected{% endif %}>Store as CRM Contacts</option>
                         </select>
+                        <i class="ri-arrow-down-s-line absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
                     </div>
-                    <p class="mt-1 text-xs text-gray-500">
-                        Choose where new entries will be stored in your CRM
+                    <p class="text-[10px] font-medium text-slate-400 py-1 flex items-center">
+                        <i class="ri-information-line mr-1 text-xs"></i>
+                        New scheduling entries will be initialized in this module.
                     </p>
                 </div>
+            </div>
 
-                <!-- Lead Source Input -->
-                <div>
-                    <label for="lead_source" class="block text-sm font-medium text-gray-700">
-                        Lead Source
-                    </label>
-                    <div class="mt-1">
-                        <input 
-                            type="text" 
-                            name="lead_source" 
-                            id="lead_source"
-                            value="{% if settings.lead_source %}{{ settings.lead_source }}{% else %}Calendly{% endif %}"
-                            required
-                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        >
+            <!-- Lead Source Input -->
+            <div class="space-y-6">
+                <div class="flex items-center space-x-3 pb-2 border-b border-slate-50">
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+                        <i class="ri-fingerprint-line text-lg"></i>
                     </div>
-                    <p class="mt-1 text-xs text-gray-500">
-                        Specify the source identifier for new leads
-                    </p>
+                    <h2 class="text-lg font-extrabold text-slate-900">Attribution Meta</h2>
                 </div>
 
-                <!-- Save Button -->
-                <div class="flex items-center justify-end">
-                    <button 
-                        type="submit"
-                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
-                    >
-                        Save Settings
-                    </button>
+                <div class="space-y-2">
+                    <label for="lead_source" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Entry Origin Identifier</label>
+                    <div class="relative group">
+                        <i class="ri-flag-line absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors"></i>
+                        <input type="text" name="lead_source" id="lead_source"
+                               value="{% if settings.lead_source %}{{ settings.lead_source }}{% else %}Calendly Hub{% endif %}"
+                               required
+                               class="w-full pl-12 pr-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-semibold focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                               placeholder="e.g. Website Booking">
+                    </div>
+                    <p class="text-[10px] font-medium text-slate-400 py-1">Metadata tag for filtering and analytics segmentation.</p>
                 </div>
-            </form>
+            </div>
+
+            <div class="pt-6">
+                <button type="submit" class="w-full py-4 bg-slate-900 text-white font-black rounded-2xl shadow-xl shadow-slate-200 hover:bg-slate-800 hover:-translate-y-1 active:scale-95 transition-all uppercase tracking-widest text-xs">
+                    Commit Pipeline logic
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Help Section -->
+    <div class="mt-12 p-8 bg-indigo-50 rounded-[2.5rem] border border-indigo-100 flex items-start space-x-4">
+        <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-indigo-600 shadow-sm flex-shrink-0">
+            <i class="ri-questionnaire-line text-2xl"></i>
         </div>
-
-        <!-- Help Section -->
-        <div class="mt-8 text-center">
-            <p class="text-sm text-gray-500">
-                Need help? 
-                <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">
-                    View Documentation
-                </a>
+        <div>
+            <h4 class="text-sm font-black text-slate-900 uppercase tracking-tight mb-1">Configuration Support</h4>
+            <p class="text-xs font-medium text-slate-500 leading-relaxed mb-3">
+                Need guidance on how to structure your CRM synchronization logic? Our architectural documentation covers all advanced mapping scenarios.
             </p>
+            <a href="#" class="text-xs font-black text-indigo-600 hover:text-indigo-800 transition-colors inline-flex items-center">
+                Explore Documentation
+                <i class="ri-arrow-right-s-line"></i>
+            </a>
         </div>
     </div>
 </div>
 
-<!-- Success Notification -->
+<!-- Premium Toast Notifications -->
 {% if messages %}
-<div class="fixed bottom-0 right-0 m-6">
+<div class="fixed bottom-10 right-10 z-[100] flex flex-col items-end space-y-4">
     {% for message in messages %}
-    <div class="{% if message.tags %}{{ message.tags }}{% endif %} bg-green-50 p-4 rounded-lg shadow-lg border border-green-200">
-        <div class="flex">
-            <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                </svg>
-            </div>
-            <div class="ml-3">
-                <p class="text-sm font-medium text-green-800">
-                    {{ message }}
-                </p>
-            </div>
+    <div class="bg-white p-5 rounded-[1.5rem] shadow-2xl shadow-slate-400/20 border border-slate-100 flex items-center space-x-4 animate-fade-left">
+        <div class="w-10 h-10 rounded-xl {% if message.tags == 'success' %}bg-emerald-50 text-emerald-600{% else %}bg-amber-50 text-amber-600{% endif %} flex items-center justify-center">
+            {% if message.tags == 'success' %}
+                <i class="ri-checkbox-circle-fill text-xl"></i>
+            {% else %}
+                <i class="ri-error-warning-fill text-xl"></i>
+            {% endif %}
         </div>
+        <div>
+            <p class="text-xs font-black text-slate-900 leading-none mb-1">{% if message.tags == 'success' %}System Success{% else %}System Note{% endif %}</p>
+            <p class="text-[11px] font-bold text-slate-400">{{ message }}</p>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-slate-300 hover:text-slate-500 transition-colors pl-2">
+            <i class="ri-close-line text-lg"></i>
+        </button>
     </div>
     {% endfor %}
 </div>

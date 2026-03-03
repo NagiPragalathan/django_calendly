@@ -120,9 +120,9 @@ def list_appointments(request):
                         'meeting_notes_html': event.get('meeting_notes_html', ''),
                         
                         # Location
-                        'location_type': event.get('location', {}).get('type', ''),
-                        'location_address': event.get('location', {}).get('location', ''),
-                        'location_info': event.get('location', {}).get('additional_info', ''),
+                        'location_type': (event.get('location') or {}).get('type', ''),
+                        'location_address': (event.get('location') or {}).get('location', ''),
+                        'location_info': (event.get('location') or {}).get('additional_info', ''),
                         
                         # URLs
                         'cancel_url': invitee.get('cancel_url', ''),
@@ -130,9 +130,9 @@ def list_appointments(request):
                         'scheduling_url': invitee.get('scheduling_url', ''),
                         
                         # Counter Information
-                        'invitees_total': event.get('invitees_counter', {}).get('total', 0),
-                        'invitees_active': event.get('invitees_counter', {}).get('active', 0),
-                        'invitees_limit': event.get('invitees_counter', {}).get('limit', 0),
+                        'invitees_total': (event.get('invitees_counter') or {}).get('total', 0),
+                        'invitees_active': (event.get('invitees_counter') or {}).get('active', 0),
+                        'invitees_limit': (event.get('invitees_counter') or {}).get('limit', 0),
                         
                         # Event Members
                         'event_members': [{
@@ -340,9 +340,9 @@ def past_appointments(request):
                         'meeting_notes_html': event.get('meeting_notes_html', ''),
                         
                         # Location
-                        'location_type': event.get('location', {}).get('type', ''),
-                        'location_address': event.get('location', {}).get('location', ''),
-                        'location_info': event.get('location', {}).get('additional_info', ''),
+                        'location_type': (event.get('location') or {}).get('type', ''),
+                        'location_address': (event.get('location') or {}).get('location', ''),
+                        'location_info': (event.get('location') or {}).get('additional_info', ''),
                         
                         # URLs
                         'cancel_url': invitee.get('cancel_url', ''),
@@ -350,9 +350,9 @@ def past_appointments(request):
                         'scheduling_url': invitee.get('scheduling_url', ''),
                         
                         # Counter Information
-                        'invitees_total': event.get('invitees_counter', {}).get('total', 0),
-                        'invitees_active': event.get('invitees_counter', {}).get('active', 0),
-                        'invitees_limit': event.get('invitees_counter', {}).get('limit', 0),
+                        'invitees_total': (event.get('invitees_counter') or {}).get('total', 0),
+                        'invitees_active': (event.get('invitees_counter') or {}).get('active', 0),
+                        'invitees_limit': (event.get('invitees_counter') or {}).get('limit', 0),
                         
                         # Event Members
                         'event_members': [{
@@ -370,8 +370,8 @@ def past_appointments(request):
                         } for guest in event_guests],
                         
                         # Calendar Information
-                        'calendar_type': event.get('calendar_event', {}).get('kind', ''),
-                        'calendar_id': event.get('calendar_event', {}).get('external_id', '')
+                        'calendar_type': (event.get('calendar_event') or {}).get('kind', ''),
+                        'calendar_id': (event.get('calendar_event') or {}).get('external_id', '')
                     }
                     appointments.append(appointment)
                 except (ValueError, KeyError) as e:

@@ -1,5 +1,5 @@
-from django.http import JsonResponse
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 import requests
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
@@ -15,9 +15,8 @@ from base.routes.tool_kit.calendly_tool import setup_calendly_webhooks, cleanup_
 
 base_webhook_events = "https://django-acuity-scheduling.vercel.app/"
 
+@login_required
 def list_credentials(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({'error': 'Unauthorized'}, status=403)
 
     credentials = CalendlyCredentials.objects.filter(email=request.user.email)
     
@@ -32,6 +31,7 @@ def list_credentials(request):
         'user': request.user
     })
 
+@login_required
 def edit_credentials(request, credential_id):
     try:
         credential = CalendlyCredentials.objects.get(unique_id=credential_id, email=request.user.email)
@@ -69,20 +69,23 @@ def edit_credentials(request, credential_id):
                 refresh_token=refresh_token or credential.refresh_token
             )
 
-            # Refresh credential object
-            credential.refresh_from_db()
+            messages.success(request, "Credentials updated successfully!")
+            return redirect('list_credentials')
 
         except Exception as e:
             print(f"Error updating credentials: {str(e)}")
-            return JsonResponse({
-                'error': f'Error updating credentials: {str(e)}'
-            }, status=500)
+            messages.error(request, f"Error updating credentials: {str(e)}")
+            return render(request, 'acuityscheduling/edit_credentials.html', {
+                'credential': credential,
+                'error': str(e)
+            })
 
     return render(request, 'acuityscheduling/edit_credentials.html', {
         'credential': credential
     })
 
 
+@login_required
 def create_credentials(request):
     if request.method == 'POST':
         try:
@@ -111,24 +114,22 @@ def create_credentials(request):
                 refresh_token=refresh_token
             )
 
+            messages.success(request, "Credentials created successfully!")
+            return redirect('list_credentials')
+
         except Exception as e:
             print(f"Error creating credentials: {str(e)}")
-            return JsonResponse({
-                'error': f'Error creating credentials: {str(e)}'
-            }, status=500)
+            messages.error(request, f"Error creating credentials: {str(e)}")
+            return render(request, 'acuityscheduling/create_credentials.html', {'error': str(e)})
 
     return render(request, 'acuityscheduling/create_credentials.html')
 
 
+@login_required
 def delete_credentials(request, credential_id):
-    credential = CalendlyCredentials.objects.get(unique_id=credential_id, email=request.user.email)
-    # targets = get_webhooks_with_ids(credential.user_id, credential.api_key)
-    # print(targets, "targets")
-    # for target in targets:
-    #     print(target, "target")
-        # if str(credential.unique_id) in target[1]:
-        #     delete_webhooks(target[0], credential.user_id, credential.api_key)
-    CalendlyCredentials.objects.filter(unique_id=credential_id, email=request.user.email).delete()
+    credential = get_object_or_404(CalendlyCredentials, unique_id=credential_id, email=request.user.email)
+    credential.delete()
+    messages.success(request, "Credentials deleted successfully!")
     return redirect('list_credentials')
 
 def setup_webhook_view(request, credential_id):

@@ -5,7 +5,10 @@ from django.conf import settings
 from base.models import CalendlyCredentials
 from uuid import UUID
 from base.routes.tool_kit.calendly_tool import CalendlyWebhookManager
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
+@login_required
 def calendly_auth(request, credential_id):
     """Step 1: Redirect user to Calendly's OAuth authorization page."""
     if isinstance(credential_id, UUID):
@@ -85,6 +88,12 @@ def calendly_callback(request):
                 
                 credential = CalendlyCredentials.objects.filter(unique_id=credential_id).first()
 
+                # Ensure we have the correct user for the webhook target, even if session is lost
+                current_user = request.user
+                if not current_user.is_authenticated:
+                    from django.contrib.auth.models import User
+                    current_user = User.objects.filter(email=credential.email).first()
+
                 webhook_configs = [
                     {
                         "scope": "user",
@@ -94,7 +103,7 @@ def calendly_callback(request):
                             "invitee_no_show.created",
                             "invitee_no_show.deleted"
                         ],
-                        "target": f"{base_url}/calendly-webhook/meeting/{str(credential.unique_id)}/{request.user.id}/"
+                        "target": f"{base_url}/calendly-webhook/meeting/{str(credential.unique_id)}/{current_user.id if current_user else 'None'}/"
                     }
                 ]
 
@@ -116,28 +125,29 @@ def calendly_callback(request):
                 # Check webhook creation results
                 webhook_status = 'success' if all(result.get('success') for result in webhook_results) else 'partial'
 
+                if webhook_status == 'success':
+                    messages.success(request, "Calendly account connected and webhooks established successfully!")
+                else:
+                    messages.warning(request, "Account connected, but some webhooks failed to initialize.")
+
                 return redirect("list_credentials")
 
             except CalendlyCredentials.DoesNotExist:
                 print(f"❌ No credential found with ID: {credential_id}")
-                return JsonResponse({
-                    'error': f'No credential found with ID: {credential_id}'
-                }, status=404)
+                messages.error(request, f"No credential found with ID: {credential_id}")
+                return redirect("list_credentials")
             except Exception as e:
                 print(f"❌ Error saving tokens or creating webhooks: {str(e)}")
-                return JsonResponse({
-                    'error': f'Error saving tokens or creating webhooks: {str(e)}'
-                }, status=500)
+                messages.error(request, f"Connection failed: {str(e)}")
+                return redirect("list_credentials")
 
         else:
-            print("❌ Token response error:", token_response.json())
-            return JsonResponse({
-                'error': 'Failed to get access token',
-                'details': token_response.json()
-            }, status=400)
+            details = token_response.json()
+            print("❌ Token response error:", details)
+            messages.error(request, f"Failed to get access token: {details.get('error_description', 'Unknown error')}")
+            return redirect("list_credentials")
 
     except Exception as e:
         print(f"❌ Error in calendly_callback: {str(e)}")
-        return JsonResponse({
-            'error': f'An error occurred: {str(e)}'
-        }, status=500)
+        messages.error(request, f"An unexpected error occurred: {str(e)}")
+        return redirect("list_credentials")

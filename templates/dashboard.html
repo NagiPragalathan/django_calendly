@@ -1,117 +1,190 @@
 {% extends 'base.html' %}
 
+{% block title %}Contacts Explorer{% endblock %}
+{% block breadcrumb %}Contacts Explorer{% endblock %}
+
 {% block content %}
-<head>
-    <!-- Tailwind CSS and DaisyUI CDN links -->
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-
-<div class="p-8">
-    <h1 class="text-2xl font-semibold mb-4">Contacts List</h1>
-    
-    <!-- Search Input -->
-    <div class="mb-4">
-        <input 
-            type="text" 
-            id="search-input" 
-            placeholder="Search contacts..." 
-            class="input input-bordered w-full bg-white text-gray-700 placeholder-gray-500 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent" 
-            oninput="searchContacts()"
-            style="    color: white;"
-        />
+<div class="space-y-6">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Contacts Explorer</h1>
+            <p class="text-sm font-medium text-slate-500">Manage and track your lead synchronization across platforms.</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button class="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-2xl hover:bg-slate-50 transition-all shadow-sm flex items-center">
+                <i class="ri-download-2-line mr-2"></i> Export All
+            </button>
+            <button class="px-4 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-2xl hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-200 flex items-center">
+                <i class="ri-add-line mr-2"></i> Add Contact
+            </button>
+        </div>
     </div>
 
-    <div class="overflow-x-auto">
-        <table class="table w-full">
-            <thead>
-                <tr class="bg-gray-100">
-                    <th>Full Name</th>
-                    <th>Phone</th>
-                    <th>Source</th>
-                    <th>Status</th>
-                    <th>Created Date</th>
-                    <th>Details</th>
-                    <th>Chat</th>
-                    <th>Download</th>
-                </tr>
-            </thead>
-            <tbody id="contacts-table">
-                {% for contact in contacts %}
-                    <tr class="hover:bg-gray-50 cursor-pointer contact-row" data-search="{{ contact.fullName }} {{ contact.phone }} {{ contact.source }} {{ contact.contactStatus }} {{ contact.created }}">
-                        <td>{{ contact.fullName }}</td>
-                        <td>{{ contact.phone }}</td>
-                        <td>{{ contact.source }}</td>
-                        <td>{{ contact.contactStatus }}</td>
-                        <td>{{ contact.created }}</td>
-                        <td><button class="btn btn-warning" onclick="showContactDetails('{{ contact.id }}')">Details</button></td>
-                        <td><button class="btn btn-success" onclick="redirect('{{ contact.phone }}')">Chat</button></td>
-                        <td><button class="btn btn-neutral" onclick="download('{{ contact.phone }}')">Download</button></td>
+    <!-- Search & Filters -->
+    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
+        <div class="relative group">
+            <i class="ri-search-2-line absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors"></i>
+            <input 
+                type="text" 
+                id="search-input" 
+                placeholder="Search by name, phone, or status..." 
+                class="w-full pl-11 pr-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-100 transition-all"
+                oninput="searchContacts()"
+            />
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 border-b border-slate-100">
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Communication</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Origin</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody id="contacts-table" class="divide-y divide-slate-50">
+                    {% for contact in contacts %}
+                        <tr class="hover:bg-slate-50/50 transition-colors group contact-row" 
+                            data-search="{{ contact.fullName }} {{ contact.phone }} {{ contact.source }} {{ contact.contactStatus }}">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-bold group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-all">
+                                        {{ contact.fullName|slice:":1"|upper }}
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-900">{{ contact.fullName }}</p>
+                                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-tight">{{ contact.created|date:"M d, Y" }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <p class="text-sm font-medium text-slate-600">{{ contact.phone }}</p>
+                                <p class="text-[10px] font-bold text-indigo-400 uppercase">Primary Contact</p>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider">
+                                    {{ contact.source }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider
+                                    {% if contact.contactStatus == 'Active' %}bg-emerald-50 text-emerald-600
+                                    {% elif contact.contactStatus == 'Pending' %}bg-amber-50 text-amber-600
+                                    {% else %}bg-slate-100 text-slate-600{% endif %}">
+                                    <span class="w-1.5 h-1.5 rounded-full mr-2 
+                                        {% if contact.contactStatus == 'Active' %}bg-emerald-500
+                                        {% elif contact.contactStatus == 'Pending' %}bg-amber-500
+                                        {% else %}bg-slate-400{% endif %}"></span>
+                                    {{ contact.contactStatus }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="showContactDetails('{{ contact.id }}')" class="p-2 bg-white border border-slate-200 rounded-xl hover:text-indigo-600 transition-all shadow-sm">
+                                        <i class="ri-eye-line"></i>
+                                    </button>
+                                    <button onclick="redirect('{{ contact.phone }}')" class="p-2 bg-white border border-slate-200 rounded-xl hover:text-emerald-600 transition-all shadow-sm">
+                                        <i class="ri-chat-3-line"></i>
+                                    </button>
+                                    <button onclick="download('{{ contact.phone }}')" class="p-2 bg-white border border-slate-200 rounded-xl hover:text-slate-900 transition-all shadow-sm">
+                                        <i class="ri-download-cloud-line"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-300 mb-4">
+                                        <i class="ri-user-search-line text-3xl"></i>
+                                    </div>
+                                    <p class="text-sm font-bold text-slate-900">No contacts found</p>
+                                    <p class="text-xs text-slate-400 mt-1">Try adjusting your search filters or add a new contact.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
+</div>
 
-    <!-- Contact Details Modal -->
-    <input type="checkbox" id="contact-modal" class="modal-toggle" />
-    <div class="modal">
-        <div class="modal-box w-11/12 max-w-5xl">
-            <h3 class="text-lg font-bold text-white">Contact Details</h3>
-            <div id="contact-details" class="py-4">
-                <!-- Contact details will be loaded here -->
-            </div>
-            <div class="modal-action">
-                <label for="contact-modal" class="btn">Close</label>
-            </div>
+<!-- Contact Details Modal -->
+<div id="contact-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal()"></div>
+    <div class="relative bg-white w-full max-w-2xl rounded-[2rem] shadow-2xl border border-slate-100 overflow-hidden animate-fade-up">
+        <div class="px-8 py-6 border-b border-slate-50 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-slate-900">Contact Details</h3>
+            <button onclick="closeModal()" class="p-2 hover:bg-slate-50 rounded-xl transition-all">
+                <i class="ri-close-line text-xl text-slate-400"></i>
+            </button>
+        </div>
+        <div id="contact-details" class="p-8 space-y-6">
+            <!-- Loaded dynamically -->
+        </div>
+        <div class="px-8 py-6 bg-slate-50 flex justify-end">
+            <button onclick="closeModal()" class="px-6 py-2 bg-white border border-slate-200 text-sm font-bold rounded-xl hover:bg-slate-100 transition-all">Close Window</button>
         </div>
     </div>
 </div>
 
 <script>
-    function redirect(number){
-        window.location.href = "messages/"+number;
-    }
-    function download(number){
-        window.location.href = "download-messages/"+number;
-    }
+    function redirect(number) { window.location.href = "messages/" + number; }
+    function download(number) { window.location.href = "download-messages/" + number; }
+
+    function closeModal() { document.getElementById('contact-modal').classList.add('hidden'); }
 
     async function showContactDetails(contactId) {
-        const response = await fetch(`/contacts/${contactId}/`);
-        const contact = await response.json();
+        const modal = document.getElementById('contact-modal');
+        const container = document.getElementById('contact-details');
+        
+        container.innerHTML = '<div class="flex justify-center py-12"><div class="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div></div>';
+        modal.classList.remove('hidden');
 
-        document.getElementById('contact-details').innerHTML = `
-            <table style="width: 100%; color: white;">
-                <tr>
-                    <td><strong>Full Name:</strong></td>
-                    <td>${contact.fullName}</td>
-                </tr>
-                <tr>
-                    <td><strong>Phone:</strong></td>
-                    <td>${contact.phone}</td>
-                </tr>
-                <tr>
-                    <td><strong>Source:</strong></td>
-                    <td>${contact.source}</td>
-                </tr>
-                <tr>
-                    <td><strong>Status:</strong></td>
-                    <td>${contact.contactStatus}</td>
-                </tr>
-                <tr>
-                    <td><strong>Created Date:</strong></td>
-                    <td>${contact.created}</td>
-                </tr>
-            </table>
-        `;
+        try {
+            const response = await fetch(`/contacts/${contactId}/`);
+            const contact = await response.json();
 
-        document.getElementById('contact-modal').checked = true;
+            container.innerHTML = `
+                <div class="grid grid-cols-2 gap-8">
+                    <div class="space-y-1">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Full Name</p>
+                        <p class="text-sm font-bold text-slate-900">${contact.fullName}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Phone Number</p>
+                        <p class="text-sm font-bold text-slate-900">${contact.phone}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Data Source</p>
+                        <p class="text-sm font-bold text-slate-900">${contact.source}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Current Status</p>
+                        <p class="text-sm font-bold text-emerald-600 font-bold">${contact.contactStatus}</p>
+                    </div>
+                    <div class="col-span-2 space-y-1">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Registration Date</p>
+                        <p class="text-sm font-bold text-slate-900">${contact.created}</p>
+                    </div>
+                </div>
+            `;
+        } catch (e) {
+            container.innerHTML = '<p class="text-center text-rose-500 font-bold">Failed to load details.</p>';
+        }
     }
 
     function searchContacts() {
         const input = document.getElementById('search-input').value.toLowerCase();
         const rows = document.querySelectorAll('.contact-row');
-
         rows.forEach(row => {
             const searchText = row.getAttribute('data-search').toLowerCase();
             row.style.display = searchText.includes(input) ? '' : 'none';

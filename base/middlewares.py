@@ -69,9 +69,13 @@ class UserDataMiddleware:
             public_url_names = [
                 'login',
                 'signup',
-                'calendly_callback',  # Add the name from your urls.py
-                'calendly_auth',      # Add the name from your urls.py
-                'calendly_webhook_create_meeting'
+                'calendly_callback',
+                'calendly_auth',
+                'calendly_webhook_create_meeting',
+                'list_credentials',
+                'create_credentials',
+                'edit_credentials',
+                'delete_credentials'
             ]
             current_url_name = resolve(request.path_info).url_name
             print(f"Current URL name: {current_url_name}", request.path_info)

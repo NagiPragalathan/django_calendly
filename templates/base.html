@@ -3,363 +3,243 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calendly Hub</title>
+    <title>Calendly Hub | {% block title %}Admin{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://unpkg.com/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
-    <!-- Add any additional CSS/JS here -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-sidebar { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); }
+        .nav-item-active { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); }
+        .gradient-text { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .sidebar-animate { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Mobile Menu Button (visible on small screens) -->
+<body class="bg-[#f8fafc] text-slate-900 custom-scrollbar">
+    <!-- Mobile Menu Button -->
     <div class="lg:hidden fixed top-4 left-4 z-50">
-        <button id="mobile-menu-button" class="p-2 rounded-lg bg-white shadow-lg text-gray-600 hover:bg-gray-50">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-            </svg>
+        <button id="mobile-menu-button" class="p-2.5 rounded-xl bg-white shadow-xl text-slate-600 hover:text-indigo-600 border border-slate-100 transition-all active:scale-95">
+            <i class="ri-menu-2-line text-2xl"></i>
         </button>
     </div>
 
     <div class="flex min-h-screen">
         <!-- Sidebar -->
-        <div id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full lg:translate-x-0 
-                                w-72 bg-white shadow-xl transition-transform duration-300 ease-in-out z-40">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full lg:translate-x-0 
+                                  w-72 glass-sidebar border-r border-slate-100 transition-transform duration-300 ease-in-out z-40">
             <!-- Logo Section -->
-            <div class="sticky top-0 z-10 bg-white border-b border-gray-100">
-                <div class="px-6 py-8">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl 
-                                   flex items-center justify-center">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                        </div>
-                        <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 
-                                   bg-clip-text text-transparent">
-                            Calendly Hub
-                        </span>
+            <div class="px-8 py-10">
+                <div class="flex items-center space-x-3 group cursor-pointer">
+                    <div class="w-12 h-12 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-2xl 
+                               flex items-center justify-center shadow-lg shadow-indigo-200 group-hover:rotate-6 transition-transform">
+                        <i class="ri-calendar-event-line text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold tracking-tight text-slate-900">Calendly <span class="text-indigo-600">Hub</span></h1>
+                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-[2px]">Integration Suite</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Navigation (scrollable) -->
-            <div class="h-[calc(100vh-5rem)] overflow-y-auto pb-6">
-                <div class="px-4 py-6 space-y-6">
-                    <!-- Main Navigation -->
-                    <div class="space-y-6">
-                        <!-- Analytics Section -->
-                        <div>
-                            <h3 class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                Analytics
-                            </h3>
-                            <div class="mt-3 space-y-1">
-                                <a href="{% url 'acuity_dashboard' %}" 
-                                   class="group flex items-center px-4 py-2.5 text-sm font-medium rounded-xl 
-                                          transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50">
-                                    <span class="flex items-center justify-center w-8 h-8 mr-3 rounded-lg 
-                                               bg-gradient-to-r from-blue-100 to-blue-50 text-blue-600 
-                                               group-hover:from-blue-600 group-hover:to-purple-600 group-hover:text-white 
-                                               transition-all duration-200">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                                        </svg>
-                                    </span>
-                                    Dashboard
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Appointments Section -->
-                        <div>
-                            <h3 class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                Appointments
-                            </h3>
-                            <div class="mt-3 space-y-1">
-                                <a href="{% url 'list_appointments' %}" 
-                                   class="group flex items-center px-4 py-2.5 text-sm font-medium rounded-xl 
-                                          transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50">
-                                    <span class="flex items-center justify-center w-8 h-8 mr-3 rounded-lg 
-                                               bg-gradient-to-r from-green-100 to-green-50 text-green-600 
-                                               group-hover:from-blue-600 group-hover:to-purple-600 group-hover:text-white 
-                                               transition-all duration-200">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                    </span>
-                                    Upcoming
-                                </a>
-
-                                <a href="{% url 'past_appointments' %}" 
-                                   class="group flex items-center px-4 py-2.5 text-sm font-medium rounded-xl 
-                                          transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50">
-                                    <span class="flex items-center justify-center w-8 h-8 mr-3 rounded-lg 
-                                               bg-gradient-to-r from-purple-100 to-purple-50 text-purple-600 
-                                               group-hover:from-blue-600 group-hover:to-purple-600 group-hover:text-white 
-                                               transition-all duration-200">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                    </span>
-                                    Past
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Settings Section -->
-                        <div>
-                            <h3 class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                Settings
-                            </h3>
-                            <div class="mt-3 space-y-1">
-                                <a href="{% url 'appointment_types' %}" 
-                                   class="group flex items-center px-4 py-2.5 text-sm font-medium rounded-xl 
-                                          transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50">
-                                    <span class="flex items-center justify-center w-8 h-8 mr-3 rounded-lg 
-                                               bg-gradient-to-r from-orange-100 to-orange-50 text-orange-600 
-                                               group-hover:from-blue-600 group-hover:to-purple-600 group-hover:text-white 
-                                               transition-all duration-200">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                                        </svg>
-                                    </span>
-                                    Event Links
-                                </a>
-
-                                <a href="{% url 'list_credentials' %}" 
-                                   class="group flex items-center px-4 py-2.5 text-sm font-medium rounded-xl 
-                                          transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50">
-                                    <span class="flex items-center justify-center w-8 h-8 mr-3 rounded-lg 
-                                               bg-gradient-to-r from-pink-100 to-pink-50 text-pink-600 
-                                               group-hover:from-blue-600 group-hover:to-purple-600 group-hover:text-white 
-                                               transition-all duration-200">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                                        </svg>
-                                    </span>
-                                    Credentials
-                                </a>
-                            </div>
-                        </div>
+            <!-- Navigation -->
+            <nav class="px-4 pb-6 space-y-8 h-[calc(100vh-10rem)] overflow-y-auto custom-scrollbar">
+                <!-- Group -->
+                <div class="space-y-2">
+                    <p class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-[2px]">Main Interface</p>
+                    <div class="space-y-1">
+                        <a href="{% url 'acuity_dashboard' %}" class="nav-link flex items-center px-4 py-3 text-sm font-semibold rounded-2xl text-slate-600 hover:bg-white hover:text-indigo-600 transition-all border border-transparent hover:border-slate-100 group">
+                            <i class="ri-dashboard-3-line mr-3 text-lg group-hover:scale-110 transition-transform"></i>
+                            Analytics Dashboard
+                        </a>
+                        <a href="{% url 'list_appointments' %}" class="nav-link flex items-center px-4 py-3 text-sm font-semibold rounded-2xl text-slate-600 hover:bg-white hover:text-indigo-600 transition-all border border-transparent hover:border-slate-100 group">
+                            <i class="ri-calendar-2-line mr-3 text-lg group-hover:scale-110 transition-transform"></i>
+                            Upcoming Meetings
+                        </a>
+                        <a href="{% url 'past_appointments' %}" class="nav-link flex items-center px-4 py-3 text-sm font-semibold rounded-2xl text-slate-600 hover:bg-white hover:text-indigo-600 transition-all border border-transparent hover:border-slate-100 group">
+                            <i class="ri-history-line mr-3 text-lg group-hover:scale-110 transition-transform"></i>
+                            Meeting History
+                        </a>
                     </div>
                 </div>
+
+                <div class="space-y-2">
+                    <p class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-[2px]">Configuration</p>
+                    <div class="space-y-1">
+                        <a href="{% url 'appointment_types' %}" class="nav-link flex items-center px-4 py-3 text-sm font-semibold rounded-2xl text-slate-600 hover:bg-white hover:text-indigo-600 transition-all border border-transparent hover:border-slate-100 group">
+                            <i class="ri-links-line mr-3 text-lg group-hover:scale-110 transition-transform"></i>
+                            Scheduling Links
+                        </a>
+                        <a href="{% url 'list_credentials' %}" class="nav-link flex items-center px-4 py-3 text-sm font-semibold rounded-2xl text-slate-600 hover:bg-white hover:text-indigo-600 transition-all border border-transparent hover:border-slate-100 group">
+                            <i class="ri-key-2-line mr-3 text-lg group-hover:scale-110 transition-transform"></i>
+                            API Credentials
+                        </a>
+                        <a href="{% url 'settings_form' %}" class="nav-link flex items-center px-4 py-3 text-sm font-semibold rounded-2xl text-slate-600 hover:bg-white hover:text-indigo-600 transition-all border border-transparent hover:border-slate-100 group">
+                            <i class="ri-settings-4-line mr-3 text-lg group-hover:scale-110 transition-transform"></i>
+                            System Settings
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Bottom Ad/Banner -->
+            <div class="absolute bottom-6 left-4 right-4">
+                <div class="p-4 bg-gradient-to-tr from-slate-900 to-slate-800 rounded-3xl shadow-xl shadow-slate-200 overflow-hidden relative group">
+                    <div class="absolute -top-4 -right-4 w-16 h-16 bg-white/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
+                    <p class="text-[10px] font-bold text-indigo-400 mb-1">PRO PLAN</p>
+                    <p class="text-xs font-semibold text-white mb-3 leading-relaxed">Unlock advanced Zoho automation.</p>
+                    <button class="w-full py-2 bg-indigo-600 text-white text-[10px] font-bold rounded-xl hover:bg-indigo-500 transition-all active:scale-95 shadow-lg shadow-indigo-900/20">
+                        Upgrade Now
+                    </button>
+                </div>
             </div>
-        </div>
+        </aside>
 
         <!-- Main Content Area -->
-        <div class="flex-1 lg:ml-72">
-            <!-- Top Bar -->
-            <header class="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200">
-                <div class="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+        <div class="flex-1 lg:ml-72 flex flex-col min-h-screen">
+            <!-- Header -->
+            <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-100">
+                <div class="px-6 py-4 flex items-center justify-between">
                     <div class="flex items-center space-x-4">
-                        <h1 class="text-xl sm:text-2xl font-semibold text-gray-800">
-                            {% block page_title %}Dashboard{% endblock %}
-                        </h1>
+                        <div class="hidden lg:flex items-center space-x-2 text-slate-400">
+                            <i class="ri-home-4-line"></i>
+                            <i class="ri-arrow-right-s-line"></i>
+                            <span class="text-sm font-medium text-slate-900">{% block breadcrumb %}Dashboard{% endblock %}</span>
+                        </div>
                     </div>
                     
-                    <!-- User Profile -->
-                    <div class="relative">
-                        <button id="profile-button"
-                                class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 
-                                       focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            {% if request.calendly_user.avatar_url %}
-                                <img src="{{ request.calendly_user.avatar_url }}" 
-                                     alt="{{ request.calendly_user.name }}" 
-                                     class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm">
-                            {% else %}
-                                <div class="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 
-                                           flex items-center justify-center text-white">
-                                    <span class="text-sm font-medium">
-                                        {{ request.calendly_user.name|slice:":1"|upper }}
-                                    </span>
-                                </div>
-                            {% endif %}
-                            <div class="hidden md:block text-left">
-                                <p class="text-sm font-medium text-gray-900">
-                                    {{ request.calendly_user.name }}
-                                </p>
-                                <p class="text-xs text-gray-500">{{ request.calendly_user.email }}</p>
-                            </div>
+                    <div class="flex items-center space-x-6">
+                        <!-- Notifications -->
+                        <button class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-all relative">
+                            <i class="ri-notification-3-line text-xl"></i>
+                            <span class="absolute top-2 right-2 w-2 h-2 bg-indigo-600 rounded-full border-2 border-white"></span>
                         </button>
 
-                        <!-- Dropdown Menu -->
-                        <div id="profile-dropdown"
-                             class="hidden absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg 
-                                    border border-gray-100 py-2 z-50">
-                            <div class="px-4 py-3 border-b border-gray-100">
-                                <p class="text-sm font-medium text-gray-900">
-                                    {{ request.calendly_user.name }}
-                                </p>
-                                <p class="text-xs text-gray-500">{{ request.calendly_user.email }}</p>
-                            </div>
-                            
-                            <div class="px-4 py-2">
-                                <div class="text-xs text-gray-500 uppercase tracking-wider">
-                                    Timezone
+                        <!-- User Profile -->
+                        <div class="relative">
+                            <button id="profile-button" class="flex items-center space-x-3 group p-1.5 pr-3 rounded-2xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">
+                                <div class="relative">
+                                    {% if request.calendly_user.avatar_url %}
+                                        <img src="{{ request.calendly_user.avatar_url }}" class="w-10 h-10 rounded-xl object-cover border-2 border-white shadow-sm group-hover:shadow-md transition-all">
+                                    {% else %}
+                                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center text-white ring-2 ring-white shadow-sm">
+                                            <span class="text-sm font-bold">{{ request.calendly_user.name|slice:":1"|upper }}</span>
+                                        </div>
+                                    {% endif %}
+                                    <div class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white"></div>
                                 </div>
-                                <div class="text-sm text-gray-700">
-                                    {{ request.calendly_user.timezone }}
+                                <div class="hidden md:block text-left">
+                                    <p class="text-sm font-bold text-slate-900 leading-none mb-1 group-hover:text-indigo-600 transition-colors">
+                                        {{ request.calendly_user.name }}
+                                    </p>
+                                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider leading-none">
+                                        Administrator
+                                    </p>
                                 </div>
-                            </div>
+                                <i class="ri-arrow-down-s-line text-slate-400 group-hover:text-indigo-600 transition-colors"></i>
+                            </button>
 
-                            <div class="px-4 py-2">
-                                <a href="{{ request.calendly_user.scheduling_url }}" 
-                                   target="_blank"
-                                   class="text-sm text-blue-600 hover:text-blue-700">
-                                    View Scheduling Page
-                                </a>
-                            </div>
-
-                            <div class="border-t border-gray-100 mt-2 pt-2">
-                                <a href="{% url 'zoho_auth' %}" target="_blank"
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                    Connect Zoho Account
-                                </a>
-                                <a href="{% url 'dashboard' %}" target="_blank"
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                    Open site in new tab
-                                </a>
-                                <a href="{% url 'settings_form' %}" 
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                    Settings
-                                </a>
-                                <a href="/logout" 
-                                   class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                    Sign Out
-                                </a>
+                            <!-- Dropdown -->
+                            <div id="profile-dropdown" class="hidden absolute right-0 mt-3 w-72 bg-white rounded-3xl shadow-2xl shadow-indigo-200 border border-slate-50 py-3 z-50 animate-fade-in">
+                                <div class="px-6 py-4 border-b border-slate-50 mb-2">
+                                    <p class="text-sm font-bold text-slate-900">{{ request.calendly_user.name }}</p>
+                                    <p class="text-xs text-slate-400">{{ request.calendly_user.email }}</p>
+                                </div>
+                                <div class="px-3 space-y-1">
+                                    <a href="{{ request.calendly_user.scheduling_url }}" target="_blank" class="flex items-center px-3 py-2 text-sm font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all">
+                                        <i class="ri-external-link-line mr-3"></i>
+                                        Scheduling Page
+                                    </a>
+                                    <a href="{% url 'zoho_auth' %}" class="flex items-center px-3 py-2 text-sm font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all">
+                                        <i class="ri-refresh-line mr-3"></i>
+                                        Sync Zoho CRM
+                                    </a>
+                                    <a href="/logout" class="flex items-center px-3 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all mt-2 border-t border-slate-50 pt-3">
+                                        <i class="ri-logout-box-r-line mr-3"></i>
+                                        Disconnect Account
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </header>
 
-            <!-- Main Content -->
-            <main class="flex-1">
-                <!-- Breadcrumbs -->
-                <div class="bg-gray-50 border-b border-gray-100">
-                    <div class="px-4 sm:px-6 lg:px-8 py-3">
-                        <nav class="flex text-sm text-gray-500" aria-label="Breadcrumb">
-                            {% block breadcrumbs %}
-                            <ol class="flex items-center space-x-2">
-                                <li>
-                                    <a href="/" class="hover:text-gray-700">Home</a>
-                                </li>
-                                <li class="flex items-center space-x-2">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                    </svg>
-                                    <span class="text-gray-700">{% block breadcrumb_page %}Dashboard{% endblock %}</span>
-                                </li>
-                            </ol>
-                            {% endblock %}
-                        </nav>
-                    </div>
-                </div>
-
-                <!-- Page Content -->
-                <div class="px-4 sm:px-6 lg:px-8 py-6">
-                    <!-- Flash Messages -->
-                    {% if messages %}
-                        <div class="space-y-2 mb-6">
-                            {% for message in messages %}
-                                <div class="p-4 rounded-lg flex items-center space-x-3 
-                                            {% if message.tags == 'success' %}bg-green-50 text-green-800
-                                            {% elif message.tags == 'error' %}bg-red-50 text-red-800
-                                            {% else %}bg-blue-50 text-blue-800{% endif %}">
-                                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        {% if message.tags == 'success' %}
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        {% elif message.tags == 'error' %}
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        {% else %}
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        {% endif %}
-                                    </svg>
-                                    <p>{{ message }}</p>
+            <!-- Main Content Area -->
+            <main class="flex-1 p-4 lg:p-8">
+                <!-- Messages -->
+                {% if messages %}
+                    <div class="max-w-7xl mx-auto mb-8 space-y-3">
+                        {% for message in messages %}
+                            <div class="p-4 rounded-2xl flex items-center space-x-3 animate-fade-in border shadow-sm
+                                        {% if message.tags == 'success' %}bg-emerald-50 text-emerald-800 border-emerald-100
+                                        {% elif message.tags == 'error' %}bg-rose-50 text-rose-800 border-rose-100
+                                        {% else %}bg-indigo-50 text-indigo-800 border-indigo-100{% endif %}">
+                                <div class="w-8 h-8 rounded-xl flex items-center justify-center
+                                            {% if message.tags == 'success' %}bg-emerald-500
+                                            {% elif message.tags == 'error' %}bg-rose-500
+                                            {% else %}bg-indigo-500{% endif %} text-white font-bold">
+                                    {% if message.tags == 'success' %}<i class="ri-checkbox-circle-line"></i>
+                                    {% elif message.tags == 'error' %}<i class="ri-error-warning-line"></i>
+                                    {% else %}<i class="ri-information-line"></i>{% endif %}
                                 </div>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-
-                    <!-- Main Content Block -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                        <div class="p-6">
-                            {% block content %}{% endblock %}
-                        </div>
+                                <p class="text-sm font-semibold">{{ message }}</p>
+                            </div>
+                        {% endfor %}
                     </div>
+                {% endif %}
+
+                <!-- Content Block -->
+                <div class="max-w-full mx-auto animate-fade-up">
+                    {% block content %}{% endblock %}
                 </div>
             </main>
+            
+            <!-- Footer -->
+            <footer class="px-8 py-6 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between text-slate-400 text-[10px] font-bold uppercase tracking-[1px]">
+                <p>&copy; 2026 CALENDLY HUB ENGINE. ALL RIGHTS RESERVED.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="hover:text-indigo-600">Documentation</a>
+                    <a href="#" class="hover:text-indigo-600">API Support</a>
+                    <a href="#" class="hover:text-indigo-600">Privacy</a>
+                </div>
+            </footer>
         </div>
     </div>
 
     <!-- Scripts -->
     <script>
-        // Mobile menu toggle
         const mobileMenuButton = document.getElementById('mobile-menu-button');
         const sidebar = document.getElementById('sidebar');
-        
-        mobileMenuButton.addEventListener('click', () => {
+        const profileButton = document.getElementById('profile-button');
+        const profileDropdown = document.getElementById('profile-dropdown');
+
+        mobileMenuButton?.addEventListener('click', (e) => {
+            e.stopPropagation();
             sidebar.classList.toggle('-translate-x-full');
         });
 
-        // Profile dropdown toggle
-        const profileButton = document.getElementById('profile-button');
-        const profileDropdown = document.getElementById('profile-dropdown');
-        let isDropdownOpen = false;
-
-        function toggleDropdown() {
-            isDropdownOpen = !isDropdownOpen;
-            profileDropdown.classList.toggle('hidden', !isDropdownOpen);
-        }
-
-        // Toggle dropdown on button click
-        profileButton.addEventListener('click', (e) => {
+        profileButton?.addEventListener('click', (e) => {
             e.stopPropagation();
-            toggleDropdown();
+            profileDropdown.classList.toggle('hidden');
         });
 
-        // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
-            if (isDropdownOpen && !profileDropdown.contains(e.target) && !profileButton.contains(e.target)) {
-                isDropdownOpen = false;
-                profileDropdown.classList.add('hidden');
+            if (!profileButton?.contains(e.target)) profileDropdown?.classList.add('hidden');
+            if (window.innerWidth < 1024 && !sidebar?.contains(e.target) && !mobileMenuButton?.contains(e.target)) {
+                sidebar?.classList.add('-translate-x-full');
             }
         });
 
-        // Prevent dropdown from closing when clicking inside it
-        profileDropdown.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', (e) => {
-            if (window.innerWidth < 1024 && 
-                !sidebar.contains(e.target) && 
-                !mobileMenuButton.contains(e.target) && 
-                !sidebar.classList.contains('-translate-x-full')) {
-                sidebar.classList.add('-translate-x-full');
-            }
-        });
-
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            if (window.innerWidth >= 1024) {
-                sidebar.classList.remove('-translate-x-full');
-            }
-        });
-
-        // Active navigation highlighting
-        document.addEventListener('DOMContentLoaded', function() {
-            const path = window.location.pathname;
-            document.querySelectorAll('a').forEach(link => {
-                if (link.getAttribute('href') === path) {
-                    link.classList.add('bg-gradient-to-r', 'from-blue-50', 'to-purple-50', 'text-blue-600');
+        // Set active link
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('nav-item-active');
+                    link.classList.remove('text-slate-600');
                 }
             });
         });
