@@ -12,6 +12,9 @@
             <p class="text-sm font-medium text-slate-500">Historical records of all your completed scheduling cycles.</p>
         </div>
         <div class="flex items-center space-x-3">
+            <button onclick="syncCalendarToZoho()" id="sync-btn" class="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-2xl hover:bg-slate-50 transition-all shadow-sm flex items-center disabled:opacity-50">
+                <i id="sync-icon" class="ri-calendar-event-line mr-2"></i> <span id="sync-text">Sync Calendar</span>
+            </button>
             <button onclick="document.getElementById('archive-filters').classList.toggle('hidden')" 
                     class="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-2xl hover:bg-slate-50 transition-all shadow-sm flex items-center">
                 <i class="ri-filter-3-line mr-2"></i> Filters
@@ -198,6 +201,64 @@
     </div>
 </div>
 
+<!-- Sync Option Modal -->
+<div id="sync-modal" class="fixed inset-0 z-[110] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeSyncModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="relative inline-block align-bottom bg-white rounded-[2.5rem] text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-slate-100">
+            <div class="px-8 pt-10 pb-8 sm:p-10">
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-16 h-16 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-6">
+                        <i class="ri-refresh-line text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-black text-slate-900 leading-tight mb-2">Sync Intelligence</h3>
+                    <p class="text-sm font-medium text-slate-500 mb-8">Select the synchronization protocol for your Zoho CRM projection.</p>
+                    
+                    <div class="grid grid-cols-1 gap-4 w-full">
+                        <button onclick="triggerSync('upcoming')" class="group flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-white hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/10 transition-all text-left">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-indigo-600 transition-colors">
+                                    <i class="ri-calendar-check-line"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-900">Project Upcoming</p>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Next 30 Days Only</p>
+                                </div>
+                            </div>
+                            <i class="ri-arrow-right-s-line text-slate-300"></i>
+                        </button>
+
+                        <button onclick="triggerSync('all')" class="group flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-white hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/10 transition-all text-left">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-indigo-600 transition-colors">
+                                    <i class="ri-history-line"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-900">Full Archive Backfill</p>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Historical & Future Data</p>
+                                </div>
+                            </div>
+                            <i class="ri-arrow-right-s-line text-slate-300"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-50/50 px-8 py-5 flex justify-center">
+                <button onclick="closeSyncModal()" class="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Cancel Protocol</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Global Orchestration Progress Bar -->
+<div id="sync-progress-bar" class="fixed top-0 left-0 w-full h-1.5 z-[1000] hidden bg-slate-100">
+    <div id="progress-fill" class="h-full bg-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.5)] transition-all duration-300 ease-out w-0"></div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container" class="fixed bottom-8 right-8 z-[200] flex flex-col gap-3"></div>
+
 <script>
     function showAppointmentDetails(data) {
         const modal = document.getElementById('detail-modal');
@@ -225,6 +286,94 @@
 
     function closeDetailModal() {
         document.getElementById('detail-modal').classList.add('hidden');
+    }
+
+    function openSyncModal() { document.getElementById('sync-modal').classList.remove('hidden'); }
+    function closeSyncModal() { document.getElementById('sync-modal').classList.add('hidden'); }
+
+    async function triggerSync(type) {
+        closeSyncModal();
+        const btn = document.getElementById('sync-btn');
+        const icon = document.getElementById('sync-icon');
+        const text = document.getElementById('sync-text');
+        const progressBar = document.getElementById('sync-progress-bar');
+        const progressFill = document.getElementById('progress-fill');
+        
+        btn.disabled = true;
+        icon.className = 'ri-loader-4-line mr-2 animate-spin';
+        text.innerText = 'Syncing Records...';
+
+        // Show and animate progress bar (Indeterminate/Simulated)
+        progressBar.classList.remove('hidden');
+        progressFill.style.width = '0%';
+        
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            if (progress < 90) {
+                progress += Math.random() * 5;
+                progressFill.style.width = `${progress}%`;
+            }
+        }, 800);
+        
+        let params = new URLSearchParams();
+        if (type === 'upcoming') {
+            const now = new Date().toISOString().split('T')[0];
+            params.append('start_date', now);
+        } else {
+            const start = document.querySelector('input[name="start_date"]')?.value || '';
+            const end = document.querySelector('input[name="end_date"]')?.value || '';
+            if (start) params.append('start_date', start);
+            if (end) params.append('end_date', end);
+        }
+
+        try {
+            const response = await fetch(`{% url "sync_to_crm" %}?${params.toString()}`);
+            const data = await response.json();
+            
+            clearInterval(progressInterval);
+            progressFill.style.width = '100%';
+
+            if (data.success) {
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast(data.error || 'Sync failed', 'error');
+                progressBar.classList.add('hidden');
+            }
+        } catch (err) {
+            clearInterval(progressInterval);
+            showToast('Network error during sync', 'error');
+            progressBar.classList.add('hidden');
+        } finally {
+            btn.disabled = false;
+            icon.className = 'ri-calendar-event-line mr-2';
+            text.innerText = 'Sync Calendar';
+        }
+    }
+
+    function syncCalendarToZoho() {
+        openSyncModal();
+    }
+
+    function showToast(message, type) {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        const isSuccess = type === 'success';
+        
+        toast.className = `flex items-center space-x-3 px-6 py-4 rounded-2xl shadow-2xl border transition-all duration-500 transform translate-x-0 ${
+            isSuccess ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-800'
+        }`;
+        
+        toast.innerHTML = `
+            <i class="${isSuccess ? 'ri-checkbox-circle-line' : 'ri-error-warning-line'} text-xl"></i>
+            <p class="text-sm font-bold">${message}</p>
+        `;
+        
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-x-full');
+            setTimeout(() => toast.remove(), 500);
+        }, 4000);
     }
 </script>
 {% endblock %}

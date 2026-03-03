@@ -62,25 +62,6 @@ def create_event(access_token, event_data):
         print("Failed to create event:", response.text)
         return False
 
-def add_meeting_to_zoho_crm(event_data, user_id):
-    print("adding meeting to zoho")
-    zoho_token = ZohoToken.objects.get(user=user_id)
-    access_token = zoho_token.access_token
-    print("access_token", access_token)
-    check = check_access_token_validity(access_token)
-    if not check:
-        access_token = get_access_token(CLIENT_ID, CLIENT_SECRET, zoho_token.refresh_token)
-        ZohoToken.objects.filter(user=user_id).update(access_token=access_token)
-    else:
-        access_token = zoho_token.access_token
-    try:
-        create_event(access_token, event_data)
-        return True
-    except Exception as e:
-        print("Error:", e)
-        return False
-    
-    
 def find_meeting_in_zoho(acuity_id, access_token):
     """
     Searches for an existing meeting in Zoho CRM using the Acuity_ID.
@@ -106,6 +87,74 @@ def find_meeting_in_zoho(acuity_id, access_token):
     except Exception as e:
         print("Error searching for event in Zoho CRM:", e)
         return None
+
+def find_calendly_meeting_in_zoho(event_data, access_token):
+    """
+    Advanced multi-layered search for existing Calendly meetings in Zoho CRM.
+    1. Primary: Search by unique Calendly Invitee URI (with quotes)
+    2. Fallback: Search by Subject + Start DateTime (Human-readable uniqueness)
+    """
+    try:
+        invitee_uri = event_data.get("Calendly_Invitee_Uri")
+        if invitee_uri:
+            # Protocol 1: Direct URI match (Wrapped in quotes to handle slashes/colons)
+            url = f"https://www.zohoapis.com/crm/v2/Events/search?criteria=(Calendly_Invitee_Uri:equals:\"{invitee_uri}\")"
+            headers = {"Authorization": f"Zoho-oauthtoken {access_token}"}
+            response = requests.get(url, headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                if "data" in data and len(data["data"]) > 0:
+                    print(f"✅ Deduplication Success: Match found via URI mapping.")
+                    return data["data"][0]
+
+        # Protocol 2: Subject + Time Fallback (Crucial if custom fields are not searchable)
+        subject = event_data.get("Subject")
+        start_time = event_data.get("Start_DateTime")
+        if subject and start_time:
+            # We search specifically for the subject and then locally filter by time to be 100% sure
+            url = f"https://www.zohoapis.com/crm/v2/Events/search?criteria=(Subject:equals:\"{subject}\")"
+            headers = {"Authorization": f"Zoho-oauthtoken {access_token}"}
+            response = requests.get(url, headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                for record in data.get("data", []):
+                    # Zoho timestamps might be slightly different in format, so we normalize
+                    if record.get("Start_DateTime")[:19] == start_time[:19]:
+                        print(f"✅ Deduplication Fallback: Match found via Subject/Time fingerprint.")
+                        return record
+
+        return None
+    except Exception as e:
+        print(f"⚠️ Search Logic Error: {e}")
+        return None
+
+def add_meeting_to_zoho_crm(event_data, user_id):
+    print("Orchestrating High-Fidelity Sync...")
+    zoho_token = ZohoToken.objects.get(user=user_id)
+    access_token = zoho_token.access_token
+    
+    check = check_access_token_validity(access_token)
+    if not check:
+        access_token = get_access_token(CLIENT_ID, CLIENT_SECRET, zoho_token.refresh_token)
+        ZohoToken.objects.filter(user=user_id).update(access_token=access_token)
+    else:
+        access_token = zoho_token.access_token
+
+    try:
+        # Step 1: Execute Deduplication Intelligence
+        existing_event = find_calendly_meeting_in_zoho(event_data, access_token)
+        
+        if existing_event:
+            print(f"♻️ Update Protocol: Refreshed detail for Zoho ID: {existing_event['id']}")
+            event_data["id"] = existing_event["id"]
+            return update_meeting_in_zoho(access_token, event_data)
+        
+        # Step 2: Proceed with Creation if no match found
+        print("🆕 Creation Protocol: Launching new record in Zoho CRM...")
+        return create_event(access_token, event_data)
+    except Exception as e:
+        print(f"❌ Critical Sync Failure: {e}")
+        return False
 
 def update_meeting_in_zoho(access_token, updated_event_data):
     """

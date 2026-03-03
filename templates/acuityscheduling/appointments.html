@@ -9,15 +9,60 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 leading-tight">Upcoming Meetings</h1>
-            <p class="text-sm font-medium text-slate-500">View and manage your scheduled sessions for 
-                <span class="text-indigo-600 font-bold px-2 py-0.5 bg-indigo-50 rounded-lg">{{ start_date|slice:":10" }} - {{ end_date|slice:":10" }}</span>
+            <p class="text-sm font-medium text-slate-500">
+                {% if start_date_val or end_date_val %}
+                Viewing scheduled sessions for <span class="text-indigo-600 font-bold px-2 py-0.5 bg-indigo-50 rounded-lg">{{ min_time|date:"M d, Y" }} - {{ max_time|date:"M d, Y" }}</span>
+                {% else %}
+                View and manage your upcoming scheduled sessions
+                {% endif %}
             </p>
         </div>
         <div class="flex items-center space-x-3">
-            <button class="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-2xl hover:bg-slate-50 transition-all shadow-sm flex items-center">
-                <i class="ri-calendar-event-line mr-2"></i> Sync Calendar
+            <button onclick="syncCalendarToZoho()" id="sync-btn" class="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-2xl hover:bg-slate-50 transition-all shadow-sm flex items-center disabled:opacity-50">
+                <i id="sync-icon" class="ri-calendar-event-line mr-2"></i> <span id="sync-text">Sync Calendar</span>
             </button>
         </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm">
+        <form method="GET" action="{% url 'list_appointments' %}" class="flex flex-col lg:flex-row gap-4">
+            <!-- Search Input -->
+            <div class="flex-1 relative group">
+                <i class="ri-search-2-line absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors"></i>
+                <input type="text" 
+                       name="search" 
+                       value="{{ search_query }}"
+                       placeholder="Search by participant name or email..." 
+                       class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-transparent focus:border-indigo-100 focus:bg-white focus:ring-4 focus:ring-indigo-500/5 rounded-2xl text-sm font-medium text-slate-700 transition-all outline-none">
+            </div>
+
+            <div class="flex flex-wrap md:flex-nowrap gap-4">
+                <!-- Date Range -->
+                <div class="flex items-center gap-2 px-4 py-1.5 bg-slate-50 rounded-2xl border border-transparent focus-within:border-indigo-100 focus-within:bg-white transition-all">
+                    <div class="flex flex-col">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">From</label>
+                        <input type="date" name="start_date" value="{{ start_date_val }}" class="bg-transparent border-none text-xs font-bold text-slate-700 focus:ring-0 p-0">
+                    </div>
+                    <div class="w-px h-8 bg-slate-200 mx-2"></div>
+                    <div class="flex flex-col">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">To</label>
+                        <input type="date" name="end_date" value="{{ end_date_val }}" class="bg-transparent border-none text-xs font-bold text-slate-700 focus:ring-0 p-0">
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="px-8 py-3 bg-slate-900 text-white font-black rounded-2xl shadow-xl hover:bg-slate-800 transition-all uppercase tracking-widest text-[10px] flex items-center">
+                    <i class="ri-filter-3-line mr-2"></i> Apply Filters
+                </button>
+                
+                {% if search_query or start_date_val or end_date_val %}
+                <a href="{% url 'list_appointments' %}" class="px-4 py-3 bg-slate-100 text-slate-600 font-black rounded-2xl hover:bg-slate-200 transition-all uppercase tracking-widest text-[10px] flex items-center">
+                    <i class="ri-restart-line"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
     </div>
 
     <!-- Error State -->
@@ -91,7 +136,7 @@
                                 </div>
                                 <h3 class="text-lg font-extrabold text-slate-900">Quiet Calendar</h3>
                                 <p class="text-sm font-medium text-slate-500 max-w-sm mt-2">You don't have any sessions scheduled for the next 30 days. Time to fill up those slots!</p>
-                                <button class="mt-8 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-indigo-100 hover:bg-indigo-500 transition-all">
+                                <button onclick="openBookingSelector()" class="mt-8 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-indigo-100 hover:bg-indigo-500 transition-all">
                                     Share Booking Link
                                 </button>
                             </div>
@@ -110,7 +155,7 @@
             </p>
             <div class="flex items-center space-x-1">
                 {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}" class="p-2 bg-white border border-slate-200 rounded-xl hover:text-indigo-600 transition-all shadow-sm">
+                    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if start_date_val %}&start_date={{ start_date_val }}{% endif %}{% if end_date_val %}&end_date={{ end_date_val }}{% endif %}" class="p-2 bg-white border border-slate-200 rounded-xl hover:text-indigo-600 transition-all shadow-sm">
                         <i class="ri-arrow-left-s-line shadow-sm"></i>
                     </a>
                 {% endif %}
@@ -118,7 +163,7 @@
                     {{ page_obj.number }}
                 </span>
                 {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}" class="p-2 bg-white border border-slate-200 rounded-xl hover:text-indigo-600 transition-all shadow-sm">
+                    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if start_date_val %}&start_date={{ start_date_val }}{% endif %}{% if end_date_val %}&end_date={{ end_date_val }}{% endif %}" class="p-2 bg-white border border-slate-200 rounded-xl hover:text-indigo-600 transition-all shadow-sm">
                         <i class="ri-arrow-right-s-line shadow-sm"></i>
                     </a>
                 {% endif %}
@@ -164,7 +209,203 @@
     </div>
 </div>
 
+<!-- Sync Option Modal -->
+<div id="sync-modal" class="fixed inset-0 z-[110] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeSyncModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="relative inline-block align-middle bg-white rounded-[2.5rem] text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-slate-100">
+            <div class="px-8 pt-10 pb-8 sm:p-10">
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-16 h-16 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-6">
+                        <i class="ri-refresh-line text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-black text-slate-900 leading-tight mb-2">Sync Intelligence</h3>
+                    <p class="text-sm font-medium text-slate-500 mb-8">Select the synchronization protocol for your Zoho CRM projection.</p>
+                    
+                    <div class="grid grid-cols-1 gap-4 w-full">
+                        <button onclick="triggerSync('upcoming')" class="group flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-white hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/10 transition-all text-left">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-indigo-600 transition-colors">
+                            <i class="ri-calendar-check-line"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-900">Project Upcoming</p>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Next 30 Days Only</p>
+                                </div>
+                            </div>
+                            <i class="ri-arrow-right-s-line text-slate-300"></i>
+                        </button>
+
+                        <button onclick="triggerSync('all')" class="group flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-white hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/10 transition-all text-left">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-indigo-600 transition-colors">
+                            <i class="ri-history-line"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-900">Full Archive Backfill</p>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Historical & Future Data</p>
+                                </div>
+                            </div>
+                            <i class="ri-arrow-right-s-line text-slate-300"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-50/50 px-8 py-5 flex justify-center">
+                <button onclick="closeSyncModal()" class="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Cancel Protocol</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Global Orchestration Progress Bar -->
+<div id="sync-progress-bar" class="fixed top-0 left-0 w-full h-1.5 z-[1000] hidden bg-slate-100">
+    <div id="progress-fill" class="h-full bg-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.5)] transition-all duration-300 ease-out w-0"></div>
+</div>
+
+<!-- Booking Selector Modal -->
+<div id="booking-modal" class="fixed inset-0 z-[100] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeBookingModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="relative inline-block align-bottom bg-white rounded-[2.5rem] text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-slate-100">
+            <div class="px-8 pt-10 pb-8 sm:p-10">
+                <div class="flex justify-between items-start mb-8">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 rounded-3xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                            <i class="ri-links-line text-3xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-900 leading-tight">Protocol Selector</h3>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Select meeting deployment link</p>
+                        </div>
+                    </div>
+                    <button onclick="closeBookingModal()" class="p-2 text-slate-400 hover:text-slate-900 transition-colors">
+                        <i class="ri-close-line text-2xl"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-3 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
+                    {% for et in all_event_types %}
+                    <div class="group flex items-center justify-between p-4 bg-slate-50 hover:bg-indigo-50/50 rounded-2xl border border-slate-100 hover:border-indigo-100 transition-all cursor-pointer"
+                         onclick="window.open('{{ et.scheduling_url }}', '_blank')">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-2 h-10 rounded-full" style="background: {{ et.color }}"></div>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-900">{{ et.name }}</h4>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ et.duration }} Minutes • {{ et.kind|title }}</p>
+                            </div>
+                        </div>
+                        <i class="ri-external-link-line text-slate-300 group-hover:text-indigo-600 transition-colors"></i>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="bg-slate-50/50 px-8 py-6 sm:px-10 flex justify-end">
+                <button onclick="closeBookingModal()" class="px-8 py-3 bg-slate-200 text-slate-600 font-black rounded-2xl hover:bg-slate-300 transition-all uppercase tracking-widest text-[10px]">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container" class="fixed bottom-8 right-8 z-[200] flex flex-col gap-3"></div>
+
 <script>
+    function openSyncModal() { document.getElementById('sync-modal').classList.remove('hidden'); }
+    function closeSyncModal() { document.getElementById('sync-modal').classList.add('hidden'); }
+
+    async function triggerSync(type) {
+        closeSyncModal();
+        const btn = document.getElementById('sync-btn');
+        const icon = document.getElementById('sync-icon');
+        const text = document.getElementById('sync-text');
+        const progressBar = document.getElementById('sync-progress-bar');
+        const progressFill = document.getElementById('progress-fill');
+        
+        btn.disabled = true;
+        icon.className = 'ri-loader-4-line mr-2 animate-spin';
+        text.innerText = 'Syncing Records...';
+
+        // Show and animate progress bar (Indeterminate/Simulated)
+        progressBar.classList.remove('hidden');
+        progressFill.style.width = '0%';
+        
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            if (progress < 90) {
+                progress += Math.random() * 5;
+                progressFill.style.width = `${progress}%`;
+            }
+        }, 800);
+        
+        let params = new URLSearchParams();
+        if (type === 'upcoming') {
+            const now = new Date().toISOString().split('T')[0];
+            params.append('start_date', now);
+        } else {
+            const start = document.querySelector('input[name="start_date"]')?.value || '';
+            const end = document.querySelector('input[name="end_date"]')?.value || '';
+            if (start) params.append('start_date', start);
+            if (end) params.append('end_date', end);
+        }
+
+        try {
+            const response = await fetch(`{% url "sync_to_crm" %}?${params.toString()}`);
+            const data = await response.json();
+            
+            clearInterval(progressInterval);
+            progressFill.style.width = '100%';
+
+            if (data.success) {
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast(data.error || 'Sync failed', 'error');
+                progressBar.classList.add('hidden');
+            }
+        } catch (err) {
+            clearInterval(progressInterval);
+            showToast('Network error during sync', 'error');
+            progressBar.classList.add('hidden');
+        } finally {
+            btn.disabled = false;
+            icon.className = 'ri-calendar-event-line mr-2';
+            text.innerText = 'Sync Calendar';
+        }
+    }
+
+    async function syncCalendarToZoho() {
+        openSyncModal();
+    }
+
+    function showToast(message, type) {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        const isSuccess = type === 'success';
+        
+        toast.className = `flex items-center space-x-3 px-6 py-4 rounded-2xl shadow-2xl border transition-all duration-500 transform translate-x-0 ${
+            isSuccess ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-800'
+        }`;
+        
+        toast.innerHTML = `
+            <i class="${isSuccess ? 'ri-checkbox-circle-line' : 'ri-error-warning-line'} text-xl"></i>
+            <p class="text-sm font-bold">${message}</p>
+        `;
+        
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-x-full');
+            setTimeout(() => toast.remove(), 500);
+        }, 4000);
+    }
+
+    function openBookingSelector() { document.getElementById('booking-modal').classList.remove('hidden'); }
+    function closeBookingModal() { document.getElementById('booking-modal').classList.add('hidden'); }
+
     function showAppointmentDetails(data) {
         const modal = document.getElementById('detail-modal');
         const body = document.getElementById('modal-body');

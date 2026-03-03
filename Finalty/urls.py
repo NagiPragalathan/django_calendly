@@ -70,6 +70,7 @@ acuityscheduling_urls = [
     
     path("settings/", settings_form, name="settings_form"),
     path("api/search/", global_search, name="global_search"),
+    path("api/sync-to-crm/", sync_to_crm, name="sync_to_crm"),
 ]
 
 acuityscheduling_api_urls = [

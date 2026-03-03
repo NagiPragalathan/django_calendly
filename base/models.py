@@ -62,6 +62,7 @@ class Settings(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     leads_to_store = models.CharField(max_length=20, choices=[('Leads', 'Leads'), ('Contacts', 'Contacts')], default='Contacts')
     lead_source = models.CharField(max_length=255, default='Acuity Scheduling')
+    field_mappings = models.JSONField(default=dict, blank=True)
 
     def __str__(self):
         return self.user.username
