@@ -65,6 +65,7 @@ class Settings(models.Model):
     lead_source = models.CharField(max_length=255, default='Acuity Scheduling')
     use_default_mapping = models.BooleanField(default=True)
     field_mappings = models.JSONField(default=dict, blank=True)
+    webhook_base_url = models.URLField(max_length=500, null=True, blank=True, help_text="Public URL for webhooks (e.g., ngrok)")
 
     def __str__(self):
         return self.user.username

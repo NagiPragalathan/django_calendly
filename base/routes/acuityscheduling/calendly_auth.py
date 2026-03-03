@@ -7,6 +7,7 @@ from uuid import UUID
 from base.routes.tool_kit.calendly_tool import CalendlyWebhookManager
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from base.routes.tool_kit.zoho_tool import ensure_field_exists
 
 @login_required
 def calendly_auth(request, credential_id):
@@ -83,16 +84,26 @@ def calendly_callback(request):
                         webhook_uuid = webhook['uri'].split('/')[-1]
                         webhook_manager.delete_webhook(webhook_uuid)
 
-                # Define webhook configurations
-                base_url = settings.HOSTED_CALENDLY_CLIENT_ID.rstrip('/')
-                
-                credential = CalendlyCredentials.objects.filter(unique_id=credential_id).first()
-
                 # Ensure we have the correct user for the webhook target, even if session is lost
                 current_user = request.user
                 if not current_user.is_authenticated:
                     from django.contrib.auth.models import User
                     current_user = User.objects.filter(email=credential.email).first()
+
+                # Step 3: Automatic Field Creation in Zoho (System Orchestration)
+                if current_user:
+                    try:
+                        from base.routes.acuityscheduling.acuityscheduling_settings import INTEGRATION_FIELDS
+                        for item in INTEGRATION_FIELDS:
+                            ensure_field_exists(current_user, item['label'])
+                        print("✅ Zoho Field Orchestration Complete.")
+                    except Exception as fe:
+                        print(f"⚠️ Field Orchestration Warning: {str(fe)}")
+
+                # Define webhook configurations
+                base_url = getattr(settings, 'BASE_WEBHOOK_URL', 'https://django-acuity-scheduling.vercel.app/').rstrip('/')
+                
+                credential = CalendlyCredentials.objects.filter(unique_id=credential_id).first()
 
                 webhook_configs = [
                     {
@@ -126,9 +137,9 @@ def calendly_callback(request):
                 webhook_status = 'success' if all(result.get('success') for result in webhook_results) else 'partial'
 
                 if webhook_status == 'success':
-                    messages.success(request, "Calendly account connected and webhooks established successfully!")
+                    messages.success(request, "Calendly account connected, Zoho fields verified, and webhooks established!")
                 else:
-                    messages.warning(request, "Account connected, but some webhooks failed to initialize.")
+                    messages.warning(request, "Account connected, but some webhooks or fields failed to initialize.")
 
                 return redirect("list_credentials")
 

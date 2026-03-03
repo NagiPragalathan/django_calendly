@@ -1,98 +1,108 @@
 {% extends 'base.html' %}
 {% load config_tags %}
 
-{% block title %}Integration Orchestration Settings{% endblock %}
-{% block breadcrumb %}Global Settings{% endblock %}
+{% block title %}Master Orchestration Hub{% endblock %}
+{% block breadcrumb %}Global Control Center{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto py-8">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-        <div>
-            <h1 class="text-3xl font-black text-slate-900 tracking-tight">Integration Logic</h1>
-            <p class="text-sm font-medium text-slate-500 mt-2">Customized routing and metadata extraction for your sync pipeline.</p>
+<div class="max-w-[1600px] mx-auto py-12 px-8">
+    <!-- Sophisticated Command Header -->
+    <div class="flex flex-col xl:flex-row xl:items-end justify-between gap-10 mb-16 animate-fade-in">
+        <div class="space-y-6">
+            <div class="inline-flex items-center px-5 py-2 bg-indigo-50 border border-indigo-100 rounded-full">
+                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 mr-3 animate-ping"></span>
+                <span class="text-[10px] font-black text-indigo-600 uppercase tracking-[0.25em]">System Architecture v2.4</span>
+            </div>
+            <h1 class="text-6xl font-black text-slate-900 tracking-tighter leading-none">Integration Control</h1>
+            <p class="text-lg font-medium text-slate-400 max-w-2xl leading-relaxed">
+                Configure high-fidelity routing directives and manage real-time webhook payloads for your global <span class="text-indigo-600 font-bold">Calendly ↔ Zoho</span> sync pipeline.
+            </p>
         </div>
-        <div class="flex items-center space-x-4">
-            <div class="text-right">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Status</p>
-                <p class="text-xs font-bold text-emerald-600 flex items-center justify-end">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span>
-                    Operational
-                </p>
+        
+        <div class="flex items-center gap-6">
+            <div class="bg-white px-8 py-5 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 flex items-center gap-5">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 shadow-inner">
+                    <i class="ri-shield-check-line text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">Runtime Status</p>
+                    <p class="text-sm font-black text-slate-900 tracking-tight flex items-center">
+                        Active & Operational
+                    </p>
+                </div>
             </div>
         </div>
     </div>
 
     <form method="POST">
         {% csrf_token %}
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             
-            <!-- Main Content Area: Orchestration -->
-            <div class="lg:col-span-7 space-y-8">
-                <!-- Field Orchestration -->
-                <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-                    <div class="absolute -top-24 -right-24 w-64 h-64 bg-indigo-50 rounded-full blur-3xl opacity-50"></div>
+            <!-- Pillar 1 & 2: Main Logic Engine -->
+            <div class="lg:col-span-8 space-y-12">
+                <!-- Sync Orchestration Matrix -->
+                <div class="bg-white p-14 rounded-[4rem] border border-slate-100 shadow-2xl shadow-slate-200/50 relative overflow-hidden group/matrix">
+                    <div class="absolute -top-40 -right-40 w-[500px] h-[500px] bg-indigo-50 rounded-full blur-[120px] opacity-40 group-hover/matrix:opacity-60 transition-opacity duration-1000"></div>
                     
-                    <div class="relative space-y-8">
-                        <div class="flex items-center space-x-3 pb-6 border-b border-slate-50">
-                            <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center text-violet-600">
-                                <i class="ri-node-tree text-lg"></i>
+                    <div class="relative space-y-12">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 pb-10 border-b border-slate-50">
+                            <div class="flex items-center space-x-6">
+                                <div class="w-16 h-16 rounded-[1.75rem] bg-slate-900 flex items-center justify-center text-white shadow-2xl shadow-slate-900/20 group-hover/matrix:scale-110 transition-transform duration-500">
+                                    <i class="ri-terminal-box-line text-3xl"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-2xl font-black text-slate-900 tracking-tight">Sync Directives</h2>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] mt-1.5">Logic ↔ Field Orchestration</p>
+                                </div>
                             </div>
-                            <div class="flex-1">
-                                <h2 class="text-lg font-extrabold text-slate-900 leading-tight">Sync Orchestration</h2>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Calendly ↔ Zoho CRM Mapping</p>
-                            </div>
-                            <div class="flex items-center space-x-3 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
-                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Pulse</span>
-                                <div class="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in">
+                            
+                            <div class="px-8 py-4 bg-slate-50 border border-slate-100 rounded-3xl flex items-center gap-6 shadow-sm">
+                                <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Global Protocol</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" name="use_default_mapping" id="use_default_mapping_toggle" 
                                            {% if settings.use_default_mapping != False %}checked{% endif %}
-                                           class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-2 border-slate-200 appearance-none cursor-pointer checked:right-0 checked:border-indigo-600 transition-all duration-300"/>
-                                    <label for="use_default_mapping_toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-colors duration-300"></label>
-                                </div>
-                                <style>
-                                    .toggle-checkbox:checked { right: 0; border-color: #4f46e5; }
-                                    .toggle-checkbox:checked + .toggle-label { background-color: #4f46e5; }
-                                    .toggle-checkbox { right: 1.5rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-                                </style>
+                                           class="sr-only peer">
+                                    <div class="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                </label>
                             </div>
                         </div>
 
-                        <!-- Pre-built Mode Banner -->
-                        <div id="prebuilt-banner" class="{% if settings.use_default_mapping == False %}hidden{% endif %} p-8 bg-indigo-50/50 rounded-[2.5rem] border border-indigo-100/50 text-center space-y-4 animate-fade-in">
-                            <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm mx-auto">
-                                <i class="ri-shield-flash-line text-3xl"></i>
+                        <div id="prebuilt-banner" class="{% if settings.use_default_mapping == False %}hidden{% endif %} py-20 bg-indigo-50/50 rounded-[3rem] border border-indigo-100/50 text-center space-y-6 animate-zoom-in">
+                            <div class="w-24 h-24 bg-white rounded-[2rem] flex items-center justify-center text-indigo-600 shadow-xl shadow-indigo-200/20 mx-auto relative">
+                                <i class="ri-rocket-2-line text-5xl"></i>
+                                <div class="absolute -top-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full border-4 border-white"></div>
                             </div>
-                            <div>
-                                <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Pre-built Orchestration Active</h3>
-                                <p class="text-[11px] font-medium text-slate-500 max-w-xs mx-auto mt-1">The system is currently using standardized high-performance field mapping protocols.</p>
+                            <div class="space-y-2">
+                                <h3 class="text-xl font-black text-slate-900 uppercase tracking-tight">Standardized Orchestration Active</h3>
+                                <p class="text-sm font-medium text-slate-500 max-w-sm mx-auto leading-relaxed">The engine is currently running high-performance default mapping protocols for maximum reliability.</p>
                             </div>
-                            <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest cursor-pointer hover:text-indigo-700 transition-colors" onclick="document.getElementById('use_default_mapping_toggle').click()">
-                                Switch to Manual Mode
-                            </p>
+                            <button type="button" class="px-10 py-4 bg-indigo-600 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-indigo-700 hover:shadow-2xl hover:shadow-indigo-600/20 transition-all active:scale-95" 
+                                    onclick="document.getElementById('use_default_mapping_toggle').click()">
+                                Unlock Manual Mapping
+                            </button>
                         </div>
 
-                        <div id="mapping-orchestration-matrix" class="grid grid-cols-1 gap-4 {% if settings.use_default_mapping != False %}hidden{% endif %} transition-all duration-500">
+                        <div id="mapping-orchestration-matrix" class="grid grid-cols-1 md:grid-cols-2 gap-8 {% if settings.use_default_mapping != False %}hidden{% endif %}">
                             {% for item in integration_fields %}
-                            <div class="p-6 bg-slate-50/50 border border-slate-100/50 rounded-3xl space-y-4 hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all group">
+                            <div class="p-8 bg-slate-50/50 border border-slate-100/50 rounded-[2.5rem] space-y-6 hover:bg-white hover:shadow-2xl hover:shadow-slate-200/50 transition-all group/field relative">
                                 <div class="flex items-center justify-between">
-                                    <label class="text-[11px] font-black text-slate-900 uppercase tracking-wider flex items-center">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-2"></span>
+                                    <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center">
+                                        <span class="w-2 h-2 rounded-full bg-indigo-500 mr-3"></span>
                                         {{ item.label }}
                                     </label>
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-[10px] font-bold text-slate-400">Create New?</span>
-                                        <div onclick="toggleCreateField('{{ item.key }}')" 
-                                             id="toggle-{{ item.key }}"
-                                             class="w-10 h-5 bg-slate-200 rounded-full relative transition-all duration-300 cursor-pointer">
-                                            <div class="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-all duration-300 shadow-sm" id="thumb-{{ item.key }}"></div>
-                                        </div>
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Auto-Create</span>
+                                        <button type="button" onclick="toggleCreateField('{{ item.key }}')" id="toggle-{{ item.key }}"
+                                                class="w-8 h-4 bg-slate-200 rounded-full relative transition-colors duration-300">
+                                            <div class="absolute left-1 top-0.5 w-3 h-3 bg-white rounded-full transition-all duration-300 shadow-sm" id="thumb-{{ item.key }}"></div>
+                                        </button>
                                     </div>
                                 </div>
 
                                 <div class="relative" id="container-select-{{ item.key }}">
                                     <select name="map_{{ item.key }}" id="select-{{ item.key }}"
-                                            class="w-full px-5 py-3.5 bg-white border border-slate-100 rounded-2xl text-xs font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 transition-all appearance-none cursor-pointer">
-                                        <option value="">-- No Mapping / Skip --</option>
+                                            class="w-full px-6 py-4 bg-white border border-slate-100 rounded-2xl text-[13px] font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/5 appearance-none cursor-pointer transition-all shadow-sm">
+                                        <option value="">-- NO ORCHESTRATION --</option>
                                         {% for z_field in zoho_fields %}
                                         <option value="{{ z_field.api_name }}" 
                                                 {% if settings.field_mappings|get_item:item.key == z_field.api_name %}selected{% endif %}>
@@ -100,16 +110,16 @@
                                         </option>
                                         {% endfor %}
                                     </select>
-                                    <i class="ri-arrow-down-s-line absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                                    <i class="ri-arrow-down-s-line absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
                                 </div>
 
                                 <div class="relative hidden" id="container-input-{{ item.key }}">
-                                    <div class="absolute left-5 top-1/2 -translate-y-1/2 flex items-center text-indigo-500">
-                                        <i class="ri-add-circle-line font-black"></i>
-                                    </div>
                                     <input type="text" id="input-{{ item.key }}"
-                                           placeholder="New Field Label (e.g. {{ item.label }})"
-                                           class="w-full pl-12 pr-5 py-3.5 bg-white border border-indigo-100 rounded-2xl text-xs font-black text-indigo-600 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-300 transition-all">
+                                           placeholder="Enter New Field Label"
+                                           class="w-full pl-6 pr-6 py-4 bg-white border border-indigo-100 rounded-2xl text-[13px] font-black text-indigo-600 placeholder:text-slate-300 transition-all">
+                                    <div class="absolute right-6 top-1/2 -translate-y-1/2">
+                                        <i class="ri-magic-line text-indigo-400"></i>
+                                    </div>
                                 </div>
                             </div>
                             {% endfor %}
@@ -117,150 +127,226 @@
                     </div>
                 </div>
 
+                <!-- Webhook Management Hub -->
+                <div id="webhook-hub-sector" class="bg-white p-14 rounded-[4rem] border border-slate-100 shadow-2xl shadow-slate-200/50 relative overflow-hidden group/webhook animate-fade-in-up">
+                    <div class="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-emerald-50 rounded-full blur-[120px] opacity-40"></div>
+                    
+                    <div class="relative space-y-12">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 pb-10 border-b border-slate-50">
+                            <div class="flex items-center space-x-6">
+                                <div class="w-16 h-16 rounded-[1.75rem] bg-emerald-500 flex items-center justify-center text-white shadow-2xl shadow-emerald-500/20">
+                                    <i class="ri-radar-line text-3xl"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-2xl font-black text-slate-900 tracking-tight">Payload Strategy Management</h2>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] mt-1.5">Real-time Data Stream Control</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-6">
+                                <button type="submit" name="webhook_action" value="refresh" 
+                                        class="px-6 py-3 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
+                                    <i class="ri-refresh-line mr-2"></i> Sync Streams
+                                </button>
+                                <div class="flex items-center gap-4 bg-slate-900 px-6 py-3 rounded-2xl shadow-2xl">
+                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Hub:</span>
+                                    <span class="text-[11px] font-black text-white tracking-tight">{{ active_hub.email|default:'IDLE'|upper }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-6">
+                            {% for webhook in webhook_status %}
+                            <div class="p-10 bg-slate-50/50 border border-slate-100/50 rounded-[3rem] flex flex-col xl:flex-row xl:items-center justify-between gap-10 hover:bg-white hover:shadow-2xl hover:shadow-slate-200/50 transition-all group/wh-item">
+                                <div class="space-y-6 flex-1">
+                                    <div class="flex items-center gap-4">
+                                        <div class="px-4 py-1.5 {% if webhook.state == 'active' %}bg-emerald-100 text-emerald-700{% else %}bg-amber-100 text-amber-700{% endif %} rounded-full text-[9px] font-black uppercase tracking-widest border border-emerald-200">
+                                            {{ webhook.state|default:'Active'|upper }} Loop
+                                        </div>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ webhook.scope }} Level Access</span>
+                                    </div>
+                                    <div class="space-y-3">
+                                        <div class="flex items-center gap-3">
+                                            <i class="ri-link text-slate-400"></i>
+                                            <code class="text-[13px] font-black text-slate-700 bg-white px-4 py-2 rounded-xl border border-slate-100 shadow-sm">{{ webhook.callback_url }}</code>
+                                        </div>
+                                        <div class="flex flex-wrap gap-2 pt-2">
+                                            {% for event in webhook.events %}
+                                            <span class="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black border border-indigo-100 shadow-sm transition-transform hover:-translate-y-1">
+                                                <i class="ri-fire-line mr-1.5"></i>{{ event }}
+                                            </span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-6 pt-4 border-t border-slate-100">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[8px] font-black text-slate-300 uppercase">Provider</span>
+                                            <span class="text-[10px] font-bold text-slate-600">Calendly API v2</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[8px] font-black text-slate-300 uppercase">Payload</span>
+                                            <span class="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">JSON Stream</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[8px] font-black text-slate-300 uppercase">Identifier</span>
+                                            <span class="text-[10px] font-bold text-indigo-500 font-mono tracking-tighter">{{ webhook.uri|slice:"-12:" }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center gap-10 xl:pl-10 xl:border-l border-slate-100">
+                                    <div class="text-right hidden sm:block">
+                                        <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1.5">Established</p>
+                                        <p class="text-md font-black text-slate-900 tracking-tighter">{{ webhook.created_at|slice:":10" }}</p>
+                                    </div>
+                                    <button type="submit" name="webhook_action" value="delete"
+                                            onclick="event.stopPropagation(); document.getElementById('wh-id-input').value='{{ webhook.uri }}'; return confirm('WARNING: Decommissioning this link will stop real-time synchronization. Continue?')"
+                                            class="w-16 h-16 bg-rose-50 text-rose-500 rounded-[1.5rem] flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all duration-500 shadow-xl shadow-rose-500/10 hover:shadow-rose-600/30">
+                                        <i class="ri-delete-bin-line text-2xl"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="py-24 text-center bg-slate-50/20 rounded-[3.5rem] border border-dashed border-slate-200 group-hover/webhook:border-indigo-200 transition-colors">
+                                <div class="w-24 h-24 bg-white rounded-[2rem] flex items-center justify-center text-slate-200 mx-auto mb-8 shadow-xl shadow-slate-100">
+                                    <i class="ri-wireless-charge-line text-5xl"></i>
+                                </div>
+                                <h3 class="text-xl font-black text-slate-900 uppercase tracking-tight">No Active Streams</h3>
+                                <p class="text-sm font-medium text-slate-400 mt-3 max-w-xs mx-auto leading-relaxed uppercase tracking-tighter italic">Initializing Sync Hub will automatically establish real-time links.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" name="webhook_id" id="wh-id-input">
+
+                        <div class="p-8 bg-amber-50 rounded-[2.5rem] border border-amber-100/50 flex items-start gap-6 group/alert">
+                            <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-amber-500 shadow-sm group-hover/alert:rotate-12 transition-transform">
+                                <i class="ri-error-warning-line text-2xl"></i>
+                            </div>
+                            <div class="flex-1 space-y-1">
+                                <p class="text-xs font-black text-slate-900 uppercase tracking-widest">Protocol Intelligence</p>
+                                <p class="text-sm font-medium text-slate-500 leading-relaxed italic">
+                                    Webhook subscriptions are scope-dependent. Organizational webhooks require administrative privileges on your Calendly account.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Sidebar Content area -->
-            <div class="lg:col-span-5 space-y-8 sticky top-8">
-                <!-- Destination & Meta -->
-                <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-10">
-                    <div class="space-y-6">
-                        <div class="flex items-center space-x-3 pb-4 border-b border-slate-50">
-                           <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white">
-                               <i class="ri-equalizer-line"></i>
-                           </div>
-                           <h3 class="font-extrabold text-slate-900">Routing Directives</h3>
+            <!-- Pillar 3: Tactical Interface Logic -->
+            <div class="lg:col-span-4 space-y-12 sticky top-12">
+                <div class="bg-slate-900 p-12 rounded-[4rem] shadow-[0_40px_100px_rgba(0,0,0,0.2)] relative overflow-hidden group/save">
+                    <div class="absolute -top-20 -right-20 w-80 h-80 bg-indigo-500 rounded-full blur-[100px] opacity-20 group-hover/save:opacity-40 transition-opacity duration-1000"></div>
+                    
+                    <div class="relative space-y-12">
+                        <div class="flex items-center space-x-5">
+                            <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white">
+                                <i class="ri-save-3-line text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-black text-white tracking-tight leading-none">Finalize Strategy</h3>
+                                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-2">Deploy orchestration live</p>
+                            </div>
                         </div>
-                        
+
                         <div class="space-y-4">
+                            <div class="p-6 bg-white/5 border border-white/10 rounded-3xl space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Target Hub</span>
+                                    <span class="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 rounded-md text-[8px] font-black uppercase">Active</span>
+                                </div>
+                                <p class="text-sm font-black text-white tracking-tight truncate">{{ active_hub.email }}</p>
+                            </div>
+                            
                             <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Destination Container</label>
-                                <select name="leads_to_store" class="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900">
+                                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Lead Destination</label>
+                                <select name="leads_to_store" class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-[13px] font-bold text-white focus:ring-4 focus:ring-indigo-500/20 appearance-none">
                                     <option value="Leads" {% if settings.leads_to_store == "Leads" %}selected{% endif %}>CRM Leads</option>
                                     <option value="Contacts" {% if settings.leads_to_store == "Contacts" %}selected{% endif %}>CRM Contacts</option>
                                 </select>
                             </div>
+
                             <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Entry Origin tag</label>
-                                <input type="text" name="lead_source" value="{{ settings.lead_source|default:'Calendly Hub' }}"
-                                       class="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900">
+                                <div class="flex items-center justify-between px-1">
+                                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Public Tunnel URL</label>
+                                    <i class="ri-information-line text-indigo-400 cursor-help" title="Calendly requires a public HTTPS URL (like ngrok) to send webhooks to your local machine."></i>
+                                </div>
+                                <input type="url" name="webhook_base_url" value="{{ settings.webhook_base_url|default:'' }}" 
+                                       placeholder="https://your-tunnel.ngrok-free.app"
+                                       class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-[13px] font-bold text-white focus:ring-4 focus:ring-indigo-500/20 placeholder:text-slate-600 transition-all">
                             </div>
                         </div>
+
+                        <button type="submit" name="global_action" value="save"
+                                class="w-full py-7 bg-indigo-600 text-white font-black rounded-[2rem] hover:bg-indigo-500 hover:-translate-y-2 active:scale-95 transition-all duration-300 flex items-center justify-center uppercase tracking-[0.25em] text-[11px] shadow-2xl shadow-indigo-600/30">
+                            <i class="ri-cpu-line mr-3 text-xl group-hover/save:animate-spin"></i>
+                            Deploy Node Strategy
+                        </button>
                     </div>
                 </div>
 
-                <!-- SMTP Sidebar Card -->
-                <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
-                    <div class="flex items-center space-x-3 pb-4 border-b border-slate-50">
-                        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100">
-                            <i class="ri-mail-send-line"></i>
+                <div class="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-xl shadow-slate-200/30 group/smtp">
+                    <div class="flex items-center space-x-4 mb-10 pb-6 border-b border-slate-50">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-xl shadow-indigo-100/50">
+                            <i class="ri-mail-send-line text-2xl"></i>
                         </div>
-                        <div class="flex-1">
-                            <h3 class="font-bold text-slate-900">Mailing Suite</h3>
-                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Inbound SMTP Configuration</p>
+                        <div>
+                            <h3 class="text-lg font-black text-slate-900 tracking-tight leading-none">Mailing Suite</h3>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">Outreach Node</p>
                         </div>
                     </div>
 
-                    <div class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="space-y-1.5">
-                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Server</label>
-                                <input type="text" name="smtp_server" value="{{ smtp_settings.smtp_server|default:'' }}" placeholder="smtp.gmail.com"
-                                       class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-xs font-bold text-slate-900">
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-2 gap-5">
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">SMTP Server</label>
+                                <input type="text" name="smtp_server" value="{{ smtp_settings.smtp_server|default:'' }}" 
+                                       class="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-[13px] font-bold text-slate-900 shadow-inner">
                             </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Port</label>
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Port</label>
                                 <input type="number" name="smtp_port" value="{{ smtp_settings.smtp_port|default:'587' }}"
-                                       class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-xs font-bold text-slate-900">
+                                       class="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-[13px] font-bold text-slate-900 shadow-inner">
                             </div>
                         </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">User Identifier</label>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Identifier (User)</label>
                             <input type="email" name="smtp_user" value="{{ smtp_settings.smtp_user|default:'' }}"
-                                   class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-xs font-bold text-slate-900">
+                                   class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-[13px] font-bold text-slate-900 shadow-inner">
                         </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">App Secret Key</label>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">App Token</label>
                             <input type="password" name="smtp_password" value="{{ smtp_settings.smtp_password|default:'' }}"
-                                   class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-xs font-bold text-slate-900">
+                                   class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-[13px] font-bold text-slate-900 shadow-inner">
                         </div>
-                        <div class="flex items-center space-x-3 pt-2">
+                        <div class="flex items-center space-x-4 pt-4">
                              <input type="checkbox" name="use_tls" id="use_tls" {% if smtp_settings.use_tls %}checked{% endif %}
-                                    class="w-4 h-4 rounded-lg border-slate-200 text-indigo-600 focus:ring-indigo-500 transition-all">
-                             <label for="use_tls" class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Enforce TLS</label>
+                                    class="w-5 h-5 rounded-lg border-2 border-slate-200 text-indigo-600 focus:ring-indigo-500">
+                             <label for="use_tls" class="text-[11px] font-black text-slate-600 uppercase tracking-widest">Enforce TLS Protocol</label>
                         </div>
                     </div>
                 </div>
 
-                <!-- Global Save Button -->
-                <div class="sticky bottom-8 z-20">
-                    <button type="submit" class="w-full py-6 bg-slate-900 text-white font-black rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] hover:bg-indigo-600 hover:-translate-y-2 active:scale-95 transition-all uppercase tracking-widest text-sm flex items-center justify-center group">
-                        <i class="ri-save-3-line mr-3 text-lg group-hover:rotate-12 transition-transform"></i>
-                        Synchronize All
-                    </button>
-                    <p class="text-[9px] font-bold text-slate-400 mt-4 text-center italic leading-relaxed">
-                        Orchestration changes will impact active hub:<br>
-                        <span class="text-slate-900 uppercase tracking-tighter">{{ active_hub.company_name|default:active_hub.email }}</span>
-                    </p>
+                <div class="p-12 bg-indigo-500 rounded-[4rem] text-white relative overflow-hidden group/guide">
+                    <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+                    <div class="relative space-y-6">
+                        <div class="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white text-2xl">
+                            <i class="ri-book-3-line"></i>
+                        </div>
+                        <div class="space-y-2">
+                            <h4 class="text-xl font-black tracking-tight leading-none uppercase">Architectural Support</h4>
+                            <p class="text-sm font-medium text-white/70 leading-relaxed text-indigo-100">
+                                Need technical documentation on payload structures or CRM mapping logic? Explore our deep-dive repository.
+                            </p>
+                        </div>
+                        <a href="{% url 'list_credentials' %}" class="inline-flex items-center px-8 py-3.5 bg-white text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:scale-105 active:scale-95 transition-all">
+                            Manage Hub Nodes
+                            <i class="ri-arrow-right-line ml-3"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </form>
-
-    <script>
-        document.getElementById('use_default_mapping_toggle')?.addEventListener('change', function() {
-            const matrix = document.getElementById('mapping-orchestration-matrix');
-            const banner = document.getElementById('prebuilt-banner');
-            if (this.checked) {
-                matrix.classList.add('hidden');
-                banner.classList.remove('hidden');
-            } else {
-                matrix.classList.remove('hidden');
-                banner.classList.add('hidden');
-            }
-        });
-
-        function toggleCreateField(key) {
-            const selectCont = document.getElementById('container-select-' + key);
-            const inputCont = document.getElementById('container-input-' + key);
-            const toggle = document.getElementById('toggle-' + key);
-            const thumb = document.getElementById('thumb-' + key);
-            const selectEl = document.getElementById('select-' + key);
-            const inputEl = document.getElementById('input-' + key);
-
-            if (inputCont.classList.contains('hidden')) {
-                inputCont.classList.remove('hidden');
-                selectCont.classList.add('hidden');
-                toggle.classList.replace('bg-slate-200', 'bg-indigo-600');
-                thumb.style.left = '1.6rem';
-                selectEl.name = 'ignore_' + key;
-                inputEl.name = 'create_' + key;
-            } else {
-                inputCont.classList.add('hidden');
-                selectCont.classList.remove('hidden');
-                toggle.classList.replace('bg-indigo-600', 'bg-slate-200');
-                thumb.style.left = '0.25rem';
-                selectEl.name = 'map_' + key;
-                inputEl.name = 'ignore_' + key;
-            }
-        }
-    </script>
-
-    <!-- Help Section -->
-    <div class="mt-12 p-8 bg-indigo-50 rounded-[2.5rem] border border-indigo-100 flex items-start space-x-4">
-        <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-indigo-600 shadow-sm flex-shrink-0">
-            <i class="ri-questionnaire-line text-2xl"></i>
-        </div>
-        <div>
-            <h4 class="text-sm font-black text-slate-900 uppercase tracking-tight mb-1">Configuration Support</h4>
-            <p class="text-xs font-medium text-slate-500 leading-relaxed mb-3">
-                Need guidance on how to structure your CRM synchronization logic? Our architectural documentation covers all advanced mapping scenarios.
-            </p>
-            <a href="#" class="text-xs font-black text-indigo-600 hover:text-indigo-800 transition-colors inline-flex items-center">
-                Explore Documentation
-                <i class="ri-arrow-right-s-line"></i>
-            </a>
-        </div>
-    </div>
 </div>
 
 <!-- Premium Toast Notifications -->
@@ -286,4 +372,66 @@
     {% endfor %}
 </div>
 {% endif %}
+
+<style>
+    @keyframes fade-in-up {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up { animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    
+    @keyframes zoom-in {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    .animate-zoom-in { animation: zoom-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    
+    @keyframes fade-left {
+        from { opacity: 0; transform: translateX(20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    .animate-fade-left { animation: fade-left 0.4s ease-out both; }
+</style>
+
+<script>
+    document.getElementById('use_default_mapping_toggle')?.addEventListener('change', function() {
+        const matrix = document.getElementById('mapping-orchestration-matrix');
+        const banner = document.getElementById('prebuilt-banner');
+        if (this.checked) {
+            matrix.classList.add('hidden');
+            banner.classList.remove('hidden');
+            banner.classList.add('animate-zoom-in');
+        } else {
+            matrix.classList.remove('hidden');
+            banner.classList.add('hidden');
+            matrix.classList.add('animate-zoom-in');
+        }
+    });
+
+    function toggleCreateField(key) {
+        const selectCont = document.getElementById('container-select-' + key);
+        const inputCont = document.getElementById('container-input-' + key);
+        const toggle = document.getElementById('toggle-' + key);
+        const thumb = document.getElementById('thumb-' + key);
+        const selectEl = document.getElementById('select-' + key);
+        const inputEl = document.getElementById('input-' + key);
+
+        if (inputCont.classList.contains('hidden')) {
+            inputCont.classList.remove('hidden');
+            selectCont.classList.add('hidden');
+            toggle.classList.replace('bg-slate-200', 'bg-indigo-600');
+            thumb.style.left = '1.0rem';
+            selectEl.name = 'ignore_' + key;
+            inputEl.name = 'create_' + key;
+            inputCont.classList.add('animate-zoom-in');
+        } else {
+            inputCont.classList.add('hidden');
+            selectCont.classList.remove('hidden');
+            toggle.classList.replace('bg-indigo-600', 'bg-slate-200');
+            thumb.style.left = '0.25rem';
+            selectEl.name = 'map_' + key;
+            inputEl.name = 'ignore_' + key;
+        }
+    }
+</script>
 {% endblock %}

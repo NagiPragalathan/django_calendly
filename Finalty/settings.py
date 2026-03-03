@@ -220,3 +220,8 @@ SESSION_SAVE_EVERY_REQUEST = True
 SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax' 
+
+# Webhook Infrastructure
+# IMPORTANT: Calendly requires a PUBLIC HTTPS URL for webhooks. 
+# Use a service like ngrok (e.g., https://your-id.ngrok-free.app) for local development.
+BASE_WEBHOOK_URL = os.getenv("BASE_WEBHOOK_URL", "https://your-public-tunnel.ngrok-free.app")
