@@ -106,11 +106,11 @@ def signup_view(request):
             messages.error(request, "Passwords do not match!")
             return render(request, 'auth/signup.html')
 
-        if User.objects.filter(username=username).exists():
+        if User.objects.filter(username=username).first() is not None:
             messages.error(request, "Username already exists!")
             return render(request, 'auth/signup.html')
 
-        if User.objects.filter(email=email).exists():
+        if User.objects.filter(email=email).first() is not None:
             messages.error(request, "Email already registered!")
             return render(request, 'auth/signup.html')
 
@@ -138,3 +138,9 @@ def login_view(request):
         return render(request, 'auth/login.html')
 
     return render(request, 'auth/login.html')
+
+def logout_view(request):
+    from django.contrib.auth import logout
+    logout(request)
+    messages.success(request, "Logged out successfully!")
+    return redirect('login')

@@ -56,7 +56,7 @@ class ZohoToken(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.account_name} ({self.email}) - {self.status}"
+        return f"Zoho Token for {self.user.username} - {self.org_data}"
 
 class Settings(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

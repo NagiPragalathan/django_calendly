@@ -1,8 +1,8 @@
-from django.urls import resolve
-from .models import CalendlyCredentials
+from .models import ZohoToken, CalendlyCredentials
 import requests
 from django.core.cache import cache
 from django.shortcuts import redirect
+from django.urls import resolve
 
 class UserDataMiddleware:
     """
@@ -23,9 +23,17 @@ class UserDataMiddleware:
 
         # Add user-specific data only if the user is authenticated
         if request.user.is_authenticated:
+            # Check Zoho connection status for template use - Always set this first
+            # Use .first() is not None instead of .exists() to avoid Djongo recursion bug
+            request.zoho_connected = ZohoToken.objects.filter(user=request.user).first() is not None
+            if not request.zoho_connected:
+                # Fallback: check by email if the direct user relationship has issues
+                request.zoho_connected = ZohoToken.objects.filter(user__email=request.user.email).first() is not None
+            
             try:
                 # Retrieve Acuity credentials for the logged-in user
                 credentials = CalendlyCredentials.objects.filter(email=request.user.email).first()
+                
                 if credentials:
                     # Attach the image URL to the request
                     if credentials.image_id:
@@ -64,6 +72,7 @@ class UserDataMiddleware:
                 request.image_url = "https://avatars.githubusercontent.com/u/150781803?s=200&v=4"
                 request.company_name = 'susanoox'
         else:
+            request.zoho_connected = False
             request.image_url = "https://avatars.githubusercontent.com/u/150781803?s=200&v=4"
             request.company_name = 'susanoox'
             public_url_names = [

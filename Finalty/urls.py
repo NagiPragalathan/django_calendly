@@ -30,6 +30,7 @@ from base.routes.acuityscheduling_del import *
 from base.routes.acuityscheduling_api import *
 from base.routes.acuityscheduling.acuityscheduling_settings import *
 from base.routes.acuityscheduling.calendly_auth import *
+from base.routes.search_views import *
 
 sitemaps = {
     'static': StaticViewSitemap,
@@ -41,6 +42,7 @@ auth = [
     path('g_login/', g_login, name='g_login'),
     path('google/login/', google_login, name='google-login'),
     path('google/callback/', google_callback, name='google-callback'),
+    path('logout/', logout_view, name='logout'),
 ]
 
 urlpatterns = [
@@ -67,6 +69,7 @@ acuityscheduling_urls = [
     path('credentials/<uuid:credential_id>/delete/', delete_credentials, name='delete_credentials'),  # New delete URL
     
     path("settings/", settings_form, name="settings_form"),
+    path("api/search/", global_search, name="global_search"),
 ]
 
 acuityscheduling_api_urls = [

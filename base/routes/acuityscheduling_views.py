@@ -149,6 +149,8 @@ def list_appointments(request):
                             'updated_at': guest.get('updated_at', '')
                         } for guest in event.get('event_guests', [])]
                     }
+                    # Add full JSON data for the popup
+                    appointment['full_data_json'] = json.dumps(appointment, default=str)
                     appointments.append(appointment)
                 except (ValueError, KeyError) as e:
                     print(f"Error processing appointment: {str(e)}")
@@ -373,6 +375,8 @@ def past_appointments(request):
                         'calendar_type': (event.get('calendar_event') or {}).get('kind', ''),
                         'calendar_id': (event.get('calendar_event') or {}).get('external_id', '')
                     }
+                    # Add full JSON data for the popup
+                    appointment['full_data_json'] = json.dumps(appointment, default=str)
                     appointments.append(appointment)
                 except (ValueError, KeyError) as e:
                     print(f"Error processing appointment: {str(e)}")
@@ -489,7 +493,8 @@ def appointment_types_view(request):
                 'single_use_url': single_use_link,
                 'type': event['type'],
                 'slug': event['slug'],
-                'active': event.get('active', True)
+                'active': event.get('active', True),
+                'full_data_json': json.dumps(event, default=str)
             })
 
         return render(request, 'acuityscheduling/appointment_types.html', {

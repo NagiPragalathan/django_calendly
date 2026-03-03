@@ -16,9 +16,11 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .blur-content { filter: blur(8px); pointer-events: none; user-select: none; }
     </style>
 </head>
 <body class="bg-[#f8fafc] text-slate-900 custom-scrollbar">
+    <div id="app-root" class="{% if user.is_authenticated and not request.zoho_connected and request.resolver_match.url_name != 'zoho_auth' and request.resolver_match.url_name != 'zoho_callback' and request.resolver_match.url_name != 'logout' %}blur-content{% endif %}">
     <!-- Mobile Menu Button -->
     <div class="lg:hidden fixed top-4 left-4 z-50">
         <button id="mobile-menu-button" class="p-2.5 rounded-xl bg-white shadow-xl text-slate-600 hover:text-indigo-600 border border-slate-100 transition-all active:scale-95">
@@ -101,25 +103,49 @@
         <div class="flex-1 lg:ml-72 flex flex-col min-h-screen">
             <!-- Header -->
             <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-100">
-                <div class="px-6 py-4 flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <div class="hidden lg:flex items-center space-x-2 text-slate-400">
+                <div class="px-8 py-4 flex items-center justify-between">
+                    <!-- Left: Breadcrumb (Visible on all screens) -->
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
                             <i class="ri-home-4-line"></i>
-                            <i class="ri-arrow-right-s-line"></i>
-                            <span class="text-sm font-medium text-slate-900">{% block breadcrumb %}Dashboard{% endblock %}</span>
+                        </div>
+                        <i class="ri-arrow-right-s-line text-slate-300"></i>
+                        <span class="text-sm font-bold text-slate-900 tracking-tight">{% block breadcrumb %}Dashboard{% endblock %}</span>
+                    </div>
+
+                    <!-- Center: Search (Visible on md+) -->
+                    <div class="flex-1 max-w-xl px-12">
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <i class="ri-search-2-line text-slate-400 group-focus-within:text-indigo-600 transition-colors"></i>
+                            </div>
+                            <input type="text" id="global-search-input" 
+                                   class="block w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-100 focus:border-indigo-200 focus:bg-white focus:ring-4 focus:ring-indigo-50/50 rounded-2xl text-sm font-medium transition-all shadow-sm group-hover:bg-white group-hover:border-slate-200" 
+                                   placeholder="Search meetings, events, or email...">
+                            
+                            <!-- Search Results Dropdown -->
+                            <div id="search-results" class="hidden absolute top-full left-0 right-0 mt-3 bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-100 py-3 z-[100] overflow-hidden">
+                                <div id="search-results-list" class="max-h-96 overflow-y-auto custom-scrollbar">
+                                    <!-- Results will be injected here -->
+                                </div>
+                                <div id="search-loading" class="hidden px-6 py-4 text-center">
+                                    <i class="ri-loader-4-line animate-spin text-indigo-600 text-xl"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
+                    <!-- Right: Actions & Profile -->
                     <div class="flex items-center space-x-6">
-                        <!-- Notifications -->
-                        <button class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-all relative">
+                        <!-- System Alerts -->
+                        <button class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-all relative">
                             <i class="ri-notification-3-line text-xl"></i>
-                            <span class="absolute top-2 right-2 w-2 h-2 bg-indigo-600 rounded-full border-2 border-white"></span>
+                            <span class="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
                         </button>
 
                         <!-- User Profile -->
                         <div class="relative">
-                            <button id="profile-button" class="flex items-center space-x-3 group p-1.5 pr-3 rounded-2xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">
+                            <button id="profile-button" class="flex items-center space-x-3 group p-1.5 pr-4 rounded-2xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">
                                 <div class="relative">
                                     {% if request.calendly_user.avatar_url %}
                                         <img src="{{ request.calendly_user.avatar_url }}" class="w-10 h-10 rounded-xl object-cover border-2 border-white shadow-sm group-hover:shadow-md transition-all">
@@ -130,36 +156,38 @@
                                     {% endif %}
                                     <div class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white"></div>
                                 </div>
-                                <div class="hidden md:block text-left">
-                                    <p class="text-sm font-bold text-slate-900 leading-none mb-1 group-hover:text-indigo-600 transition-colors">
+                                <div class="hidden xl:block text-left">
+                                    <p class="text-xs font-black text-slate-900 leading-none mb-1 group-hover:text-indigo-600 transition-colors">
                                         {{ request.calendly_user.name }}
                                     </p>
-                                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider leading-none">
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">
                                         Administrator
                                     </p>
                                 </div>
-                                <i class="ri-arrow-down-s-line text-slate-400 group-hover:text-indigo-600 transition-colors"></i>
+                                <i class="ri-arrow-down-s-line text-slate-400 group-hover:text-indigo-600 transition-all group-hover:translate-y-0.5"></i>
                             </button>
 
                             <!-- Dropdown -->
-                            <div id="profile-dropdown" class="hidden absolute right-0 mt-3 w-72 bg-white rounded-3xl shadow-2xl shadow-indigo-200 border border-slate-50 py-3 z-50 animate-fade-in">
+                            <div id="profile-dropdown" class="hidden absolute right-0 mt-3 w-72 bg-white rounded-3xl shadow-2xl border border-slate-50 py-3 z-[101] animate-fade-in">
                                 <div class="px-6 py-4 border-b border-slate-50 mb-2">
-                                    <p class="text-sm font-bold text-slate-900">{{ request.calendly_user.name }}</p>
-                                    <p class="text-xs text-slate-400">{{ request.calendly_user.email }}</p>
+                                    <p class="text-sm font-bold text-slate-900 leading-tight">{{ request.calendly_user.name }}</p>
+                                    <p class="text-xs text-slate-400 font-medium">{{ request.calendly_user.email }}</p>
                                 </div>
                                 <div class="px-3 space-y-1">
-                                    <a href="{{ request.calendly_user.scheduling_url }}" target="_blank" class="flex items-center px-3 py-2 text-sm font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all">
-                                        <i class="ri-external-link-line mr-3"></i>
-                                        Scheduling Page
+                                    <a href="{{ request.calendly_user.scheduling_url }}" target="_blank" class="flex items-center px-3 py-2 text-sm font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all">
+                                        <i class="ri-external-link-line mr-3 text-lg opacity-50"></i>
+                                        My Scheduling Page
                                     </a>
-                                    <a href="{% url 'zoho_auth' %}" class="flex items-center px-3 py-2 text-sm font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all">
-                                        <i class="ri-refresh-line mr-3"></i>
+                                    <a href="{% url 'zoho_auth' %}" class="flex items-center px-3 py-2 text-sm font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all">
+                                        <i class="ri-refresh-line mr-3 text-lg opacity-50"></i>
                                         Sync Zoho CRM
                                     </a>
-                                    <a href="/logout" class="flex items-center px-3 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all mt-2 border-t border-slate-50 pt-3">
-                                        <i class="ri-logout-box-r-line mr-3"></i>
-                                        Disconnect Account
-                                    </a>
+                                    <div class="pt-2 mt-2 border-t border-slate-50">
+                                        <a href="/logout" class="flex items-center px-3 py-2 text-sm font-black text-rose-600 hover:bg-rose-50 rounded-xl transition-all">
+                                            <i class="ri-logout-box-r-line mr-3 text-lg"></i>
+                                            Disconnect Account
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -209,31 +237,138 @@
         </div>
     </div>
 
+    <!-- Mandatory Zoho Connection Modal -->
+    {% if user.is_authenticated and not request.zoho_connected and request.resolver_match.url_name != 'zoho_auth' and request.resolver_match.url_name != 'zoho_callback' and request.resolver_match.url_name != 'logout' %}
+    <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <!-- Backdrop with extreme blur -->
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-xl transition-all duration-700"></div>
+        
+        <!-- Modal Content -->
+        <div class="relative bg-white w-full max-w-lg rounded-[3rem] p-12 shadow-2xl border border-white/20 animate-fade-up text-center">
+            <div class="relative mb-10">
+                <div class="w-24 h-24 bg-rose-50 rounded-[2.5rem] flex items-center justify-center mx-auto border border-rose-100 shadow-xl shadow-rose-100/50">
+                    <i class="ri-error-warning-fill text-5xl text-rose-500 animate-pulse"></i>
+                </div>
+                <div class="absolute -top-4 -right-4 w-12 h-12 bg-indigo-50 rounded-2xl blur-3xl opacity-60"></div>
+            </div>
+
+            <div class="space-y-4">
+                <span class="px-5 py-2 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-[3px] rounded-full border border-indigo-100">
+                    Security Handshake Required
+                </span>
+                <h2 class="text-4xl font-black text-slate-900 tracking-tight leading-none">Connect CRM</h2>
+                <p class="text-sm font-medium text-slate-500 max-w-sm mx-auto leading-relaxed">
+                    Integration services are currently suspended. You must initialize the <span class="text-indigo-600 font-bold">Zoho CRM Bi-directional Bridge</span> to continue using the orchestration engine.
+                </p>
+            </div>
+
+            <div class="mt-12 flex flex-col space-y-4">
+                <a href="{% url 'zoho_auth' %}" class="w-full py-5 bg-slate-900 text-white font-black rounded-2xl shadow-2xl shadow-slate-200 hover:bg-slate-800 transition-all hover:-translate-y-1 active:scale-95 group uppercase tracking-widest text-[11px] flex items-center justify-center">
+                    Initialize Secure Bridge
+                    <i class="ri-arrow-right-up-line ml-2 text-lg"></i>
+                </a>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Need Help? <a href="#" class="text-indigo-600 hover:underline">Contact System Admin</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Scripts -->
     <script>
+        // DOM Elements
         const mobileMenuButton = document.getElementById('mobile-menu-button');
         const sidebar = document.getElementById('sidebar');
         const profileButton = document.getElementById('profile-button');
         const profileDropdown = document.getElementById('profile-dropdown');
+        const searchInput = document.getElementById('global-search-input');
+        const searchResults = document.getElementById('search-results');
+        const searchResultsList = document.getElementById('search-results-list');
+        const searchLoading = document.getElementById('search-loading');
+        
+        let searchTimeout;
 
+        // Mobile Menu
         mobileMenuButton?.addEventListener('click', (e) => {
             e.stopPropagation();
-            sidebar.classList.toggle('-translate-x-full');
+            sidebar?.classList.toggle('-translate-x-full');
         });
 
+        // Profile Toggle
         profileButton?.addEventListener('click', (e) => {
             e.stopPropagation();
-            profileDropdown.classList.toggle('hidden');
+            profileDropdown?.classList.toggle('hidden');
         });
 
+        // Global Search Logic
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                clearTimeout(searchTimeout);
+                
+                if (query.length < 2) {
+                    searchResults?.classList.add('hidden');
+                    return;
+                }
+
+                // Show basic UI
+                searchResults?.classList.remove('hidden');
+                searchLoading?.classList.remove('hidden');
+                if (searchResultsList) searchResultsList.innerHTML = '';
+
+                searchTimeout = setTimeout(() => {
+                    fetch(`/api/search/?q=${encodeURIComponent(query)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            searchLoading?.classList.add('hidden');
+                            if (data.results && data.results.length > 0) {
+                                searchResultsList.innerHTML = data.results.map(res => `
+                                    <a href="${res.url}" class="flex items-center px-6 py-4 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 group">
+                                        <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-white group-hover:text-indigo-600 transition-all shadow-sm">
+                                            <i class="${res.icon} text-lg"></i>
+                                        </div>
+                                        <div class="ml-4">
+                                            <p class="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-all">${res.title}</p>
+                                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">${res.type} &bull; ${res.subtitle}</p>
+                                        </div>
+                                    </a>
+                                `).join('');
+                            } else {
+                                searchResultsList.innerHTML = `
+                                    <div class="px-6 py-10 text-center">
+                                        <p class="text-sm font-bold text-slate-400 uppercase tracking-widest">No Matches Found</p>
+                                    </div>
+                                `;
+                            }
+                        })
+                        .catch(() => {
+                            searchLoading?.classList.add('hidden');
+                            if (searchResultsList) searchResultsList.innerHTML = '<div class="px-6 py-4 text-rose-500 text-xs font-bold">Search service unavailable</div>';
+                        });
+                }, 400);
+            });
+        }
+
+        // Global Click Handler
         document.addEventListener('click', (e) => {
-            if (!profileButton?.contains(e.target)) profileDropdown?.classList.add('hidden');
-            if (window.innerWidth < 1024 && !sidebar?.contains(e.target) && !mobileMenuButton?.contains(e.target)) {
-                sidebar?.classList.add('-translate-x-full');
+            // Close Profile
+            if (profileButton && !profileButton.contains(e.target) && profileDropdown && !profileDropdown.contains(e.target)) {
+                profileDropdown.classList.add('hidden');
+            }
+            
+            // Close Sidebar (Mobile)
+            if (window.innerWidth < 1024 && sidebar && !sidebar.contains(e.target) && !mobileMenuButton?.contains(e.target)) {
+                sidebar.classList.add('-translate-x-full');
+            }
+
+            // Close Search
+            if (searchInput && !searchInput.contains(e.target) && searchResults && !searchResults.contains(e.target)) {
+                searchResults.classList.add('hidden');
             }
         });
 
-        // Set active link
+        // Set Nav Link Active State
         document.addEventListener('DOMContentLoaded', () => {
             const currentPath = window.location.pathname;
             document.querySelectorAll('.nav-link').forEach(link => {
