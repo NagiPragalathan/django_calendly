@@ -84,3 +84,119 @@ None created
 
 
 https://api.calendly.com/activity_log_entries
+
+
+
+
+
+
+
+
+1️⃣ “Schedule Meeting” Button Inside Lead/Contact
+
+Inside a Lead record:
+
+Add button → “Schedule via Calendly”
+
+Open widget
+
+Show available slots
+
+Book meeting
+
+Save meeting details back into CRM
+
+
+2️⃣ Show Upcoming Meetings Panel
+
+Inside Lead detail page:
+
+Fetch meetings from Calendly API
+
+Show:
+
+Date
+
+Time
+
+Status
+
+Meeting link
+
+Sync to CRM fields
+
+3️⃣ Auto Sync Booking → CRM
+
+Flow:
+
+Calendly Booking → Webhook → Your Django backend → Update Zoho Lead
+
+You can:
+
+Change lead status
+
+Create task
+
+Create event
+
+Assign sales rep
+
+This is powerful for automation.
+
+4️⃣ Bulk Scheduling (Advanced)
+
+From bulk Lead selection:
+
+Send scheduling link to multiple leads
+
+Track who booked
+
+Update CRM automatically
+
+
+1️⃣1️⃣ Reschedule / Cancel Control Inside CRM
+
+Instead of going to Calendly:
+
+From Zoho:
+
+Reschedule meeting
+
+Cancel meeting
+
+Reassign meeting
+
+All from CRM interface.
+
+Very strong UX value.
+
+
+1️⃣3️⃣ Multi-Calendar Support
+
+If company uses:
+
+Multiple Calendly accounts
+
+Multiple Acuity users
+
+You create central scheduling control inside CRM.
+
+Now it becomes team-wide infrastructure.
+
+
+
+
+
+1️⃣4️⃣ Lead Engagement Score Integration
+
+Combine:
+
+Email opens
+
+Website visits
+
+Meeting booked
+
+Meeting attended
+
+Generate dynamic engagement score.

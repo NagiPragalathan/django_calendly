@@ -507,9 +507,10 @@ def appointment_types_view(request):
                      {'error': f"Failed to fetch appointment types: {str(e)}"})
 
 
+@login_required
 def acuity_dashboard(request):
     """
-    Fetch and display data for the Calendly Dashboard.
+    Fetch and display data for the Calendly Dashboard with advanced analytics.
     """
     email = request.user.email
 
@@ -521,7 +522,6 @@ def acuity_dashboard(request):
         })
 
     headers = check_and_refresh_token(credentials)
-    print(headers)
     if not headers:
         return render(request, 'acuityscheduling/dashboard.html', {
             'error': 'Failed to authenticate with Calendly. Please reconnect your account.'
@@ -535,89 +535,111 @@ def acuity_dashboard(request):
         organization_uri = user_data['current_organization']
         user_uri = user_data['uri']
 
-        # Get event types
-        event_types_url = 'https://api.calendly.com/event_types'
-        params = {'organization': organization_uri, 'user': user_uri, 'active': True}
-        event_types_response = requests.get(event_types_url, headers=headers, params=params)
-        event_types_response.raise_for_status()
-        event_types = event_types_response.json()['collection']
-
-        # Get scheduled events (last 30 days)
         now = datetime.now(timezone.utc)
+
+        # 1. Today's Events
+        start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_today = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        today_params = {
+            'organization': organization_uri,
+            'min_start_time': start_of_today.isoformat(),
+            'max_start_time': end_of_today.isoformat(),
+            'status': 'active'
+        }
+        today_meetings = requests.get('https://api.calendly.com/scheduled_events', headers=headers, params=today_params).json().get('collection', [])
+
+        # 2. Upcoming & Past Meetings (Top 3 each)
+        upcoming_params = {
+            'organization': organization_uri,
+            'min_start_time': now.isoformat(),
+            'status': 'active',
+            'count': 3,
+            'sort': 'start_time:asc'
+        }
+        upcoming_meetings = requests.get('https://api.calendly.com/scheduled_events', headers=headers, params=upcoming_params).json().get('collection', [])
+
+        past_params = {
+            'organization': organization_uri,
+            'max_start_time': now.isoformat(),
+            'status': 'active',
+            'count': 3,
+            'sort': 'start_time:desc'
+        }
+        past_meetings = requests.get('https://api.calendly.com/scheduled_events', headers=headers, params=past_params).json().get('collection', [])
+
+        # 3. Monthly Analytics (Last 30 Days)
         thirty_days_ago = now - timedelta(days=30)
-        events_url = 'https://api.calendly.com/scheduled_events'
         events_params = {
             'organization': organization_uri,
             'min_start_time': thirty_days_ago.isoformat(),
             'max_start_time': now.isoformat(),
-            'user': user_uri,
             'count': 100
         }
-        events_response = requests.get(events_url, headers=headers, params=events_params)
-        events_response.raise_for_status()
-        scheduled_events = events_response.json()['collection']
+        scheduled_events = requests.get('https://api.calendly.com/scheduled_events', headers=headers, params=events_params).json().get('collection', [])
 
-        # Get pending invitations
-        org_uuid = organization_uri.split('/')[-1]
-        invitations_url = f'https://api.calendly.com/organizations/{org_uuid}/invitations'
-        invitations_response = requests.get(invitations_url, headers=headers)
-        invitations_response.raise_for_status()
-        invitations = invitations_response.json()['collection']
+        # 4. Event Types Intelligence
+        et_response = requests.get('https://api.calendly.com/event_types', headers=headers, params={'organization': organization_uri, 'user': user_uri})
+        all_event_types = et_response.json().get('collection', [])
+        
+        # 5. Recent Activity
+        activity_response = requests.get('https://api.calendly.com/activity_log_entries', headers=headers, params={'organization': organization_uri, 'count': 5})
+        recent_activity = activity_response.json().get('collection', [])
 
-        # Data processing
-        event_type_stats = {
-            'total': len(event_types),
-            'active': sum(1 for et in event_types if et.get('active', False))
-        }
-
-        event_status_data = {
-            'active': sum(1 for event in scheduled_events if event['status'] == 'active'),
-            'canceled': sum(1 for event in scheduled_events if event['status'] == 'canceled')
-        }
-
+        # Processing Analytics
+        event_status_data = {'active': 0, 'canceled': 0}
         events_by_date = {}
+        events_by_hour = {str(h): 0 for h in range(24)}
+        events_by_type = {}
+        total_duration = 0
+
         for event in scheduled_events:
-            date = event['start_time'][:10]
-            events_by_date[date] = events_by_date.get(date, 0) + 1
+            status = event['status']
+            event_status_data[status] = event_status_data.get(status, 0) + 1
+            st = datetime.fromisoformat(event['start_time'].replace('Z', '+00:00'))
+            et = datetime.fromisoformat(event['end_time'].replace('Z', '+00:00'))
+            
+            events_by_date[st.strftime('%Y-%m-%d')] = events_by_date.get(st.strftime('%Y-%m-%d'), 0) + 1
+            events_by_hour[str(st.hour)] += 1
+            events_by_type[event['name']] = events_by_type.get(event['name'], 0) + 1
+            total_duration += int((et - st).total_seconds() / 60)
 
-        unique_invitees = {membership.get('user_email') for event in scheduled_events for membership in event.get('event_memberships', [])}
+        # Get Top 3 Event Types based on frequency or just selection
+        top_event_types = sorted(all_event_types, key=lambda x: events_by_type.get(x['name'], 0), reverse=True)[:3]
 
-        processed_events = []
-        for event in scheduled_events:
-            start_time = datetime.fromisoformat(event['start_time'].replace('Z', '+00:00'))
-            end_time = datetime.fromisoformat(event['end_time'].replace('Z', '+00:00'))
-            duration = int((end_time - start_time).total_seconds() / 60)
-
-            processed_events.append({
-                'name': event['name'],
-                'start_time': start_time,
-                'end_time': end_time,
-                'status': event['status'],
-                'duration': duration,
-                'uri': event['uri']
-            })
-
-        # Stats cards
-        stats = [
-            {'label': 'Total Events', 'value': len(scheduled_events), 'icon': '📅'},
-            {'label': 'Unique Invitees', 'value': len(unique_invitees), 'icon': '👥'},
-            {'label': 'Event Types', 'value': f"{event_type_stats['active']}/{event_type_stats['total']}", 'icon': '📌'},
-            {'label': 'Pending Invitations', 'value': sum(1 for inv in invitations if inv['status'] == 'pending'), 'icon': '⏳'}
-        ]
+        def process_meeting(e):
+            st = datetime.fromisoformat(e['start_time'].replace('Z', '+00:00'))
+            et = datetime.fromisoformat(e['end_time'].replace('Z', '+00:00'))
+            return {
+                'name': e['name'],
+                'time': st.strftime('%b %d, %H:%M'),
+                'duration': int((et - st).total_seconds() / 60),
+                'uri': e['uri']
+            }
 
         context = {
             'user_data': user_data,
-            'scheduled_events': processed_events,
-            'event_type_stats': event_type_stats,
+            'today_meetings': [process_meeting(m) for m in today_meetings],
+            'upcoming_meetings': [process_meeting(m) for m in upcoming_meetings],
+            'past_meetings': [process_meeting(m) for m in past_meetings],
+            'top_events': top_event_types,
+            'all_event_types': all_event_types,
+            'stats': [
+                {'label': 'Monthly Orchestrations', 'value': len(scheduled_events), 'icon': 'ri-calendar-event-line', 'color': 'indigo'},
+                {'label': 'Avg Engagement', 'value': f"{round(total_duration/len(scheduled_events),1) if scheduled_events else 0}m", 'icon': 'ri-time-line', 'color': 'emerald'},
+                {'label': 'Active Links', 'value': len([et for et in all_event_types if et['active']]), 'icon': 'ri-links-line', 'color': 'violet'},
+                {'label': 'Success Rate', 'value': f"{round((event_status_data['active']/len(scheduled_events))*100,1) if scheduled_events else 0}%", 'icon': 'ri-shield-check-line', 'color': 'amber'}
+            ],
+            'recent_activity': recent_activity,
             'event_status_data': mark_safe(json.dumps(event_status_data)),
             'events_by_date': mark_safe(json.dumps(events_by_date)),
-            'stats': stats
+            'events_by_hour': mark_safe(json.dumps(events_by_hour)),
+            'events_by_type': mark_safe(json.dumps(events_by_type))
         }
 
         return render(request, 'acuityscheduling/dashboard.html', context)
 
-    except requests.RequestException as e:
-        return render(request, 'acuityscheduling/dashboard.html', {'error': f"Failed to fetch data: {str(e)}"})
+    except Exception as e:
+        return render(request, 'acuityscheduling/dashboard.html', {'error': f"Analytics Engine Error: {str(e)}"})
 
 
 def reset_webhook_view(request):
