@@ -66,11 +66,16 @@ acuityscheduling_urls = [
     path('credentials/', list_credentials, name='list_credentials'),
     path('credentials/create/', create_credentials, name='create_credentials'),
     path('credentials/<uuid:credential_id>/edit/', edit_credentials, name='edit_credentials'),
-    path('credentials/<uuid:credential_id>/delete/', delete_credentials, name='delete_credentials'),  # New delete URL
+    path('credentials/<uuid:credential_id>/delete/', delete_credentials, name='delete_credentials'),
+    path('credentials/<uuid:credential_id>/set-primary/', set_primary_credential, name='set_primary_credential'),
+    path('credentials/<uuid:credential_id>/switch/', switch_active_account, name='switch_active_account'),
+    path('credentials/<uuid:credential_id>/fetch-events/', fetch_calendly_events, name='fetch_calendly_events'),
     
     path("settings/", settings_form, name="settings_form"),
     path("api/search/", global_search, name="global_search"),
     path("api/sync-to-crm/", sync_to_crm, name="sync_to_crm"),
+    path("zoho/<str:module>/<str:record_id>/booking/", zoho_record_booking, name="zoho_record_booking"),
+    path("api/send-booking-email/", send_booking_email, name="send_booking_email"),
 ]
 
 acuityscheduling_api_urls = [

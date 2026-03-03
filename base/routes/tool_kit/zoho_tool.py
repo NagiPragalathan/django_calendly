@@ -62,6 +62,20 @@ def create_event(access_token, event_data):
         print("Failed to create event:", response.text)
         return False
 
+def get_zoho_record(module, record_id, access_token):
+    """Fetch record details from Zoho CRM by module and ID."""
+    url = f"https://www.zohoapis.com/crm/v2/{module}/{record_id}"
+    headers = {
+        "Authorization": f"Zoho-oauthtoken {access_token}",
+        "Content-Type": "application/json"
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        if "data" in data and len(data["data"]) > 0:
+            return data["data"][0]
+    return None
+
 def find_meeting_in_zoho(acuity_id, access_token):
     """
     Searches for an existing meeting in Zoho CRM using the Acuity_ID.
@@ -398,13 +412,17 @@ def check_and_add_email(user_data, module, user_id, only_contact=False):
 # Create a new custom field in Zoho CRM
 ##########################################################################################################
 
-def get_event_fields(access_token):
-    url = "https://www.zohoapis.com/crm/v3/settings/fields?module=Events"
+def get_module_fields(access_token, module):
+    """Retrieve all fields for a specific Zoho CRM module."""
+    url = f"https://www.zohoapis.com/crm/v2/settings/fields?module={module}"
     headers = {
         "Authorization": f"Zoho-oauthtoken {access_token}"
     }
     response = requests.get(url, headers=headers)
     return response.json()
+
+def get_event_fields(access_token):
+    return get_module_fields(access_token, "Events")
 
 def check_field_exists(access_token, field_name):
     fields_response = get_event_fields(access_token)
@@ -413,8 +431,9 @@ def check_field_exists(access_token, field_name):
             return True
     return False 
 
-def create_event_field(access_token, field_name, field_type="text", length=255):
-    url = "https://www.zohoapis.com/crm/v3/settings/fields?module=Events"
+def create_module_field(access_token, module, field_name, field_type="text"):
+    """Create a new custom field in any specified Zoho CRM module."""
+    url = f"https://www.zohoapis.com/crm/v3/settings/fields?module={module}"
     headers = {
         "Authorization": f"Zoho-oauthtoken {access_token}",
         "Content-Type": "application/json"
@@ -425,13 +444,16 @@ def create_event_field(access_token, field_name, field_type="text", length=255):
             {
                 "field_label": field_name,
                 "api_name": field_name.replace(" ", "_"),
-                "data_type": "text"
+                "data_type": field_type
             }
         ]
     }
-    print(payload)
     response = requests.post(url, json=payload, headers=headers)
     return response.json()
+
+def create_event_field(access_token, field_name):
+    # Maintain backward compatibility but point to the generic version
+    return create_module_field(access_token, "Events", field_name)
 
 # Step 5: Check and Create Field if Needed
 def ensure_field_exists(user_obj, field_name):

@@ -1,10 +1,24 @@
 from django.shortcuts import render, redirect
-from base.models import Settings, ZohoToken
+from base.models import Settings, ZohoToken, SmtpSettings, PreFillMapping, CalendlyCredentials
 from django.contrib.auth.decorators import login_required
-from base.routes.tool_kit.zoho_tool import get_event_fields, check_access_token_validity, get_access_token, create_event_field
+from base.routes.tool_kit.zoho_tool import get_event_fields, check_access_token_validity, get_access_token, create_event_field, get_module_fields, create_module_field
 from Finalty.settings import CLIENT_ID, CLIENT_SECRET
 from django.contrib import messages
 import json
+
+# Global Orchestration Constants
+INTEGRATION_FIELDS = [
+    {'key': 'Calendly_Event_Uri', 'label': 'Event URI'},
+    {'key': 'Calendly_Invitee_Uri', 'label': 'Invitee URI'},
+    {'key': 'Calendly_Cancel_Url', 'label': 'Cancel URL'},
+    {'key': 'Calendly_Reschedule_Url', 'label': 'Reschedule URL'},
+    {'key': 'Calendly_Event_Status', 'label': 'Event Status'},
+    {'key': 'Calendly_Question_Answer', 'label': 'Questions & Answers'},
+    {'key': 'External_Event_ID', 'label': 'External Event ID (Google/Outlook)'},
+    {'key': 'Meeting_Venue', 'label': 'Meeting Venue (Virtual/In-Person)'},
+]
+
+
 
 
 @login_required
@@ -36,63 +50,60 @@ def settings_form(request):
                 zoho_fields.sort(key=lambda x: x["label"])
     except Exception as e:
         print(f"Error fetching Zoho fields: {e}")
+    # Fetch Lead fields for pre-fill mapping
+    lead_fields = []
+    try:
+        if access_token:
+            lead_data = get_module_fields(access_token, "Leads")
+            if "fields" in lead_data:
+                for f in lead_data["fields"]:
+                    lead_fields.append({"api_name": f["api_name"], "label": f["field_label"]})
+                lead_fields.sort(key=lambda x: x["label"])
+    except: pass
 
-    # Standard Integration Fields for Mapping
-    INTEGRATION_FIELDS = [
-        {'key': 'Calendly_Event_Uri', 'label': 'Event URI'},
-        {'key': 'Calendly_Invitee_Uri', 'label': 'Invitee URI'},
-        {'key': 'Calendly_Cancel_Url', 'label': 'Cancel URL'},
-        {'key': 'Calendly_Reschedule_Url', 'label': 'Reschedule URL'},
-        {'key': 'Calendly_Event_Status', 'label': 'Event Status'},
-        {'key': 'Calendly_Question_Answer', 'label': 'Questions & Answers'},
-        {'key': 'External_Event_ID', 'label': 'External Event ID (Google/Outlook)'},
-        {'key': 'Meeting_Venue', 'label': 'Meeting Venue (Virtual/In-Person)'},
-    ]
-
+    # Get SMTP Settings
+    smtp_settings = SmtpSettings.objects.filter(user=user).first()
+    
     if request.method == "POST":
+        # ... existing logic for Settings model ...
         leads_to_store = request.POST.get("leads_to_store")
         lead_source = request.POST.get("lead_source")
+        use_default_mapping = request.POST.get("use_default_mapping") == "on"
         
-        # Handle field mappings from POST
         field_mappings = {}
+
         for item in INTEGRATION_FIELDS:
-            # Check if creating a new field
             create_name = request.POST.get(f"create_{item['key']}")
             if create_name and access_token:
-                # API call to create field in Zoho
                 try:
-                    create_res = create_event_field(access_token, create_name)
+                    create_res = create_module_field(access_token, leads_to_store, create_name)
                     if create_res.get("fields") and create_res["fields"][0].get("api_name"):
                         field_mappings[item['key']] = create_res["fields"][0]["api_name"]
-                    else:
-                        messages.warning(request, f"Could not create field '{create_name}' in Zoho. Falling back to default.")
-                except Exception as e:
-                    print(f"Auth error creating field: {e}")
+                except: pass
             else:
-                # Use selected existing field
                 val = request.POST.get(f"map_{item['key']}")
-                if val:
-                    field_mappings[item['key']] = val
+                if val: field_mappings[item['key']] = val
 
-        if settings_instance:
-            Settings.objects.filter(user=user).update(
-                leads_to_store=leads_to_store,
-                lead_source=lead_source,
-                field_mappings=field_mappings
-            )
-        else:
-            Settings.objects.create(
-                user=user,
-                leads_to_store=leads_to_store,
-                lead_source=lead_source,
-                field_mappings=field_mappings
-            )
-        
-        messages.success(request, "Integration logic and field orchestration updated successfully!")
-        return redirect("settings_form")
+        Settings.objects.update_or_create(user=user, defaults={
+            'leads_to_store': leads_to_store,
+            'lead_source': lead_source,
+            'use_default_mapping': use_default_mapping,
+            'field_mappings': field_mappings
+        })
+
+        # Handle SMTP
+        SmtpSettings.objects.update_or_create(user=user, defaults={
+            'smtp_server': request.POST.get('smtp_server'),
+            'smtp_port': request.POST.get('smtp_port', 587),
+            'smtp_user': request.POST.get('smtp_user'),
+            'smtp_password': request.POST.get('smtp_password'),
+            'use_tls': request.POST.get('use_tls') == 'on'
+        })
 
     return render(request, "settings_form.html", {
         "settings": settings_instance,
         "zoho_fields": zoho_fields,
-        "integration_fields": INTEGRATION_FIELDS
+        "lead_fields": lead_fields,
+        "integration_fields": INTEGRATION_FIELDS,
+        "smtp_settings": smtp_settings
     })

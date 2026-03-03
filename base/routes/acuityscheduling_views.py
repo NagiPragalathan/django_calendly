@@ -2,18 +2,20 @@
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from Finalty.settings import CALENDLY_WEBHOOK_EVENTS, CALENDLY_CUSTOM_FIELDS
-from base.models import CalendlyCredentials, ZohoToken, Settings
-from base.routes.tool_kit.zoho_tool import add_meeting_to_zoho_crm, check_and_add_email
+from base.models import CalendlyCredentials, ZohoToken, Settings, PreFillMapping, SmtpSettings
+from base.routes.tool_kit.zoho_tool import add_meeting_to_zoho_crm, check_and_add_email, get_zoho_record
+from django.core.mail import EmailMessage, get_connection
 import requests, json
 from django.contrib.auth.decorators import login_required
 from datetime import datetime, timedelta, timezone
 from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404, redirect
+from base.utils import get_active_hub
 from base.routes.tool_kit.secract_del import delete_all_webhooks
 from base.routes.tool_kit.mongo_tool import get_image_from_mongodb
 import base64
 from django.conf import settings
 from django.utils.safestring import mark_safe
-
 
 
 @login_required
@@ -24,11 +26,11 @@ def list_appointments(request):
     end_date_val = request.GET.get('end_date', '')
 
     try:
-        credentials = CalendlyCredentials.objects.filter(email=email).first()
+        credentials = get_active_hub(request)
         if not credentials:
             return render(request, 'acuityscheduling/appointments.html', {
-                'error': 'No Calendly Credentials found for your account. '
-                         '<a href="/store-credentials/" class="text-blue-600 underline">Store credentials</a>'
+                'error': mark_safe('No Calendly Credentials found for your account. '
+                          '<a href="/credentials/create/" class="text-blue-600 underline">Add credentials hub</a>')
             })
 
         # Check if access token is expired and refresh if needed
@@ -270,12 +272,12 @@ def past_appointments(request):
     email = request.user.email
 
     try:
-        # Get credentials
-        credentials = CalendlyCredentials.objects.filter(email=email).first()
+        # Get active hub (session, primary, or first available)
+        credentials = get_active_hub(request)
         if not credentials:
             return render(request, 'acuityscheduling/past_appointments.html', {
-                'error': 'No Calendly Credentials found for your account. '
-                         '<a href="/store-credentials/" class="text-blue-600 underline">Store credentials</a>'
+                'error': mark_safe('No Calendly Credentials found for your account. '
+                          '<a href="/credentials/create/" class="text-blue-600 underline">Add credentials hub</a>')
             })
 
         # Check if access token is expired and refresh if needed
@@ -552,17 +554,129 @@ def appointment_types_view(request):
 
 
 @login_required
+def send_booking_email(request):
+    """Send an orchestrated booking email via SMTP."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+        
+    try:
+        to_email = request.POST.get('to_email')
+        subject = request.POST.get('subject', 'Invitation to Schedule a Meeting')
+        message_content = request.POST.get('message_content')
+        booking_url = request.POST.get('booking_url')
+        
+        # 1. Get SMTP Settings
+        smtp = SmtpSettings.objects.filter(user=request.user).first()
+        if not smtp:
+            return JsonResponse({'success': False, 'error': 'SMTP settings not configured. Please set them in Integration Settings.'}, status=400)
+            
+        # 2. Add Booking Link to Message
+        full_message = f"{message_content}\n\nSchedule here: {booking_url}"
+        
+        # 3. Create Connection
+        connection = get_connection(
+            backend='django.core.mail.backends.smtp.EmailBackend',
+            host=smtp.smtp_server,
+            port=smtp.smtp_port,
+            username=smtp.smtp_user,
+            password=smtp.smtp_password,
+            use_tls=smtp.use_tls,
+            timeout=10
+        )
+        
+        # 4. Send Email
+        email = EmailMessage(
+            subject=subject,
+            body=full_message,
+            from_email=smtp.smtp_user,
+            to=[to_email],
+            connection=connection
+        )
+        email.send()
+        
+        return JsonResponse({'success': True, 'message': f'Booking invitation sent to {to_email}!'})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f"Failed to send email: {str(e)}"}, status=500)
+
+@login_required
+def zoho_record_booking(request, module, record_id):
+    """Orchestrate a booking link for a specific Zoho record."""
+    try:
+        zoho_token = ZohoToken.objects.filter(user=request.user).latest('created_at')
+        from base.routes.tool_kit.zoho_tool import check_access_token_validity, get_access_token
+        from Finalty.settings import CLIENT_ID, CLIENT_SECRET
+        
+        access_token = zoho_token.access_token
+        if not check_access_token_validity(access_token):
+            access_token = get_access_token(CLIENT_ID, CLIENT_SECRET, zoho_token.refresh_token)
+            zoho_token.access_token = access_token
+            zoho_token.save()
+            
+        # 2. Fetch the Record
+        record = get_zoho_record(module, record_id, access_token)
+        if not record:
+            return HttpResponse(f"Record {record_id} not found in {module}", status=404)
+            
+        # 3. Get Active Hub
+        credentials = get_active_hub(request)
+        if not credentials:
+            return redirect('list_credentials')
+            
+        # 4. Fetch Event Types for this account
+        headers = check_and_refresh_token(credentials)
+        user_response = requests.get('https://api.calendly.com/users/me', headers=headers)
+        organization_uri = user_response.json()['resource']['current_organization']
+        
+        event_types_response = requests.get(
+            'https://api.calendly.com/event_types',
+            headers=headers,
+            params={'organization': organization_uri, 'active': True}
+        )
+        event_types = event_types_response.json().get('collection', [])
+        
+        # 5. Build Pre-fill Data
+        prefill = {
+            'name': f"{record.get('First_Name', '')} {record.get('Last_Name', '')}".strip() or record.get('Full_Name', ''),
+            'email': record.get('Email', ''),
+        }
+        
+        # Map custom questions based on PreFillMapping
+        mappings = PreFillMapping.objects.filter(user=request.user, calendly_account=credentials)
+        for mapping in mappings:
+            zoho_val = record.get(mapping.zoho_field_api_name, '')
+            if zoho_val:
+                prefill[mapping.question_key] = zoho_val
+                
+        # Also check global field mappings in Settings
+        settings = Settings.objects.filter(user=request.user).first()
+        if settings and settings.field_mappings:
+            # If there's a specific mapping for Q&A or other fields, we can use it here
+            pass
+
+        return render(request, 'acuityscheduling/zoho_booking_orchestrator.html', {
+            'module': module,
+            'record': record,
+            'event_types': event_types,
+            'prefill': prefill,
+            'credentials': credentials,
+            'all_hubs': CalendlyCredentials.objects.filter(email=request.user.email)
+        })
+
+    except Exception as e:
+        return HttpResponse(f"Orchestration Error: {str(e)}", status=500)
+
+
+@login_required
 def acuity_dashboard(request):
     """
     Fetch and display data for the Calendly Dashboard with advanced analytics.
     """
-    email = request.user.email
-
-    try:
-        credentials = CalendlyCredentials.objects.get(email=email)
-    except CalendlyCredentials.DoesNotExist:
+    credentials = get_active_hub(request)
+    if not credentials:
         return render(request, 'acuityscheduling/dashboard.html', {
-            'error': 'No Calendly Credentials found. Store credentials <a href="/store-credentials/" class="text-blue-600 underline">here</a>'
+            'error': mark_safe('No Calendly Credentials found for your account. '
+                        '<a href="/credentials/create/" class="text-blue-600 underline">Add credentials hub</a>')
         })
 
     headers = check_and_refresh_token(credentials)

@@ -15,9 +15,10 @@ class CalendlyCredentials(models.Model):
     email_template = models.CharField(max_length=700, blank=True, null=True)
     company_name = models.CharField(max_length=100, blank=True, null=True)
     image_id = models.CharField(max_length=50, blank=True, null=True)  # Updated field
+    is_primary = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.email
+        return f"{self.email} ({'Primary' if self.is_primary else 'Regular'})"
 
     def is_token_expired(self):
         """Check if the access token has expired."""
@@ -62,7 +63,29 @@ class Settings(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     leads_to_store = models.CharField(max_length=20, choices=[('Leads', 'Leads'), ('Contacts', 'Contacts')], default='Contacts')
     lead_source = models.CharField(max_length=255, default='Acuity Scheduling')
+    use_default_mapping = models.BooleanField(default=True)
     field_mappings = models.JSONField(default=dict, blank=True)
 
     def __str__(self):
         return self.user.username
+
+class SmtpSettings(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    smtp_server = models.CharField(max_length=255, default='smtp.gmail.com')
+    smtp_port = models.IntegerField(default=587)
+    smtp_user = models.EmailField()
+    smtp_password = models.CharField(max_length=255)  
+    use_tls = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"SMTP: {self.smtp_user}"
+
+class PreFillMapping(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    calendly_account = models.ForeignKey(CalendlyCredentials, on_delete=models.CASCADE)
+    # Question mapping: a1, a2, etc. to Zoho Field API name
+    question_key = models.CharField(max_length=50) # 'a1', 'a2', etc.
+    zoho_field_api_name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.question_key} -> {self.zoho_field_api_name}"

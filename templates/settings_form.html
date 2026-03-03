@@ -5,160 +5,245 @@
 {% block breadcrumb %}Global Settings{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto py-8">
-    <div class="mb-10">
-        <h1 class="text-3xl font-black text-slate-900 tracking-tight">Integration Logic</h1>
-        <p class="text-sm font-medium text-slate-500 mt-2">Customized routing and metadata extraction for your sync pipeline.</p>
+<div class="max-w-7xl mx-auto py-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+        <div>
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight">Integration Logic</h1>
+            <p class="text-sm font-medium text-slate-500 mt-2">Customized routing and metadata extraction for your sync pipeline.</p>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="text-right">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Status</p>
+                <p class="text-xs font-bold text-emerald-600 flex items-center justify-end">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span>
+                    Operational
+                </p>
+            </div>
+        </div>
     </div>
 
-    <!-- Main Settings Form -->
-    <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-        <div class="absolute -top-24 -right-24 w-64 h-64 bg-indigo-50 rounded-full blur-3xl opacity-50"></div>
-        
-        <form method="POST" class="space-y-10 relative">
-            {% csrf_token %}
+    <form method="POST">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- Main Content Area: Orchestration -->
+            <div class="lg:col-span-7 space-y-8">
+                <!-- Field Orchestration -->
+                <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                    <div class="absolute -top-24 -right-24 w-64 h-64 bg-indigo-50 rounded-full blur-3xl opacity-50"></div>
+                    
+                    <div class="relative space-y-8">
+                        <div class="flex items-center space-x-3 pb-6 border-b border-slate-50">
+                            <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center text-violet-600">
+                                <i class="ri-node-tree text-lg"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h2 class="text-lg font-extrabold text-slate-900 leading-tight">Sync Orchestration</h2>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Calendly ↔ Zoho CRM Mapping</p>
+                            </div>
+                            <div class="flex items-center space-x-3 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Pulse</span>
+                                <div class="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" name="use_default_mapping" id="use_default_mapping_toggle" 
+                                           {% if settings.use_default_mapping != False %}checked{% endif %}
+                                           class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-2 border-slate-200 appearance-none cursor-pointer checked:right-0 checked:border-indigo-600 transition-all duration-300"/>
+                                    <label for="use_default_mapping_toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-colors duration-300"></label>
+                                </div>
+                                <style>
+                                    .toggle-checkbox:checked { right: 0; border-color: #4f46e5; }
+                                    .toggle-checkbox:checked + .toggle-label { background-color: #4f46e5; }
+                                    .toggle-checkbox { right: 1.5rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+                                </style>
+                            </div>
+                        </div>
 
-            <!-- Leads to Store Selection -->
-            <div class="space-y-6">
-                <div class="flex items-center space-x-3 pb-2 border-b border-slate-50">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                        <i class="ri-database-2-line text-lg"></i>
+                        <!-- Pre-built Mode Banner -->
+                        <div id="prebuilt-banner" class="{% if settings.use_default_mapping == False %}hidden{% endif %} p-8 bg-indigo-50/50 rounded-[2.5rem] border border-indigo-100/50 text-center space-y-4 animate-fade-in">
+                            <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm mx-auto">
+                                <i class="ri-shield-flash-line text-3xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Pre-built Orchestration Active</h3>
+                                <p class="text-[11px] font-medium text-slate-500 max-w-xs mx-auto mt-1">The system is currently using standardized high-performance field mapping protocols.</p>
+                            </div>
+                            <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest cursor-pointer hover:text-indigo-700 transition-colors" onclick="document.getElementById('use_default_mapping_toggle').click()">
+                                Switch to Manual Mode
+                            </p>
+                        </div>
+
+                        <div id="mapping-orchestration-matrix" class="grid grid-cols-1 gap-4 {% if settings.use_default_mapping != False %}hidden{% endif %} transition-all duration-500">
+                            {% for item in integration_fields %}
+                            <div class="p-6 bg-slate-50/50 border border-slate-100/50 rounded-3xl space-y-4 hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all group">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-[11px] font-black text-slate-900 uppercase tracking-wider flex items-center">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-2"></span>
+                                        {{ item.label }}
+                                    </label>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-[10px] font-bold text-slate-400">Create New?</span>
+                                        <div onclick="toggleCreateField('{{ item.key }}')" 
+                                             id="toggle-{{ item.key }}"
+                                             class="w-10 h-5 bg-slate-200 rounded-full relative transition-all duration-300 cursor-pointer">
+                                            <div class="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-all duration-300 shadow-sm" id="thumb-{{ item.key }}"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="relative" id="container-select-{{ item.key }}">
+                                    <select name="map_{{ item.key }}" id="select-{{ item.key }}"
+                                            class="w-full px-5 py-3.5 bg-white border border-slate-100 rounded-2xl text-xs font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 transition-all appearance-none cursor-pointer">
+                                        <option value="">-- No Mapping / Skip --</option>
+                                        {% for z_field in zoho_fields %}
+                                        <option value="{{ z_field.api_name }}" 
+                                                {% if settings.field_mappings|get_item:item.key == z_field.api_name %}selected{% endif %}>
+                                            {{ z_field.label }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <i class="ri-arrow-down-s-line absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                                </div>
+
+                                <div class="relative hidden" id="container-input-{{ item.key }}">
+                                    <div class="absolute left-5 top-1/2 -translate-y-1/2 flex items-center text-indigo-500">
+                                        <i class="ri-add-circle-line font-black"></i>
+                                    </div>
+                                    <input type="text" id="input-{{ item.key }}"
+                                           placeholder="New Field Label (e.g. {{ item.label }})"
+                                           class="w-full pl-12 pr-5 py-3.5 bg-white border border-indigo-100 rounded-2xl text-xs font-black text-indigo-600 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-300 transition-all">
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
                     </div>
-                    <h2 class="text-lg font-extrabold text-slate-900">Destination Module</h2>
                 </div>
-                
-                <div class="space-y-2">
-                    <label for="leads_to_store" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Primary Data Container</label>
-                    <div class="relative">
-                        <select name="leads_to_store" id="leads_to_store"
-                                class="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-semibold focus:ring-4 focus:ring-indigo-500/10 transition-all appearance-none cursor-pointer">
-                            <option value="Leads" {% if settings and settings.leads_to_store == "Leads" %}selected{% endif %}>Store as CRM Leads</option>
-                            <option value="Contacts" {% if settings and settings.leads_to_store == "Contacts" %}selected{% endif %}>Store as CRM Contacts</option>
-                        </select>
-                        <i class="ri-arrow-down-s-line absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+
+            </div>
+
+            <!-- Sidebar Content area -->
+            <div class="lg:col-span-5 space-y-8 sticky top-8">
+                <!-- Destination & Meta -->
+                <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-10">
+                    <div class="space-y-6">
+                        <div class="flex items-center space-x-3 pb-4 border-b border-slate-50">
+                           <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white">
+                               <i class="ri-equalizer-line"></i>
+                           </div>
+                           <h3 class="font-extrabold text-slate-900">Routing Directives</h3>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Destination Container</label>
+                                <select name="leads_to_store" class="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900">
+                                    <option value="Leads" {% if settings.leads_to_store == "Leads" %}selected{% endif %}>CRM Leads</option>
+                                    <option value="Contacts" {% if settings.leads_to_store == "Contacts" %}selected{% endif %}>CRM Contacts</option>
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Entry Origin tag</label>
+                                <input type="text" name="lead_source" value="{{ settings.lead_source|default:'Calendly Hub' }}"
+                                       class="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900">
+                            </div>
+                        </div>
                     </div>
-                    <p class="text-[10px] font-medium text-slate-400 py-1 flex items-center">
-                        <i class="ri-information-line mr-1 text-xs"></i>
-                        New scheduling entries will be initialized in this module.
+                </div>
+
+                <!-- SMTP Sidebar Card -->
+                <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
+                    <div class="flex items-center space-x-3 pb-4 border-b border-slate-50">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100">
+                            <i class="ri-mail-send-line"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-slate-900">Mailing Suite</h3>
+                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Inbound SMTP Configuration</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Server</label>
+                                <input type="text" name="smtp_server" value="{{ smtp_settings.smtp_server|default:'' }}" placeholder="smtp.gmail.com"
+                                       class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-xs font-bold text-slate-900">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Port</label>
+                                <input type="number" name="smtp_port" value="{{ smtp_settings.smtp_port|default:'587' }}"
+                                       class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-xs font-bold text-slate-900">
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">User Identifier</label>
+                            <input type="email" name="smtp_user" value="{{ smtp_settings.smtp_user|default:'' }}"
+                                   class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-xs font-bold text-slate-900">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">App Secret Key</label>
+                            <input type="password" name="smtp_password" value="{{ smtp_settings.smtp_password|default:'' }}"
+                                   class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-xs font-bold text-slate-900">
+                        </div>
+                        <div class="flex items-center space-x-3 pt-2">
+                             <input type="checkbox" name="use_tls" id="use_tls" {% if smtp_settings.use_tls %}checked{% endif %}
+                                    class="w-4 h-4 rounded-lg border-slate-200 text-indigo-600 focus:ring-indigo-500 transition-all">
+                             <label for="use_tls" class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Enforce TLS</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Global Save Button -->
+                <div class="sticky bottom-8 z-20">
+                    <button type="submit" class="w-full py-6 bg-slate-900 text-white font-black rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] hover:bg-indigo-600 hover:-translate-y-2 active:scale-95 transition-all uppercase tracking-widest text-sm flex items-center justify-center group">
+                        <i class="ri-save-3-line mr-3 text-lg group-hover:rotate-12 transition-transform"></i>
+                        Synchronize All
+                    </button>
+                    <p class="text-[9px] font-bold text-slate-400 mt-4 text-center italic leading-relaxed">
+                        Orchestration changes will impact active hub:<br>
+                        <span class="text-slate-900 uppercase tracking-tighter">{{ active_hub.company_name|default:active_hub.email }}</span>
                     </p>
                 </div>
             </div>
+        </div>
+    </form>
 
-            <!-- Lead Source Input -->
-            <div class="space-y-6">
-                <div class="flex items-center space-x-3 pb-2 border-b border-slate-50">
-                    <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
-                        <i class="ri-fingerprint-line text-lg"></i>
-                    </div>
-                    <h2 class="text-lg font-extrabold text-slate-900">Attribution Meta</h2>
-                </div>
+    <script>
+        document.getElementById('use_default_mapping_toggle')?.addEventListener('change', function() {
+            const matrix = document.getElementById('mapping-orchestration-matrix');
+            const banner = document.getElementById('prebuilt-banner');
+            if (this.checked) {
+                matrix.classList.add('hidden');
+                banner.classList.remove('hidden');
+            } else {
+                matrix.classList.remove('hidden');
+                banner.classList.add('hidden');
+            }
+        });
 
-                <div class="space-y-2">
-                    <label for="lead_source" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Entry Origin Identifier</label>
-                    <div class="relative group">
-                        <i class="ri-flag-line absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors"></i>
-                        <input type="text" name="lead_source" id="lead_source"
-                               value="{% if settings.lead_source %}{{ settings.lead_source }}{% else %}Calendly Hub{% endif %}"
-                               required
-                               class="w-full pl-12 pr-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-semibold focus:ring-4 focus:ring-indigo-500/10 transition-all"
-                               placeholder="e.g. Website Booking">
-                    </div>
-                    <p class="text-[10px] font-medium text-slate-400 py-1">Metadata tag for filtering and analytics segmentation.</p>
-                </div>
-            <!-- Field Orchestration -->
-            <div class="space-y-8">
-                <div class="flex items-center space-x-3 pb-2 border-b border-slate-50">
-                    <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center text-violet-600">
-                        <i class="ri-node-tree text-lg"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h2 class="text-lg font-extrabold text-slate-900 leading-tight">Field Orchestration</h2>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Calendly ↔ Zoho CRM Mapping</p>
-                    </div>
-                </div>
+        function toggleCreateField(key) {
+            const selectCont = document.getElementById('container-select-' + key);
+            const inputCont = document.getElementById('container-input-' + key);
+            const toggle = document.getElementById('toggle-' + key);
+            const thumb = document.getElementById('thumb-' + key);
+            const selectEl = document.getElementById('select-' + key);
+            const inputEl = document.getElementById('input-' + key);
 
-                <div class="grid grid-cols-1 gap-6">
-                    {% for item in integration_fields %}
-                    <div class="p-6 bg-slate-50/50 border border-slate-100/50 rounded-3xl space-y-4 hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all group">
-                        <div class="flex items-center justify-between">
-                            <label class="text-[11px] font-black text-slate-900 uppercase tracking-wider flex items-center">
-                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-2"></span>
-                                {{ item.label }}
-                            </label>
-                            <div class="flex items-center space-x-2">
-                                <span class="text-[10px] font-bold text-slate-400">Create New?</span>
-                                <div onclick="toggleCreateField('{{ item.key }}')" 
-                                     id="toggle-{{ item.key }}"
-                                     class="w-10 h-5 bg-slate-200 rounded-full relative transition-all duration-300 cursor-pointer">
-                                    <div class="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-all duration-300 shadow-sm" id="thumb-{{ item.key }}"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Existing Field Dropdown -->
-                        <div class="relative" id="container-select-{{ item.key }}">
-                            <select name="map_{{ item.key }}" id="select-{{ item.key }}"
-                                    class="w-full px-5 py-3.5 bg-white border border-slate-100 rounded-2xl text-xs font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 transition-all appearance-none cursor-pointer">
-                                <option value="">-- No Mapping / Skip --</option>
-                                {% for z_field in zoho_fields %}
-                                <option value="{{ z_field.api_name }}" 
-                                        {% if settings.field_mappings|get_item:item.key == z_field.api_name %}selected{% endif %}>
-                                    {{ z_field.label }} ({{ z_field.api_name }})
-                                </option>
-                                {% endfor %}
-                            </select>
-                            <i class="ri-arrow-down-s-line absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
-                        </div>
-
-                        <!-- New Field Creation Input (Hidden by default) -->
-                        <div class="relative hidden" id="container-input-{{ item.key }}">
-                            <div class="absolute left-5 top-1/2 -translate-y-1/2 flex items-center text-indigo-500">
-                                <i class="ri-add-circle-line font-black"></i>
-                            </div>
-                            <input type="text" id="input-{{ item.key }}"
-                                   placeholder="New Field Label (e.g. {{ item.label }})"
-                                   class="w-full pl-12 pr-5 py-3.5 bg-white border border-indigo-100 rounded-2xl text-xs font-black text-indigo-600 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-300 transition-all">
-                            <p class="text-[9px] font-bold text-indigo-400 mt-2 ml-1 uppercase">Field initialization protocol will run in Zoho CRM</p>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <script>
-                function toggleCreateField(key) {
-                    const selectCont = document.getElementById('container-select-' + key);
-                    const inputCont = document.getElementById('container-input-' + key);
-                    const toggle = document.getElementById('toggle-' + key);
-                    const thumb = document.getElementById('thumb-' + key);
-                    const selectEl = document.getElementById('select-' + key);
-                    const inputEl = document.getElementById('input-' + key);
-
-                    if (inputCont.classList.contains('hidden')) {
-                        inputCont.classList.remove('hidden');
-                        selectCont.classList.add('hidden');
-                        toggle.classList.replace('bg-slate-200', 'bg-indigo-600');
-                        thumb.style.left = '1.6rem';
-                        selectEl.name = 'ignore_' + key;
-                        inputEl.name = 'create_' + key; // Changed from map_ to create_ for backend differentiation
-                    } else {
-                        inputCont.classList.add('hidden');
-                        selectCont.classList.remove('hidden');
-                        toggle.classList.replace('bg-indigo-600', 'bg-slate-200');
-                        thumb.style.left = '0.25rem';
-                        selectEl.name = 'map_' + key;
-                        inputEl.name = 'ignore_' + key;
-                    }
-                }
-            </script>
-
-            <div class="pt-6">
-                <button type="submit" class="w-full py-4 bg-slate-900 text-white font-black rounded-2xl shadow-xl shadow-slate-200 hover:bg-slate-800 hover:-translate-y-1 active:scale-95 transition-all uppercase tracking-widest text-xs">
-                    Commit Pipeline logic
-                </button>
-            </div>
-        </form>
-    </div>
+            if (inputCont.classList.contains('hidden')) {
+                inputCont.classList.remove('hidden');
+                selectCont.classList.add('hidden');
+                toggle.classList.replace('bg-slate-200', 'bg-indigo-600');
+                thumb.style.left = '1.6rem';
+                selectEl.name = 'ignore_' + key;
+                inputEl.name = 'create_' + key;
+            } else {
+                inputCont.classList.add('hidden');
+                selectCont.classList.remove('hidden');
+                toggle.classList.replace('bg-indigo-600', 'bg-slate-200');
+                thumb.style.left = '0.25rem';
+                selectEl.name = 'map_' + key;
+                inputEl.name = 'ignore_' + key;
+            }
+        }
+    </script>
 
     <!-- Help Section -->
     <div class="mt-12 p-8 bg-indigo-50 rounded-[2.5rem] border border-indigo-100 flex items-start space-x-4">

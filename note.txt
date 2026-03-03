@@ -208,4 +208,34 @@ Generate dynamic engagement score.
 
 so add the common button use the default config... below that add the new fields like if user added any if the fields like any custom questions then user should be want to autofill in the lead selection like map with exsiting 
 
-coimmenly the calendly create a1, a2, a3 so baed on this get the total custom filed or if you can fetch the names and map itt to the fields it can be more apprisiated so based on that custom field make it auto fill of the custom questions too..!
+1️⃣ “Schedule Meeting” Button Inside Lead/Contact
+
+Inside a Lead record:
+
+Add button → “Schedule via Calendly”
+
+Open widget
+
+Show available slots
+
+Book meeting
+
+Save meeting details back into CRM
+
+
+in settings in the page of http://127.0.0.1:8000/credentials/ here the user should be  set the primary account also add the option in the nav bar to select the account tehn based o that account only taht the dashbaord datas should be show.. 
+
+
+so for that create a new endpoint i can share the details of <module>/<data_id>so based on this you should show the list of connected accounts like diffrent calendly accounts  page of email templates (or) ai generated text ffor mail once its choosed then go use the app passwords based on that send the mail i willc onfig taht in the settings button
+
+
+coimmenly the calendly create a1, a2, a3 so baed on this get the total custom filed or if you can fetch the names and map itt to the fields it can be more apprisiated so based on that custom field make it auto fill of the custom questions too..! so based on that custom fields then the page should be mapped with zoho crm then when the <module>/<data_id> page is open then when it's reach form filling page then that the cusstom fields should be update based on that fild mapping datas 
+
+
+
+[10:53 AM, 3/3/2026] Amul Xtracut: Username:
+web@kalingauniversity.ac.in
+[10:53 AM, 3/3/2026] Amul Xtracut: Website@2025
+
+
+write the fuction to get the to list mail idesa and the mesage content to sendd the mails for the form filling from this mail to given incioming mail to that given to addresses using smtp on the secure way of the storing meting as of now for the testing for to mail you can us 
