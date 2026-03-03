@@ -1,162 +1,71 @@
-# Acuity Scheduling Integration for Zoho CRM (Django Project)
+# 🌌 Calendly ↔ Zoho CRM: Master Orchestration Hub
 
-This Django-based integration allows seamless synchronization and management of **Acuity Scheduling** appointments within your **Zoho CRM** account. Enhance productivity by managing appointments, contacts, and leads from a unified interface.
-
----
-
-## Key Features
-
-### 1. **Manage Appointments Directly from Zoho CRM**
-   - Book, reschedule, and cancel appointments with customers directly from Zoho CRM.
-   - Any changes in appointments made by customers in Acuity Scheduling are automatically updated in Zoho CRM.
-
-### 2. **Seamless Contact and Lead Association**
-   - Appointments booked on Acuity Scheduling by existing Zoho CRM Contacts/Leads are:
-     - Automatically associated with those Contacts/Leads.
-     - Added as events under the Activities module in Zoho CRM.
-
-### 3. **Automatic Contact Creation**
-   - New users booking appointments in Acuity Scheduling are:
-     - Automatically added as Contacts in Zoho CRM.
-     - Associated with the event in Zoho CRM.
-
-### 4. **Send Your Availability in One Click**
-   - Share your availability calendar with Zoho CRM Contacts and Leads via a single click.
+A high-fidelity, enterprise-grade synchronization engine designed to bridge the gap between **Calendly's dynamic booking ecosystem** and **Zoho CRM's relational intelligence**. This application serves as a centralized "Central Command" for managing real-time data flow, automated field provisioning, and personalized outreach.
 
 ---
 
-## Project Structure
+## 🚀 The Core Vision
 
-```plaintext
-├── project_root/
-│   ├── manage.py              # Django's management script
-│   ├── settings/
-│   │   ├── base.py            # Base settings
-│   │   ├── development.py     # Development-specific settings
-│   │   └── production.py      # Production-specific settings
-│   ├── templates/             # HTML templates for the project
-│   ├── static/                # Static files (CSS, JS, images)
-│   ├── zoho_integration/      # Main app handling Zoho CRM and Acuity integration
-│   │   ├── models.py          # Database models for Zoho Tokens, etc.
-│   │   ├── views.py           # Views to handle Zoho API and OAuth
-│   │   ├── urls.py            # URL routing for the integration app
-│   │   ├── serializers.py     # Serializers for API communication
-│   │   ├── forms.py           # Forms for user interaction
-│   │   └── tests.py           # Unit tests
-│   ├── requirements.txt       # Python dependencies
-│   └── README.md              # Project documentation
-```
-
-## Installation
-
-Follow these steps to set up the project locally:
-
-### 1\. Clone the Repository
-
-```bash
-git clone https://github.com/your-username/acuity-zoho-integration.git cd acuity-zoho-integration
-```
-
-### 2\. Set Up a Virtual Environment
-
-```bash
-python3 -m venv venv source venv/bin/activate
-```
-
-### 3\. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4\. Configure Environment Variables
-
-Create a `.env` file in the root directory and configure the following variables:
-
-
-```bash
-ZOHO_CLIENT_ID=your_client_id 
-ZOHO_CLIENT_SECRET=your_client_secret 
-ZOHO_REDIRECT_URI=http://127.0.0.1:8000/callback/ 
-ACUITY_API_KEY=your_acuity_api_key
-```
-
-### 5\. Run Migrations
-
-```bash 
-python manage.py makemigrations python manage.py migrate
-```
-
-### 6\. Run the Development Server
-
-```bash
-python manage.py runserver
-```
+The mission of this extension is to transform scheduling from a manual task into a **data-driven orchestration**. By treating Calendly accounts as "Synchronization Nodes," the application ensures that every booking, cancellation, and no-show is immediately reflected in Zoho CRM, while allowing CRM data to "flow back" into Calendly via intelligent pre-fill matrices.
 
 ---
 
-## Usage
+## 🛠️ System Architecture & Flow
 
-1. **Authenticate Zoho CRM**:
-    
-    - Navigate to `http://127.0.0.1:8000/`.
-    - Click the **Connect to Zoho CRM** button to authenticate your Zoho account.
-    - On successful authentication, the app stores access and refresh tokens in the database.
-2. **Sync Acuity Appointments**:
-    
-    - The app listens for changes in Acuity Scheduling and updates Zoho CRM Contacts/Leads and Activities accordingly.
-3. **View and Manage Data**:
-    
-    - Use Zoho CRM to book, reschedule, or cancel appointments. Changes will sync automatically.
+### 1. Node Authentication (The Entry Point)
+Users connect multiple Calendly accounts via OAuth 2.0. Each account is treated as a distinct **Synchronization Node**, allowing a single Zoho organization to manage bookings across multiple departments or team members.
 
----
+### 2. Global Sync Directives
+The **Master Orchestration Hub** provides two modes of operation:
+*   **Standardized Orchestration (Default)**: A "one-click" high-performance mapping protocol for standard fields (URI, Status, Answers).
+*   **Manual Tactical Mapping**: Granular control over which Calendly data point lands in which Zoho field, including **Auto-Creation** functionality that provision new fields in Zoho CRM directly from the extension UI.
 
-## Tech Stack
+### 3. Real-Time Data Streaming (Webhook Hub)
+The engine utilizes a **Payload Strategy Node** to manage webhook subscriptions.
+*   **Auto-Sync Hub**: With one click, the system negotiates with Calendly to set up public-facing webhooks (via secure tunnels) tracking `invitee.created`, `canceled`, and `rescheduled` events.
+*   **Administrative Oversight**: Monitor the status, scope, and target URLs of all active streams in a real-time dashboard.
 
-- **Backend**: Django
-- **Frontend**: TailwindCSS, DaisyUI for templates
-- **APIs**:
-    - Zoho CRM API for managing Contacts, Leads, and Activities
-    - Acuity Scheduling API for booking and appointment management
-- **Database**: SQLite (development) / PostgreSQL (production)
+### 4. Pre-fill Orchestration Matrix
+This is the "Intelligence Layer" where users map Zoho Lead/Contact fields to Calendly URL aliases (e.g., `a1`, `a2`, `a3`).
+*   **Dynamic Link Synthesis**: When a Zoho record is accessed, the system generates a personalized booking URL where the user's details are already filled in.
+*   **Vector Management**: Add and rearrange field vectors to match complex custom questions in your Calendly event types.
 
----
-
-## Resources
-
-### Documentation
-
-- Zoho CRM API Documentation
-- Acuity Scheduling API Documentation
-
-### Guides
-
-- [Django Official Documentation](https://docs.djangoproject.com/)
-- OAuth 2.0 Overview
+### 5. Outreach & Deployment
+*   **Mailing Intelligence**: Integrated SMTP configuration allows users to send these synthesized booking links directly to Leads or Contacts from their own authorized mail nodes.
+*   **System Simulator**: A built-in testing environment to validate URL generation and mapping logic before going live.
 
 ---
 
-## Contributing
+## 🧬 Technical Stack
 
-We welcome contributions! Please follow these steps:
+*   **Logic Engine**: Django 4.1 (Python 3.14 compatible)
+*   **Intelligence Layer**: MongoDB (Djongo) for flexible JSON field mapping and credential storage.
+*   **Visual Interface**: Vanilla CSS & Tailwind CSS with a "High-Depth Glassmorphism" aesthetic.
+*   **Integrations**: 
+    - **Calendly API v2**: OAuth, Webhooks, Resource retrieval.
+    - **Zoho CRM API**: Module management, Custom Field provisioning, Search & Update.
+*   **Connectivity**: Designed for **ngrok/Public Tunnel** compatibility for seamless local-to-cloud development.
 
-1. Fork the repository.
-2. Create a feature branch:
-    
-    ``` bash
-    git checkout -b feature-name
-    ```
-    
-3. Commit your changes:
-    
-    ``` bash
-    git commit -m "Description of changes"
-    ```
-    
-4. Push to the branch:
-    
-    ``` bash
-    git push origin feature-name
-    ```
-    
-5. Create a Pull Request.
+---
+
+## 🌓 High-Fidelity Dashboard
+
+The UI is built with a **Premium Multi-Pillar** design:
+1.  **Left Column**: Master Sync Directives & Manual Field Overrides.
+2.  **Right Column**: Deployment Control, SMTP Mailing Suite, and Architectural Support.
+3.  **Real-Time Status Banners**: Instant feedback on Node health and Stream activity.
+
+---
+
+## 🚦 Getting Started
+
+1.  **Authorize**: Connect your Zoho CRM account and at least one Calendly Node.
+2.  **Directive Setup**: Choose "Standardized Orchestration" for instant setup or use "Manual Mapping" to create custom Zoho fields.
+3.  **Tunnel Deployment**: Enter your public tunnel URL (ngrok) in the "Finalize Strategy" card.
+4.  **Stream Sync**: Hit **"Sync Streams"** to authorize Calendly webhooks.
+5.  **Matrices**: Configure your **Pre-fill Vectors** in the Credentials section to begin generating personalized booking flows.
+
+---
+
+> [!IMPORTANT]
+> **Enterprise Reliability**: Always ensure your **Public Tunnel URL** is active when testing real-time webhooks locally. Calendly will reject private IP addresses (127.0.0.1).
