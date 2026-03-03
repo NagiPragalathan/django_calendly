@@ -90,13 +90,28 @@ def global_search(request):
             duration = str(et.get('duration', ''))
             
             if query in name or query in desc or query == duration:
+                # Store full data for popup
+                res_data = {
+                    'name': et['name'],
+                    'duration': et['duration'],
+                    'kind': et.get('kind', 'Standard'),
+                    'description': et.get('description', ''),
+                    'color': et.get('color', '#4f46e5'),
+                    'scheduling_url': et.get('scheduling_url', '#'),
+                    'active': et.get('active', True),
+                    'pooling_type': et.get('pooling_type', 'N/A'),
+                    'internal_note': et.get('internal_note', 'No internal notes.'),
+                    'type': 'Event Link'
+                }
+                
                 results.append({
                     'type': 'Event Link',
                     'title': et['name'],
                     'subtitle': f"Duration: {et['duration']}m | {et.get('kind', 'Standard')}",
                     'url': '/appointments-types/',
                     'icon': 'ri-links-line',
-                    'color': et.get('color', '#4f46e5')
+                    'color': et.get('color', '#4f46e5'),
+                    'full_data_json': json.dumps(res_data)
                 })
 
         # 2. Search Scheduled Events (Past & Future)
@@ -113,37 +128,60 @@ def global_search(request):
             event_name = event['name'].lower()
             event_status = event.get('status', '').lower()
             
+            # Prepare meeting data
+            start_time = datetime.fromisoformat(event['start_time'].replace('Z', '+00:00'))
+            end_time = datetime.fromisoformat(event['end_time'].replace('Z', '+00:00'))
+            
+            meeting_data = {
+                'name': event['name'],
+                'start_time': start_time.strftime('%Y-%m-%d %H:%M'),
+                'end_time': end_time.strftime('%Y-%m-%d %H:%M'),
+                'status': event.get('status', 'Active').capitalize(),
+                'location': event.get('location', {}),
+                'calendar_event': event.get('calendar_event', {}),
+                'created_at': datetime.fromisoformat(event['created_at'].replace('Z', '+00:00')).strftime('%Y-%m-%d'),
+                'type': 'Meeting'
+            }
+
+            matched = False
             # Basic match on name/status
             if query in event_name or query in event_status:
-                start_time = datetime.fromisoformat(event['start_time'].replace('Z', '+00:00'))
+                matched = True
+            
+            # Detailed invitee fetch for ANY potential match
+            try:
+                invitee_res = requests.get(f"{event['uri']}/invitees", headers=headers, params={'count': 10})
+                invitees_raw = invitee_res.json().get('collection', [])
+                
+                invitee_list = []
+                for i in invitees_raw:
+                    i_name = i.get('name', '')
+                    i_email = i.get('email', '')
+                    
+                    if not matched and (query in i_name.lower() or query in i_email.lower()):
+                        matched = True
+                        
+                    invitee_list.append({
+                        'name': i_name,
+                        'email': i_email,
+                        'status': i.get('status', 'active'),
+                        'timezone': i.get('timezone', 'UTC'),
+                        'questions': i.get('questions_and_answers', [])
+                    })
+                
+                meeting_data['invitees'] = invitee_list
+            except:
+                pass
+
+            if matched:
                 results.append({
                     'type': 'Meeting',
                     'title': event['name'],
-                    'subtitle': f"{start_time.strftime('%b %d, %Y at %H:%M')} ({event.get('status', 'Active')})",
+                    'subtitle': f"{start_time.strftime('%b %d, %Y')} ({event.get('status', 'Active')})",
                     'url': '/appointments/' if start_time > now else '/past-appointments/',
-                    'icon': 'ri-calendar-event-line'
+                    'icon': 'ri-calendar-event-line',
+                    'full_data_json': json.dumps(meeting_data)
                 })
-                continue
-
-            # Check invitees for this event if no name match
-            # This is slightly expensive but worth it for a "global" search
-            try:
-                invitee_res = requests.get(f"{event['uri']}/invitees", headers=headers, params={'count': 5})
-                for invitee in invitee_res.json().get('collection', []):
-                    i_name = invitee.get('name', '').lower()
-                    i_email = invitee.get('email', '').lower()
-                    if query in i_name or query in i_email:
-                        start_time = datetime.fromisoformat(event['start_time'].replace('Z', '+00:00'))
-                        results.append({
-                            'type': 'Attendee Match',
-                            'title': f"{invitee.get('name')} in {event['name']}",
-                            'subtitle': f"Attendee: {invitee.get('email')}",
-                            'url': '/appointments/' if start_time > now else '/past-appointments/',
-                            'icon': 'ri-user-search-line'
-                        })
-                        break
-            except:
-                pass
 
         print(f"✅ Search Finished: {len(results)} matches found.")
         return JsonResponse({'results': results[:15]})
