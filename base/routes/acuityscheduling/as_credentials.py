@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 from django.conf import settings
 
-from base.models import CalendlyCredentials, PreFillMapping, ZohoToken, BookingEmailTemplate
+from base.models import CalendlyCredentials, PreFillMapping, ZohoToken, BookingEmailTemplate, Settings
 from base.routes.tool_kit.mongo_tool import store_image_in_mongodb
 from base.routes.tool_kit.calendly_tool import create_webhooks, get_webhooks_with_ids, delete_webhooks, CalendlyWebhookManager
 from base.routes.tool_kit.zoho_tool import ensure_field_exists, check_access_token_validity, get_access_token, get_module_fields
@@ -65,8 +65,12 @@ def edit_credentials(request, credential_id):
     except CalendlyCredentials.DoesNotExist:
         return JsonResponse({'error': 'Credential not found.'}, status=404)
 
-    # Fetch fields for pre-fill mapping (Leads & Contacts)
-    module_fields = {"Leads": [], "Contacts": []}
+    # Fetch modules from settings
+    settings_obj = Settings.objects.filter(user=request.user).first()
+    target_modules = [settings_obj.leads_to_store] if settings_obj else ["Leads", "Contacts"]
+    
+    # Fetch fields for pre-fill mapping
+    module_fields = {m: [] for m in target_modules}
     zoho_token = ZohoToken.objects.filter(user=request.user).first()
     if zoho_token:
         access_token = zoho_token.access_token
@@ -74,7 +78,7 @@ def edit_credentials(request, credential_id):
             access_token = get_access_token(CLIENT_ID, CLIENT_SECRET, zoho_token.refresh_token)
             ZohoToken.objects.filter(user=request.user).update(access_token=access_token)
         
-        for module in ["Leads", "Contacts"]:
+        for module in target_modules:
             try:
                 m_data = get_module_fields(access_token, module)
                 if "fields" in m_data:

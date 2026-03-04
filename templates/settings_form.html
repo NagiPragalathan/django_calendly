@@ -20,8 +20,8 @@
         </div>
         
         <div class="flex items-center gap-6">
-            <div class="bg-white px-8 py-5 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 flex items-center gap-5">
-                <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 shadow-inner">
+            <div class="bg-white px-8 py-5 rounded-xl border border-slate-100 shadow-xl shadow-slate-200/40 flex items-center gap-5">
+                <div class="w-12 h-12 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-500 shadow-inner">
                     <i class="ri-shield-check-line text-2xl"></i>
                 </div>
                 <div>
@@ -41,7 +41,7 @@
             <!-- Pillar 1 & 2: Main Logic Engine -->
             <div class="lg:col-span-8 space-y-12">
                 <!-- Sync Orchestration Matrix -->
-                <div class="bg-white p-14 rounded-[4rem] border border-slate-100 shadow-2xl shadow-slate-200/50 relative overflow-hidden group/matrix">
+                <div class="bg-white p-14 rounded-2xl border border-slate-100 shadow-2xl shadow-slate-200/50 relative overflow-hidden group/matrix">
                     <div class="absolute -top-40 -right-40 w-[500px] h-[500px] bg-indigo-50 rounded-full blur-[120px] opacity-40 group-hover/matrix:opacity-60 transition-opacity duration-1000"></div>
                     
                     <div class="relative space-y-12">
@@ -56,7 +56,7 @@
                                 </div>
                             </div>
                             
-                            <div class="px-8 py-4 bg-slate-50 border border-slate-100 rounded-3xl flex items-center gap-6 shadow-sm">
+                            <div class="px-8 py-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center gap-6 shadow-sm">
                                 <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Global Protocol</span>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" name="use_default_mapping" id="use_default_mapping_toggle" 
@@ -67,8 +67,8 @@
                             </div>
                         </div>
 
-                        <div id="prebuilt-banner" class="{% if settings.use_default_mapping == False %}hidden{% endif %} py-20 bg-indigo-50/50 rounded-[3rem] border border-indigo-100/50 text-center space-y-6 animate-zoom-in">
-                            <div class="w-24 h-24 bg-white rounded-[2rem] flex items-center justify-center text-indigo-600 shadow-xl shadow-indigo-200/20 mx-auto relative">
+                        <div id="prebuilt-banner" class="{% if settings.use_default_mapping == False %}hidden{% endif %} py-20 bg-indigo-50/50 rounded-2xl border border-indigo-100/50 text-center space-y-6 animate-zoom-in">
+                            <div class="w-24 h-24 bg-white rounded-xl flex items-center justify-center text-indigo-600 shadow-xl shadow-indigo-200/20 mx-auto relative">
                                 <i class="ri-rocket-2-line text-5xl"></i>
                                 <div class="absolute -top-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full border-4 border-white"></div>
                             </div>
@@ -82,53 +82,59 @@
                             </button>
                         </div>
 
-                        <div id="mapping-orchestration-matrix" class="grid grid-cols-1 md:grid-cols-2 gap-8 {% if settings.use_default_mapping != False %}hidden{% endif %}">
+                        <div id="mapping-orchestration-matrix" class="grid grid-cols-1 md:grid-cols-2 gap-10 {% if settings.use_default_mapping != False %}hidden{% endif %}">
                             {% for item in integration_fields %}
-                            <div class="p-8 bg-slate-50/50 border border-slate-100/50 rounded-[2.5rem] space-y-6 hover:bg-white hover:shadow-2xl hover:shadow-slate-200/50 transition-all group/field relative">
+                            <div class="p-10 bg-slate-50 border border-slate-100 rounded-2xl space-y-8 hover:bg-white hover:shadow-3xl transition-all group/field relative">
                                 <div class="flex items-center justify-between">
-                                    <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center">
-                                        <span class="w-2 h-2 rounded-full bg-indigo-500 mr-3"></span>
+                                    <label class="text-[11px] font-black text-slate-900 uppercase tracking-widest flex items-center">
+                                        <span class="w-3 h-3 rounded-md bg-indigo-600 mr-4 shadow-lg shadow-indigo-200"></span>
                                         {{ item.label }}
                                     </label>
-                                    <div class="flex items-center gap-3">
-                                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Auto-Create</span>
+                                    <div class="flex items-center gap-4">
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Auto-Provision</span>
                                         <button type="button" onclick="toggleCreateField('{{ item.key }}')" id="toggle-{{ item.key }}"
-                                                class="w-8 h-4 bg-slate-200 rounded-full relative transition-colors duration-300">
-                                            <div class="absolute left-1 top-0.5 w-3 h-3 bg-white rounded-full transition-all duration-300 shadow-sm" id="thumb-{{ item.key }}"></div>
+                                                class="w-10 h-5 bg-slate-200 rounded-full relative transition-colors duration-300">
+                                            <div class="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-all duration-300 shadow-xl" id="thumb-{{ item.key }}"></div>
                                         </button>
                                     </div>
                                 </div>
 
                                 <div class="relative" id="container-select-{{ item.key }}">
                                     <select name="map_{{ item.key }}" id="select-{{ item.key }}"
-                                            class="w-full px-6 py-4 bg-white border border-slate-100 rounded-2xl text-[13px] font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/5 appearance-none cursor-pointer transition-all shadow-sm">
-                                        <option value="">-- NO ORCHESTRATION --</option>
+                                            class="w-full px-6 py-5 bg-white border border-slate-200 rounded-xl text-[14px] font-black text-slate-900 focus:ring-8 focus:ring-indigo-500/5 appearance-none cursor-pointer transition-all shadow-sm">
+                                        <option value="" class="text-slate-400">-- NO ACTIVE MAPPING --</option>
                                         {% for z_field in zoho_fields %}
-                                        <option value="{{ z_field.api_name }}" 
+                                        <option value="{{ z_field.api_name }}" class="text-slate-900 font-bold"
                                                 {% if settings.field_mappings|get_item:item.key == z_field.api_name %}selected{% endif %}>
                                             {{ z_field.label }}
                                         </option>
                                         {% endfor %}
                                     </select>
-                                    <i class="ri-arrow-down-s-line absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                                    <i class="ri-arrow-down-s-line absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xl"></i>
                                 </div>
 
                                 <div class="relative hidden" id="container-input-{{ item.key }}">
                                     <input type="text" id="input-{{ item.key }}"
-                                           placeholder="Enter New Field Label"
-                                           class="w-full pl-6 pr-6 py-4 bg-white border border-indigo-100 rounded-2xl text-[13px] font-black text-indigo-600 placeholder:text-slate-300 transition-all">
+                                           placeholder="Enter Target Field Name"
+                                           class="w-full pl-6 pr-6 py-5 bg-white border-2 border-indigo-100 rounded-xl text-[14px] font-black text-indigo-600 placeholder:text-slate-300 transition-all shadow-xl shadow-indigo-50/50">
                                     <div class="absolute right-6 top-1/2 -translate-y-1/2">
-                                        <i class="ri-magic-line text-indigo-400"></i>
+                                        <i class="ri-magic-line text-indigo-400 text-xl"></i>
                                     </div>
                                 </div>
                             </div>
                             {% endfor %}
                         </div>
+                        <div class="flex justify-end pt-12 border-t border-slate-50">
+                            <button type="submit" name="global_action" value="save" 
+                                    class="px-12 py-6 bg-slate-950 text-white text-[11px] font-black uppercase tracking-[0.3em] rounded-xl hover:bg-indigo-600 hover:-translate-y-1 transition-all shadow-2xl shadow-indigo-200 active:scale-95">
+                                <i class="ri-instance-line mr-3 text-lg"></i> Authorize & Save Directives
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Webhook Management Hub -->
-                <div id="webhook-hub-sector" class="bg-white p-14 rounded-[4rem] border border-slate-100 shadow-2xl shadow-slate-200/50 relative overflow-hidden group/webhook animate-fade-in-up">
+                <div id="webhook-hub-sector" class="bg-white p-14 rounded-2xl border border-slate-100 shadow-2xl shadow-slate-200/50 relative overflow-hidden group/webhook animate-fade-in-up">
                     <div class="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-emerald-50 rounded-full blur-[120px] opacity-40"></div>
                     
                     <div class="relative space-y-12">
@@ -154,9 +160,25 @@
                             </div>
                         </div>
 
+                        <div class="p-10 bg-indigo-50 border border-indigo-100 rounded-2xl mb-12 space-y-6 shadow-xl shadow-indigo-100/50">
+                            <div class="flex items-center justify-between px-1">
+                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Public Tunnel URL (Network Gateway)</label>
+                                <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-indigo-600 shadow-lg">
+                                    <i class="ri-global-line text-xl"></i>
+                                </div>
+                            </div>
+                            <input type="url" name="webhook_base_url" value="{{ settings.webhook_base_url|default:'' }}" 
+                                   placeholder="https://your-unique-tunnel.ngrok-free.app"
+                                   class="w-full px-8 py-5 bg-white border border-slate-200 rounded-xl text-[14px] font-black text-slate-900 focus:ring-8 focus:ring-indigo-500/5 placeholder:text-slate-300 transition-all shadow-inner">
+                            <div class="flex items-start gap-4 pt-2">
+                                <i class="ri-information-fill text-indigo-400 mt-1"></i>
+                                <p class="text-[10px] font-bold text-slate-500 leading-relaxed uppercase tracking-widest italic">Node Requirement: Calendly mandates a public HTTPS endpoint for real-time signaling. Update this whenever your tunnel session is re-provisioned.</p>
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-1 gap-6">
                             {% for webhook in webhook_status %}
-                            <div class="p-10 bg-slate-50/50 border border-slate-100/50 rounded-[3rem] flex flex-col xl:flex-row xl:items-center justify-between gap-10 hover:bg-white hover:shadow-2xl hover:shadow-slate-200/50 transition-all group/wh-item">
+                            <div class="p-10 bg-slate-50/50 border border-slate-100/50 rounded-2xl flex flex-col xl:flex-row xl:items-center justify-between gap-10 hover:bg-white hover:shadow-2xl hover:shadow-slate-200/50 transition-all group/wh-item">
                                 <div class="space-y-6 flex-1">
                                     <div class="flex items-center gap-4">
                                         <div class="px-4 py-1.5 {% if webhook.state == 'active' %}bg-emerald-100 text-emerald-700{% else %}bg-amber-100 text-amber-700{% endif %} rounded-full text-[9px] font-black uppercase tracking-widest border border-emerald-200">
@@ -234,7 +256,7 @@
 
             <!-- Pillar 3: Tactical Interface Logic -->
             <div class="lg:col-span-4 space-y-12 sticky top-12">
-                <div class="bg-slate-900 p-12 rounded-[4rem] shadow-[0_40px_100px_rgba(0,0,0,0.2)] relative overflow-hidden group/save">
+                <div class="bg-slate-900 p-12 rounded-2xl shadow-[0_40px_100px_rgba(0,0,0,0.2)] relative overflow-hidden group/save">
                     <div class="absolute -top-20 -right-20 w-80 h-80 bg-indigo-500 rounded-full blur-[100px] opacity-20 group-hover/save:opacity-40 transition-opacity duration-1000"></div>
                     
                     <div class="relative space-y-12">
@@ -249,7 +271,7 @@
                         </div>
 
                         <div class="space-y-4">
-                            <div class="p-6 bg-white/5 border border-white/10 rounded-3xl space-y-4">
+                            <div class="p-6 bg-white/5 border border-white/10 rounded-2xl space-y-4">
                                 <div class="flex items-center justify-between">
                                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Target Hub</span>
                                     <span class="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 rounded-md text-[8px] font-black uppercase">Active</span>
@@ -259,34 +281,26 @@
                             
                             <div class="space-y-2">
                                 <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Lead Destination</label>
-                                <select name="leads_to_store" class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-[13px] font-bold text-white focus:ring-4 focus:ring-indigo-500/20 appearance-none">
-                                    <option value="Leads" {% if settings.leads_to_store == "Leads" %}selected{% endif %}>CRM Leads</option>
-                                    <option value="Contacts" {% if settings.leads_to_store == "Contacts" %}selected{% endif %}>CRM Contacts</option>
+                                <select name="leads_to_store" class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-[13px] font-bold text-white focus:ring-4 focus:ring-indigo-500/20 appearance-none">
+                                    <option value="Leads" {% if settings.leads_to_store == "Leads" %}selected{% endif %} class="bg-slate-900 text-white">CRM Leads</option>
+                                    <option value="Contacts" {% if settings.leads_to_store == "Contacts" %}selected{% endif %} class="bg-slate-900 text-white">CRM Contacts</option>
                                 </select>
                             </div>
 
-                            <div class="space-y-2">
-                                <div class="flex items-center justify-between px-1">
-                                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Public Tunnel URL</label>
-                                    <i class="ri-information-line text-indigo-400 cursor-help" title="Calendly requires a public HTTPS URL (like ngrok) to send webhooks to your local machine."></i>
-                                </div>
-                                <input type="url" name="webhook_base_url" value="{{ settings.webhook_base_url|default:'' }}" 
-                                       placeholder="https://your-tunnel.ngrok-free.app"
-                                       class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-[13px] font-bold text-white focus:ring-4 focus:ring-indigo-500/20 placeholder:text-slate-600 transition-all">
-                            </div>
                         </div>
 
                         <button type="submit" name="global_action" value="save"
-                                class="w-full py-7 bg-indigo-600 text-white font-black rounded-[2rem] hover:bg-indigo-500 hover:-translate-y-2 active:scale-95 transition-all duration-300 flex items-center justify-center uppercase tracking-[0.25em] text-[11px] shadow-2xl shadow-indigo-600/30">
-                            <i class="ri-cpu-line mr-3 text-xl group-hover/save:animate-spin"></i>
+                                class="w-full py-8 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 hover:-translate-y-2 active:scale-95 transition-all duration-300 flex items-center justify-center uppercase tracking-[0.4em] text-[12px] shadow-[0_20px_60px_rgba(79,70,229,0.3)] border-b-4 border-indigo-800">
+                            <i class="ri-shield-flash-line mr-4 text-2xl group-hover/save:animate-pulse"></i>
                             Deploy Node Strategy
                         </button>
                     </div>
                 </div>
 
-                <div class="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-xl shadow-slate-200/30 group/smtp">
+                <!-- Mailing Suite Sector -->
+                <div class="bg-white p-12 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/30 group/smtp">
                     <div class="flex items-center space-x-4 mb-10 pb-6 border-b border-slate-50">
-                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-xl shadow-indigo-100/50">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-xl shadow-indigo-100/50">
                             <i class="ri-mail-send-line text-2xl"></i>
                         </div>
                         <div>
@@ -300,48 +314,57 @@
                             <div class="space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">SMTP Server</label>
                                 <input type="text" name="smtp_server" value="{{ smtp_settings.smtp_server|default:'' }}" 
-                                       class="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-[13px] font-bold text-slate-900 shadow-inner">
+                                       class="w-full px-5 py-4 bg-slate-50 border-none rounded-xl text-[13px] font-bold text-slate-900 shadow-inner">
                             </div>
                             <div class="space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Port</label>
                                 <input type="number" name="smtp_port" value="{{ smtp_settings.smtp_port|default:'587' }}"
-                                       class="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-[13px] font-bold text-slate-900 shadow-inner">
+                                       class="w-full px-5 py-4 bg-slate-50 border-none rounded-xl text-[13px] font-bold text-slate-900 shadow-inner">
                             </div>
                         </div>
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Identifier (User)</label>
                             <input type="email" name="smtp_user" value="{{ smtp_settings.smtp_user|default:'' }}"
-                                   class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-[13px] font-bold text-slate-900 shadow-inner">
+                                   class="w-full px-6 py-4 bg-slate-50 border-none rounded-xl text-[13px] font-bold text-slate-900 shadow-inner">
                         </div>
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">App Token</label>
                             <input type="password" name="smtp_password" value="{{ smtp_settings.smtp_password|default:'' }}"
-                                   class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-[13px] font-bold text-slate-900 shadow-inner">
+                                   class="w-full px-6 py-4 bg-slate-50 border-none rounded-xl text-[13px] font-bold text-slate-900 shadow-inner">
                         </div>
                         <div class="flex items-center space-x-4 pt-4">
                              <input type="checkbox" name="use_tls" id="use_tls" {% if smtp_settings.use_tls %}checked{% endif %}
-                                    class="w-5 h-5 rounded-lg border-2 border-slate-200 text-indigo-600 focus:ring-indigo-500">
+                                    class="w-5 h-5 rounded-md border-2 border-slate-200 text-indigo-600 focus:ring-indigo-500">
                              <label for="use_tls" class="text-[11px] font-black text-slate-600 uppercase tracking-widest">Enforce TLS Protocol</label>
+                        </div>
+                        <div class="flex justify-end pt-6">
+                            <button type="submit" name="global_action" value="save" class="px-8 py-4 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:bg-slate-900 transition-all shadow-xl shadow-indigo-200">
+                                <i class="ri-save-3-line mr-2"></i> Save Suite
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="p-12 bg-indigo-500 rounded-[4rem] text-white relative overflow-hidden group/guide">
-                    <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-                    <div class="relative space-y-6">
-                        <div class="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white text-2xl">
-                            <i class="ri-book-3-line"></i>
+                <!-- Tactical Guide -->
+                <div class="p-12 bg-indigo-600 rounded-2xl text-white relative overflow-hidden group/guide">
+                    <div class="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl group-hover/guide:scale-150 transition-transform duration-1000"></div>
+                    <div class="relative space-y-8">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-xl flex items-center justify-center border border-white/20 shadow-2xl">
+                                <i class="ri-terminal-window-line text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-black uppercase tracking-tight">System Manual</h3>
                         </div>
-                        <div class="space-y-2">
-                            <h4 class="text-xl font-black tracking-tight leading-none uppercase">Architectural Support</h4>
-                            <p class="text-sm font-medium text-white/70 leading-relaxed text-indigo-100">
-                                Need technical documentation on payload structures or CRM mapping logic? Explore our deep-dive repository.
-                            </p>
+                        <div class="space-y-6">
+                            <div class="p-6 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
+                                <p class="text-[9px] font-black uppercase tracking-widest mb-2 text-indigo-200">Action: Global Save</p>
+                                <p class="text-[11px] font-medium leading-relaxed opacity-80">Settings are persistsed per section. Use section-specific buttons for modular updates.</p>
+                            </div>
+                            <div class="p-6 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
+                                <p class="text-[9px] font-black uppercase tracking-widest mb-2 text-indigo-200">Notice: Tunnel Gateway</p>
+                                <p class="text-[11px] font-medium leading-relaxed opacity-80">Ensure your Public Tunnel URL is active (e.g. ngrok) for real-time CRM updates.</p>
+                            </div>
                         </div>
-                        <a href="{% url 'list_credentials' %}" class="inline-flex items-center px-8 py-3.5 bg-white text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:scale-105 active:scale-95 transition-all">
-                            Manage Hub Nodes
-                            <i class="ri-arrow-right-line ml-3"></i>
-                        </a>
                     </div>
                 </div>
             </div>

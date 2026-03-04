@@ -265,3 +265,19 @@ Today (04.03.26)
 
 
 so http://127.0.0.1:8000/zoho/leads/2681636000036853001/booking/ in this link dont need to show the sidebar or navbar also need to showw the tab options for past appointed histry, upcomming meetings, create meetings, 
+
+
+
+
+
+
+
+
+
+tailwind-merge
+[nextapp (20)] [kaling@server nextapp]$ ln -s $(npm root -g)/tailwindcss /home/kaling/nodevenv/nextapp/20/lib/node_modules/tailwindcss
+[nextapp (20)] [kaling@server nextapp]$ ls /home/kaling/nodevenv/nextapp/20/lib/node_modules | grep tailwind
+@tailwindcss
+tailwindcss
+tailwind-merge
+[nextapp (20)] [kaling@server nextapp]$

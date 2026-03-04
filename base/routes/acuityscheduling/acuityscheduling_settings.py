@@ -16,6 +16,12 @@ INTEGRATION_FIELDS = [
     {'key': 'Calendly_Question_Answer', 'label': 'Questions & Answers'},
     {'key': 'External_Event_ID', 'label': 'External Event ID (Google/Outlook)'},
     {'key': 'Meeting_Venue', 'label': 'Meeting Venue (Virtual/In-Person)'},
+    # UTM Intelligence Parameters
+    {'key': 'utm_source', 'label': 'UTM Source'},
+    {'key': 'utm_medium', 'label': 'UTM Medium'},
+    {'key': 'utm_campaign', 'label': 'UTM Campaign'},
+    {'key': 'utm_content', 'label': 'UTM Content'},
+    {'key': 'utm_term', 'label': 'UTM Term'},
 ]
 
 @login_required
