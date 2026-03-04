@@ -239,3 +239,29 @@ web@kalingauniversity.ac.in
 
 
 write the fuction to get the to list mail idesa and the mesage content to sendd the mails for the form filling from this mail to given incioming mail to that given to addresses using smtp on the secure way of the storing meting as of now for the testing for to mail you can us 
+
+
+
+
+
+
+> Nagipragalathan Nagimani 
+
+Todo (03.03.26)
+* *KALINGA* – Tried deployment on cPanel – 2hrs
+* *Kalinga Forms* – Email configuration – 1hr
+* *Kalinga* – Email integration with backend form models – 1hr
+* *Kalinga* – Database changes in the Course model – 2hrs
+* *Implemented* Intent-Aware Query Understanding Module – 1hr
+
+Today (04.03.26)
+- Build Personalized Response Style Engine — 1 hr
+- Develop College Knowledge Base Structuring Pipeline — 1.5 hrs
+- Implement Multi-Source Retrieval Fusion — 1.5 hrs
+- Add Query Clarification & Follow-up Manager — 2 hr
+- Testing and Debugging — 1 hr
+
+
+
+
+so http://127.0.0.1:8000/zoho/leads/2681636000036853001/booking/ in this link dont need to show the sidebar or navbar also need to showw the tab options for past appointed histry, upcomming meetings, create meetings, 

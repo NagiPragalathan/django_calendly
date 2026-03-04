@@ -87,6 +87,19 @@ class PreFillMapping(models.Model):
     # Question mapping: a1, a2, etc. to Zoho Field API name
     question_key = models.CharField(max_length=50) # 'a1', 'a2', etc.
     zoho_field_api_name = models.CharField(max_length=100)
+    zoho_module = models.CharField(max_length=50, default='Leads')
 
     def __str__(self):
         return f"{self.question_key} -> {self.zoho_field_api_name}"
+
+class BookingEmailTemplate(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    credential = models.ForeignKey(CalendlyCredentials, on_delete=models.CASCADE, related_name='email_templates')
+    template_name = models.CharField(max_length=255)
+    subject = models.CharField(max_length=255, default="Invitation to Schedule a Meeting")
+    body = models.TextField()
+    zoho_module = models.CharField(max_length=50, default='Leads')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.template_name

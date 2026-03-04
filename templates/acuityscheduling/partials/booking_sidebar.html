@@ -1,0 +1,64 @@
+<!-- Intelligence & History Sidebar Partial -->
+<div class="space-y-8">
+    <!-- Academic/Meeting History -->
+    <div class="p-8 bg-white rounded-[3rem] border border-slate-100 shadow-sm">
+        <h3 class="text-xs font-black text-slate-400 uppercase tracking-[3px] mb-8">Intelligence Log</h3>
+        
+        <div class="space-y-8">
+            {% if upcoming %}
+            <div>
+                <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-4">Upcoming Engagements</p>
+                <div class="space-y-4">
+                    {% for meeting in upcoming %}
+                    <div class="flex items-start gap-4 p-4 bg-indigo-50/30 rounded-2xl border border-indigo-100/50">
+                        <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-indigo-600 shadow-sm shrink-0">
+                            <i class="ri-calendar-check-line text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-[11px] font-bold text-slate-900">{{ meeting.name }}</p>
+                            <p class="text-[9px] font-medium text-slate-500 uppercase tracking-tighter">{{ meeting.start_time|date:"D, M d @ H:i" }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div>
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Historical Record</p>
+                <div class="space-y-4">
+                    {% for meeting in past %}
+                    <div class="flex items-start gap-4 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all">
+                        <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
+                            <i class="ri-history-line text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-[11px] font-bold text-slate-900">{{ meeting.name }}</p>
+                            <p class="text-[9px] font-medium text-slate-400">{{ meeting.start_time|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-[10px] font-bold text-slate-300 italic">No historical data detected.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prefill Intelligence Preview -->
+    <div class="p-8 bg-slate-50 rounded-[3rem] border border-slate-100">
+        <p class="text-[9px] font-black text-slate-400 uppercase tracking-[3px] mb-6">Orchestration Data Bank</p>
+        <div class="space-y-3">
+            {% for key, val in prefill.items %}
+            <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100">
+                <span class="text-[10px] font-black text-slate-400 uppercase">{{ key }}</span>
+                <span class="text-[10px] font-bold text-slate-900 truncate max-w-[150px]">{{ val }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="p-6 bg-indigo-50/50 rounded-3xl border border-indigo-100 text-center">
+    <p class="text-[10px] font-medium text-indigo-400 italic">"Finalizing this session will log the orchestration as an activity in Zoho CRM."</p>
+</div>

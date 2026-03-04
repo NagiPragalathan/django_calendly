@@ -2,7 +2,7 @@
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from Finalty.settings import CALENDLY_WEBHOOK_EVENTS, CALENDLY_CUSTOM_FIELDS
-from base.models import CalendlyCredentials, ZohoToken, Settings, PreFillMapping, SmtpSettings
+from base.models import CalendlyCredentials, ZohoToken, Settings, PreFillMapping, SmtpSettings, BookingEmailTemplate
 from base.routes.tool_kit.zoho_tool import add_meeting_to_zoho_crm, check_and_add_email, get_zoho_record
 from django.core.mail import EmailMessage, get_connection
 import requests, json
@@ -264,7 +264,11 @@ def check_and_refresh_token(credentials):
         
     except Exception as e:
         print(f"Token refresh error: {str(e)}")
-        return None
+        # Return empty dict instead of None to prevent 'items' attribute errors in templates or requests
+        return {
+            'Authorization': f'Bearer {credentials.access_token}',
+            'Content-Type': 'application/json'
+        }
 
 
 @login_required
@@ -601,66 +605,113 @@ def send_booking_email(request):
 
 @login_required
 def zoho_record_booking(request, module, record_id):
-    """Orchestrate a booking link for a specific Zoho record."""
+    """
+    Advanced Orchestrator for Zoho Records.
+    Provides a full-screen interface to select event types and email templates.
+    """
     try:
-        zoho_token = ZohoToken.objects.filter(user=request.user).latest('created_at')
+        # 1. Fetch Record Intelligence from Zoho
+        zoho_token = ZohoToken.objects.filter(user=request.user).order_by('-created_at').first()
+        if not zoho_token:
+            return render(request, 'zoho/auth_page.html', {
+                'error': 'Zoho CRM Bridge not initialized. Please connect your account.',
+                'zoho_url': f"https://accounts.zoho.com/oauth/v2/auth?scope=ZohoCRM.modules.ALL,ZohoCRM.users.ALL,ZohoCRM.settings.ALL,ZohoCRM.org.ALL&client_id={settings.CLIENT_ID}&response_type=code&access_type=offline&prompt=consent&redirect_uri={settings.REDIRECT_URI}"
+            })
+            
         from base.routes.tool_kit.zoho_tool import check_access_token_validity, get_access_token
-        from Finalty.settings import CLIENT_ID, CLIENT_SECRET
+        # from Finalty.settings import CLIENT_ID, CLIENT_SECRET # Removed as we use from django.conf import settings
         
         access_token = zoho_token.access_token
         if not check_access_token_validity(access_token):
-            access_token = get_access_token(CLIENT_ID, CLIENT_SECRET, zoho_token.refresh_token)
+            access_token = get_access_token(settings.CLIENT_ID, settings.CLIENT_SECRET, zoho_token.refresh_token)
             zoho_token.access_token = access_token
             zoho_token.save()
             
-        # 2. Fetch the Record
         record = get_zoho_record(module, record_id, access_token)
         if not record:
             return HttpResponse(f"Record {record_id} not found in {module}", status=404)
-            
-        # 3. Get Active Hub
+
+        email = record.get('Email')
+        name = record.get('Full_Name') or f"{record.get('First_Name', '')} {record.get('Last_Name', '')}".strip()
+
+        # 2. Identify Hub context
         credentials = get_active_hub(request)
         if not credentials:
             return redirect('list_credentials')
-            
-        # 4. Fetch Event Types for this account
+        
         headers = check_and_refresh_token(credentials)
         user_response = requests.get('https://api.calendly.com/users/me', headers=headers)
-        organization_uri = user_response.json()['resource']['current_organization']
         
-        event_types_response = requests.get(
-            'https://api.calendly.com/event_types',
-            headers=headers,
-            params={'organization': organization_uri, 'active': True}
-        )
-        event_types = event_types_response.json().get('collection', [])
+        if user_response.status_code != 200:
+            messages.error(request, "Failed to authenticate with Calendly. Please reconnect your account.")
+            return redirect('list_credentials')
+            
+        user_data = user_response.json().get('resource', {})
+        if not user_data:
+             messages.error(request, "Could not retrieve Calendly user profile.")
+             return redirect('list_credentials')
+             
+        organization_uri = user_data.get('current_organization')
+
+        # 3. Fetch History (Upcoming & Past) for this Invitee
+        now = datetime.now(timezone.utc)
         
-        # 5. Build Pre-fill Data
-        prefill = {
-            'name': f"{record.get('First_Name', '')} {record.get('Last_Name', '')}".strip() or record.get('Full_Name', ''),
-            'email': record.get('Email', ''),
+        # Calendly API v2 supports invitee_email filtering
+        events_base_url = 'https://api.calendly.com/scheduled_events'
+        
+        upcoming_params = {
+            'organization': organization_uri,
+            'invitee_email': email,
+            'min_start_time': now.isoformat(),
+            'status': 'active'
         }
+        upcoming_res = requests.get(events_base_url, headers=headers, params=upcoming_params)
+        upcoming = upcoming_res.json().get('collection', []) if upcoming_res.status_code == 200 else []
+
+        past_params = {
+            'organization': organization_uri,
+            'invitee_email': email,
+            'max_start_time': now.isoformat(),
+            'status': 'active'
+        }
+        past_res = requests.get(events_base_url, headers=headers, params=past_params)
+        past = past_res.json().get('collection', []) if past_res.status_code == 200 else []
+
+        # 4. Fetch Event Types & Templates
+        et_res = requests.get('https://api.calendly.com/event_types', headers=headers, params={'organization': organization_uri, 'active': True})
+        event_types = et_res.json().get('collection', []) if et_res.status_code == 200 else []
         
-        # Map custom questions based on PreFillMapping
+        templates = list(BookingEmailTemplate.objects.filter(credential=credentials))
+        if not templates:
+            # Provide a high-fidelity default template if none exist
+            templates = [{
+                'id': 'default',
+                'template_name': 'Standard Outreach (Default)',
+                'subject': 'Schedule your meeting with [[name]]',
+                'body': 'Hi [[name]],\n\nI would like to invite you to schedule a meeting at your earliest convenience.\n\nYou can pick a time that works best for you here: [[link]]\n\nLooking forward to connecting!'
+            }]
+
+        # 5. Build Pre-fill Data for the Generator
+        prefill = {'name': name, 'email': email}
         mappings = PreFillMapping.objects.filter(user=request.user, calendly_account=credentials)
         for mapping in mappings:
             zoho_val = record.get(mapping.zoho_field_api_name, '')
             if zoho_val:
                 prefill[mapping.question_key] = zoho_val
-                
-        # Also check global field mappings in Settings
-        settings = Settings.objects.filter(user=request.user).first()
-        if settings and settings.field_mappings:
-            # If there's a specific mapping for Q&A or other fields, we can use it here
-            pass
 
-        return render(request, 'acuityscheduling/zoho_booking_orchestrator.html', {
+        return render(request, 'acuityscheduling/zoho_record_booking.html', {
             'module': module,
+            'record_id': record_id,
             'record': record,
+            'email': email,
+            'name': name,
+            'upcoming': upcoming,
+            'past': past,
             'event_types': event_types,
+            'templates': templates,
             'prefill': prefill,
             'credentials': credentials,
-            'all_hubs': CalendlyCredentials.objects.filter(email=request.user.email)
+            'no_nav': True  # Full-screen orchestration
         })
 
     except Exception as e:

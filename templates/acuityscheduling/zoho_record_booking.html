@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% block title %}Booking Orchestrator | {{ name }}{% endblock %}
+
+{% block content %}
+<div class="fixed inset-0 bg-white flex flex-col z-[1000] overflow-hidden" id="orchestrator-app">
+    <!-- Ultra-Minimal Header -->
+    <header class="h-16 border-b border-slate-100 flex items-center justify-between px-6 shrink-0 bg-white/80 backdrop-blur-xl z-50">
+        <div class="flex items-center gap-4">
+            <div class="w-8 h-8 rounded bg-indigo-600 flex items-center justify-center text-white font-black text-sm">
+                {{ name|slice:":1"|upper }}
+            </div>
+            <div class="flex flex-col">
+                <span class="text-xs font-black text-slate-900 leading-tight uppercase tracking-tighter">{{ name }}</span>
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ module }} &bull; CRM Active</span>
+            </div>
+        </div>
+        <button onclick="window.close()" class="w-10 h-10 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-400 transition-colors">
+            <i class="ri-close-line text-xl"></i>
+        </button>
+    </header>
+
+    <!-- The Stage: Centralized Content -->
+    <main class="flex-1 relative overflow-hidden bg-[#fafafa]">
+        
+        <!-- Screen 1: Event Type Selection -->
+        <div id="screen-event" class="absolute inset-0 flex flex-col animate-screen-in">
+            <div class="p-6 pb-2 shrink-0">
+                <h2 class="text-2xl font-black text-slate-900 tracking-tight">Select Event</h2>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[3px]">Step 01 &mdash; Resource Choice</p>
+            </div>
+            <div class="flex-1 overflow-y-auto px-6 py-4 space-y-1 custom-scrollbar">
+                {% for et in event_types %}
+                <label class="block cursor-pointer">
+                    <input type="radio" name="event_type" value="{{ et.scheduling_url }}" data-slug="{{ et.slug }}" class="peer hidden" onchange="nextWizStep('template')">
+                    <div class="w-full text-left p-6 bg-white border border-slate-100 rounded-none peer-checked:bg-indigo-600 peer-checked:text-white transition-all transform active:scale-[0.98]">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-1.5 h-10 rounded-full bg-indigo-200 peer-checked:bg-white/40" style="background-color: {{ et.color }}"></div>
+                                <div>
+                                    <p class="text-sm font-bold">{{ et.name }}</p>
+                                    <p class="text-[10px] font-medium opacity-60 uppercase">{{ et.duration }}m &bull; {{ et.kind|title }}</p>
+                                </div>
+                            </div>
+                            <i class="ri-arrow-right-s-line text-lg opacity-40"></i>
+                        </div>
+                    </div>
+                </label>
+                {% empty %}
+                <div class="h-full flex flex-col items-center justify-center opacity-30">
+                    <i class="ri-calendar-close-line text-6xl mb-4"></i>
+                    <p class="text-xs font-black uppercase tracking-widest">No Active Resources</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Screen 2: Template Selection -->
+        <div id="screen-template" class="absolute inset-0 flex flex-col hidden animate-screen-in">
+            <div class="p-6 pb-2 shrink-0">
+                <h2 class="text-2xl font-black text-slate-900 tracking-tight">Choose Outreach</h2>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[3px]">Step 02 &mdash; Message Logic</p>
+            </div>
+            <div class="flex-1 overflow-y-auto px-6 py-4 space-y-1 custom-scrollbar">
+                {% for template in templates %}
+                <label class="block cursor-pointer">
+                    <input type="radio" name="mail_template" value="{{ template.id }}" 
+                           data-subject="{{ template.subject }}"
+                           data-body="{{ template.body }}"
+                           class="peer hidden" onchange="toggleContinueBtn()">
+                    <div class="w-full text-left p-6 bg-white border border-slate-100 rounded-none peer-checked:bg-indigo-900 peer-checked:text-white transition-all transform active:scale-[0.98]">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1 truncate pr-8">
+                                <p class="text-sm font-bold">{{ template.template_name }}</p>
+                                <p class="text-[10px] font-medium opacity-60 truncate">{{ template.subject }}</p>
+                            </div>
+                            <div class="w-6 h-6 rounded-full border-2 border-slate-100 flex items-center justify-center peer-checked:bg-white peer-checked:border-white">
+                                <i class="ri-check-line text-indigo-900 text-xs opacity-0 peer-checked:opacity-100"></i>
+                            </div>
+                        </div>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+            <div class="p-6 shrink-0 bg-white border-t border-slate-50">
+                <button id="continue-btn" disabled onclick="orchestrateBooking()"
+                        class="w-full py-5 bg-indigo-600 text-white text-[11px] font-black uppercase tracking-[3px] rounded shadow-xl shadow-indigo-100 disabled:opacity-30 transition-all flex items-center justify-center gap-3">
+                    Launch Session <i class="ri-flashlight-fill text-yellow-300"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Screen 3: Live Session -->
+        <div id="screen-live" class="absolute inset-0 flex flex-col hidden bg-white z-[60] animate-screen-in">
+            <div class="flex-1 relative">
+                <div id="iframe-loader" class="absolute inset-0 flex flex-col items-center justify-center bg-white z-20">
+                    <div class="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-[4px]">Generating URI...</p>
+                </div>
+                <iframe id="booking-iframe" class="w-full h-full border-none opacity-0 transition-opacity duration-700" onload="onIframeLoad()"></iframe>
+            </div>
+        </div>
+
+        <!-- Screen 4: Intelligence Log -->
+        <div id="screen-intel" class="absolute inset-0 flex flex-col hidden bg-white z-40 animate-screen-in">
+            <div class="p-6 pb-2 shrink-0">
+                <h2 class="text-2xl font-black text-slate-900 tracking-tight">Intelligence Log</h2>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[3px]">History & CRM Context</p>
+            </div>
+            <div class="flex-1 overflow-y-auto px-6 py-4 space-y-6 custom-scrollbar">
+                {% include "acuityscheduling/partials/booking_sidebar.html" %}
+            </div>
+        </div>
+    </main>
+
+    <!-- App Bottom Tab Bar -->
+    <nav class="h-20 bg-white border-t border-slate-100 flex items-center justify-around px-2 shrink-0 z-[100]">
+        <button onclick="nextWizStep('event')" id="tab-event" class="flex flex-col items-center gap-1.5 transition-all text-indigo-600">
+            <div class="w-14 h-1 flex rounded-full bg-current mb-1 opacity-0" id="indicator-event"></div>
+            <i class="ri-calendar-event-line text-xl"></i>
+            <span class="text-[8px] font-black uppercase tracking-widest">Event</span>
+        </button>
+        <button onclick="nextWizStep('template')" id="tab-template" class="flex flex-col items-center gap-1.5 transition-all text-slate-400">
+            <div class="w-14 h-1 flex rounded-full bg-current mb-1 opacity-0" id="indicator-template"></div>
+            <i class="ri-mail-send-line text-xl"></i>
+            <span class="text-[8px] font-black uppercase tracking-widest">Logic</span>
+        </button>
+        <button onclick="nextWizStep('intel')" id="tab-intel" class="flex flex-col items-center gap-1.5 transition-all text-slate-400">
+            <div class="w-14 h-1 flex rounded-full bg-current mb-1 opacity-0" id="indicator-intel"></div>
+            <i class="ri-radar-line text-xl"></i>
+            <span class="text-[8px] font-black uppercase tracking-widest">Intel</span>
+        </button>
+        <button onclick="toggleOutreach()" id="tab-dispatch" class="hidden flex flex-col items-center gap-1.5 transition-all text-slate-400">
+            <div class="w-14 h-1 flex rounded-full bg-current mb-1 opacity-0" id="indicator-dispatch"></div>
+            <i class="ri-send-plane-2-line text-xl"></i>
+            <span class="text-[8px] font-black uppercase tracking-widest">Dispatch</span>
+        </button>
+    </nav>
+
+    <!-- Outreach Slide-Over Drawer -->
+    <div id="drawer-outreach" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden flex items-end">
+        <div id="drawer-content" class="w-full bg-white rounded-t p-8 space-y-6 transform translate-y-full transition-transform duration-500 ease-out max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-black text-slate-900">Email Dispatch</h3>
+                <button onclick="toggleOutreach()" class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center"><i class="ri-close-line"></i></button>
+            </div>
+            
+            <div class="space-y-4">
+                <input type="text" id="mail-subject" placeholder="Subject" class="w-full px-6 py-4 bg-slate-50 rounded text-sm font-bold border-none outline-none">
+                <textarea id="mail-body" rows="8" class="w-full px-6 py-6 bg-slate-50 rounded text-sm font-medium border-none outline-none resize-none"></textarea>
+                <button id="send-btn" onclick="sendOrchestratedMail()" class="w-full py-5 bg-slate-900 text-white text-[11px] font-black uppercase tracking-[4px] rounded shadow-xl shadow-slate-200">
+                    Dispatch Invitation
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const prefillData = {{ prefill|safe }};
+    let generatedUrl = "";
+    let currentStep = 'event';
+
+    function nextWizStep(step) {
+        // Hide all screens
+        ['event', 'template', 'live', 'intel'].forEach(s => {
+            const el = document.getElementById(`screen-${s}`);
+            if(el) el.classList.add('hidden');
+            
+            const tab = document.getElementById(`tab-${s}`);
+            const ind = document.getElementById(`indicator-${s}`);
+            if(tab) tab.classList.replace('text-indigo-600', 'text-slate-400');
+            if(ind) ind.classList.add('opacity-0');
+        });
+
+        // Show target screen
+        document.getElementById(`screen-${step}`).classList.remove('hidden');
+        
+        // Update tabs
+        const activeTab = document.getElementById(`tab-${step}`);
+        const activeInd = document.getElementById(`indicator-${step}`);
+        if(activeTab) activeTab.classList.replace('text-slate-400', 'text-indigo-600');
+        if(activeInd) activeInd.classList.remove('opacity-0');
+
+        currentStep = step;
+    }
+
+    function toggleContinueBtn() {
+        const etSelected = document.querySelector('input[name="event_type"]:checked');
+        document.getElementById('continue-btn').disabled = !etSelected;
+    }
+
+    function orchestrateBooking() {
+        const etInput = document.querySelector('input[name="event_type"]:checked');
+        const baseUrl = etInput.value;
+        const params = new URLSearchParams();
+        for (const [key, val] of Object.entries(prefillData)) { params.append(key, val); }
+        generatedUrl = `${baseUrl}?${params.toString()}`;
+        
+        const mailInput = document.querySelector('input[name="mail_template"]:checked');
+        if (mailInput) {
+            let subj = mailInput.dataset.subject;
+            let bod = mailInput.dataset.body;
+            for (const [k, v] of Object.entries(prefillData)) {
+                subj = subj.replace(new RegExp(`\\[\\[${k}\\]\\]`, 'g'), v);
+                bod = bod.replace(new RegExp(`\\[\\[${k}\\]\\]`, 'g'), v);
+            }
+            bod = bod.replace(/\[\[link\]\]/g, generatedUrl);
+            document.getElementById('mail-subject').value = subj;
+            document.getElementById('mail-body').value = bod;
+        }
+
+        nextWizStep('live');
+        document.getElementById('tab-dispatch').classList.remove('hidden');
+        const iframe = document.getElementById('booking-iframe');
+        iframe.src = generatedUrl;
+        document.getElementById('iframe-loader').classList.remove('hidden');
+    }
+
+    function onIframeLoad() {
+        document.getElementById('iframe-loader').classList.add('hidden');
+        document.getElementById('booking-iframe').classList.remove('opacity-0');
+    }
+
+    function toggleOutreach() {
+        const drawer = document.getElementById('drawer-outreach');
+        const content = document.getElementById('drawer-content');
+        if (drawer.classList.contains('hidden')) {
+            drawer.classList.remove('hidden');
+            setTimeout(() => content.classList.remove('translate-y-full'), 10);
+        } else {
+            content.classList.add('translate-y-full');
+            setTimeout(() => drawer.classList.add('hidden'), 500);
+        }
+    }
+
+    async function sendOrchestratedMail() {
+        const btn = document.getElementById('send-btn');
+        const orig = btn.innerText;
+        btn.innerText = 'DISPATCHING...';
+        btn.disabled = true;
+
+        const data = new FormData();
+        data.append('to_email', "{{ email }}");
+        data.append('subject', document.getElementById('mail-subject').value);
+        data.append('message_content', document.getElementById('mail-body').value);
+        data.append('booking_url', generatedUrl);
+        data.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        try {
+            const res = await fetch("{% url 'send_booking_email' %}", { method: 'POST', body: data });
+            const result = await res.json();
+            if (result.success) {
+                btn.innerText = 'SUCCESS';
+                btn.style.backgroundColor = '#10b981';
+                setTimeout(() => toggleOutreach(), 1500);
+            } else {
+                alert(result.error);
+                btn.innerText = orig;
+                btn.disabled = false;
+            }
+        } catch (e) {
+            alert("Network Error");
+            btn.innerText = orig;
+            btn.disabled = false;
+        }
+    }
+
+    // Initialize View
+    nextWizStep('event');
+</script>
+
+<style>
+    #orchestrator-app {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    @keyframes screen-in {
+        from { opacity: 0; transform: scale(1.02); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    .animate-screen-in { animation: screen-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    
+    .custom-scrollbar::-webkit-scrollbar { width: 0; }
+    
+    label input:checked + div {
+        box-shadow: 0 20px 40px -15px rgba(79, 70, 229, 0.4);
+    }
+</style>
+{% endblock %}

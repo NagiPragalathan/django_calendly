@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 from django.conf import settings
 
-from base.models import CalendlyCredentials, PreFillMapping, ZohoToken
+from base.models import CalendlyCredentials, PreFillMapping, ZohoToken, BookingEmailTemplate
 from base.routes.tool_kit.mongo_tool import store_image_in_mongodb
 from base.routes.tool_kit.calendly_tool import create_webhooks, get_webhooks_with_ids, delete_webhooks, CalendlyWebhookManager
 from base.routes.tool_kit.zoho_tool import ensure_field_exists, check_access_token_validity, get_access_token, get_module_fields
@@ -65,8 +65,8 @@ def edit_credentials(request, credential_id):
     except CalendlyCredentials.DoesNotExist:
         return JsonResponse({'error': 'Credential not found.'}, status=404)
 
-    # Fetch Lead fields for pre-fill mapping
-    lead_fields = []
+    # Fetch fields for pre-fill mapping (Leads & Contacts)
+    module_fields = {"Leads": [], "Contacts": []}
     zoho_token = ZohoToken.objects.filter(user=request.user).first()
     if zoho_token:
         access_token = zoho_token.access_token
@@ -74,32 +74,56 @@ def edit_credentials(request, credential_id):
             access_token = get_access_token(CLIENT_ID, CLIENT_SECRET, zoho_token.refresh_token)
             ZohoToken.objects.filter(user=request.user).update(access_token=access_token)
         
-        try:
-            lead_data = get_module_fields(access_token, "Leads")
-            if "fields" in lead_data:
-                for f in lead_data["fields"]:
-                    lead_fields.append({"api_name": f["api_name"], "label": f["field_label"]})
-                lead_fields.sort(key=lambda x: x["label"])
-        except: pass
+        for module in ["Leads", "Contacts"]:
+            try:
+                m_data = get_module_fields(access_token, module)
+                if "fields" in m_data:
+                    fields = []
+                    for f in m_data["fields"]:
+                        fields.append({"api_name": f["api_name"], "label": f["field_label"]})
+                    fields.sort(key=lambda x: x["label"])
+                    module_fields[module] = fields
+            except: pass
+
+    # Fetch templates
+    templates = BookingEmailTemplate.objects.filter(credential=credential)
 
     if request.method == 'POST':
         try:
             # Get form data
             image = request.FILES.get('image')
             company_name = request.POST.get('company_name')
-            email_template = request.POST.get('email_template')
             
             # Handle Pre-fill Mappings (Dynamic Logic)
             PreFillMapping.objects.filter(user=request.user, calendly_account=credential).delete()
             q_keys = request.POST.getlist('q_key[]')
             z_fields = request.POST.getlist('z_field[]')
-            for k, f in zip(q_keys, z_fields):
+            z_modules = request.POST.getlist('z_module[]')
+            for k, f, m in zip(q_keys, z_fields, z_modules):
                 if k and f:
                     PreFillMapping.objects.create(
                         user=request.user, 
                         calendly_account=credential, 
                         question_key=k, 
-                        zoho_field_api_name=f
+                        zoho_field_api_name=f,
+                        zoho_module=m or 'Leads'
+                    )
+
+            # Handle Multiple Email Templates
+            BookingEmailTemplate.objects.filter(credential=credential).delete()
+            t_names = request.POST.getlist('t_name[]')
+            t_subjects = request.POST.getlist('t_subject[]')
+            t_bodies = request.POST.getlist('t_body[]')
+            t_modules = request.POST.getlist('t_module[]')
+            for n, s, b, m in zip(t_names, t_subjects, t_bodies, t_modules):
+                if n and b:
+                    BookingEmailTemplate.objects.create(
+                        user=request.user,
+                        credential=credential,
+                        template_name=n,
+                        subject=s or "Invitation to Schedule a Meeting",
+                        body=b,
+                        zoho_module=m or 'Leads'
                     )
 
             if image:
@@ -113,7 +137,6 @@ def edit_credentials(request, credential_id):
                 email=request.user.email
             ).update(
                 company_name=company_name,
-                email_template=email_template,
                 image_id=image_id
             )
 
@@ -124,15 +147,19 @@ def edit_credentials(request, credential_id):
             messages.error(request, f"Error updating hub logic: {str(e)}")
             return render(request, 'acuityscheduling/edit_credentials.html', {
                 'credential': credential,
-                'lead_fields': lead_fields,
+                'module_fields': module_fields,
+                'module_fields_json': json.dumps(module_fields),
                 'prefill_mappings': PreFillMapping.objects.filter(user=request.user, calendly_account=credential),
+                'templates': templates,
                 'error': str(e)
             })
 
     return render(request, 'acuityscheduling/edit_credentials.html', {
         'credential': credential,
-        'lead_fields': lead_fields,
-        'prefill_mappings': PreFillMapping.objects.filter(user=request.user, calendly_account=credential)
+        'module_fields': module_fields,
+        'module_fields_json': json.dumps(module_fields),
+        'prefill_mappings': PreFillMapping.objects.filter(user=request.user, calendly_account=credential),
+        'templates': templates
     })
 
 
