@@ -139,5 +139,49 @@
             }
         }
     </script>
+
+<!-- Loading Overlay -->
+<div id="global-loader" class="fixed inset-0 z-[9999] hidden">
+    <div class="absolute inset-0 bg-white/80 backdrop-blur-sm"></div>
+    <div class="relative w-full h-full flex flex-col items-center justify-center">
+        <div class="bg-white rounded-xl p-10 shadow-2xl border border-gray-100 flex flex-col items-center gap-5">
+            <div class="relative w-12 h-12">
+                <div class="absolute inset-0 border-[3px] border-gray-100 rounded-full"></div>
+                <div class="absolute inset-0 border-[3px] border-transparent border-t-indigo-600 rounded-full animate-spin"></div>
+            </div>
+            <div class="text-center">
+                <p class="text-sm font-bold text-gray-900">Creating Account</p>
+                <p class="text-xs text-gray-400 mt-1">Setting up your workspace...</p>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    const loader = document.getElementById('global-loader');
+    
+    // Form submits
+    document.querySelector('form').addEventListener('submit', function() {
+        loader.classList.remove('hidden');
+        document.querySelector('.text-gray-900', loader).textContent = 'Creating Account';
+        document.querySelector('.text-gray-400', loader).textContent = 'Setting up your workspace...';
+        const btn = this.querySelector('button[type="submit"]');
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+    });
+    
+    // Link clicks (Login link)
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a[href]');
+        if (!link) return;
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+        
+        loader.classList.remove('hidden');
+        document.querySelector('.text-gray-900', loader).textContent = 'Loading';
+        document.querySelector('.text-gray-400', loader).textContent = 'Preparing login page...';
+    });
+
+    window.addEventListener('pageshow', () => loader.classList.add('hidden'));
+</script>
+
 </body>
 </html>

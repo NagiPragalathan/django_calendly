@@ -119,11 +119,9 @@ def settings_form(request):
         if action == 'refresh' and active_hub:
             try:
                 from base.routes.tool_kit.calendly_tool import CalendlyWebhookManager
-                from Finalty.settings import BASE_WEBHOOK_URL
                 wh_manager = CalendlyWebhookManager(active_hub.access_token)
-                
-                # Determine effective base URL (UI Value > Settings Config)
-                effective_base = settings_instance.webhook_base_url if settings_instance and settings_instance.webhook_base_url else BASE_WEBHOOK_URL
+                # Determine effective base URL (User Override > Current Browser URL > Settings Config)
+                effective_base = settings_instance.webhook_base_url if settings_instance and settings_instance.webhook_base_url else request.build_absolute_uri('/')[:-1]
                 
                 # Webhook creation via manager (automatically handles user/org URIs)
                 target_url = f"{effective_base.rstrip('/')}/calendly-webhook/meeting/{active_hub.unique_id}/{request.user.id}/"

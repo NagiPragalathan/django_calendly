@@ -26,7 +26,7 @@
     </style>
 </head>
 <body class="bg-[#f8fafc] text-slate-900 custom-scrollbar">
-    <div id="app-root" class="{% if user.is_authenticated and not request.zoho_connected and request.resolver_match.url_name != 'zoho_auth' and request.resolver_match.url_name != 'zoho_callback' and request.resolver_match.url_name != 'logout' %}blur-content{% endif %}">
+    <div id="app-root">
     {% if not no_nav %}
     <!-- Mobile Menu Button -->
     <div class="lg:hidden fixed top-4 left-4 z-50">
@@ -257,21 +257,38 @@
             <main class="flex-1 p-4 lg:p-8">
                 <!-- Messages -->
                 {% if messages %}
-                    <div class="max-w-7xl mx-auto mb-8 space-y-3">
+                    <div class="max-w-7xl mx-auto mb-6 space-y-3">
                         {% for message in messages %}
-                            <div class="p-4 rounded-sm flex items-center space-x-3 animate-fade-in border shadow-sm
-                                        {% if message.tags == 'success' %}bg-emerald-50 text-emerald-800 border-emerald-100
-                                        {% elif message.tags == 'error' %}bg-rose-50 text-rose-800 border-rose-100
-                                        {% else %}bg-indigo-50 text-indigo-800 border-indigo-100{% endif %}">
-                                <div class="w-8 h-8 rounded
-                                            {% if message.tags == 'success' %}bg-emerald-500
-                                            {% elif message.tags == 'error' %}bg-rose-500
-                                            {% else %}bg-indigo-500{% endif %} text-white font-bold">
-                                    {% if message.tags == 'success' %}<i class="ri-checkbox-circle-line"></i>
-                                    {% elif message.tags == 'error' %}<i class="ri-error-warning-line"></i>
-                                    {% else %}<i class="ri-information-line"></i>{% endif %}
+                            <div class="msg-bar flex items-center justify-between gap-4 px-5 py-4 rounded-lg border shadow-sm transition-all duration-300
+                                        {% if message.tags == 'success' %}bg-emerald-50 border-emerald-200
+                                        {% elif message.tags == 'error' %}bg-rose-50 border-rose-200
+                                        {% elif message.tags == 'warning' %}bg-amber-50 border-amber-200
+                                        {% else %}bg-indigo-50 border-indigo-200{% endif %}">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
+                                                {% if message.tags == 'success' %}bg-emerald-500 text-white
+                                                {% elif message.tags == 'error' %}bg-rose-500 text-white
+                                                {% elif message.tags == 'warning' %}bg-amber-500 text-white
+                                                {% else %}bg-indigo-500 text-white{% endif %}">
+                                        {% if message.tags == 'success' %}<i class="ri-check-line text-lg"></i>
+                                        {% elif message.tags == 'error' %}<i class="ri-close-line text-lg"></i>
+                                        {% elif message.tags == 'warning' %}<i class="ri-alert-line text-lg"></i>
+                                        {% else %}<i class="ri-information-line text-lg"></i>{% endif %}
+                                    </div>
+                                    <p class="text-sm font-semibold truncate
+                                              {% if message.tags == 'success' %}text-emerald-800
+                                              {% elif message.tags == 'error' %}text-rose-800
+                                              {% elif message.tags == 'warning' %}text-amber-800
+                                              {% else %}text-indigo-800{% endif %}">{{ message }}</p>
                                 </div>
-                                <p class="text-sm font-semibold">{{ message }}</p>
+                                <button type="button" onclick="this.closest('.msg-bar').style.opacity='0';setTimeout(()=>this.closest('.msg-bar').remove(),300)"
+                                        class="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 transition-colors
+                                               {% if message.tags == 'success' %}text-emerald-400 hover:bg-emerald-100 hover:text-emerald-600
+                                               {% elif message.tags == 'error' %}text-rose-400 hover:bg-rose-100 hover:text-rose-600
+                                               {% elif message.tags == 'warning' %}text-amber-400 hover:bg-amber-100 hover:text-amber-600
+                                               {% else %}text-indigo-400 hover:bg-indigo-100 hover:text-indigo-600{% endif %}">
+                                    <i class="ri-close-line text-lg"></i>
+                                </button>
                             </div>
                         {% endfor %}
                     </div>
@@ -319,42 +336,60 @@
         </div>
     </div>
 
-    <!-- Mandatory Zoho Connection Modal -->
-    {% if user.is_authenticated and not request.zoho_connected and request.resolver_match.url_name != 'zoho_auth' and request.resolver_match.url_name != 'zoho_callback' and request.resolver_match.url_name != 'logout' %}
-    <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-        <!-- Backdrop with extreme blur -->
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-xl transition-all duration-700"></div>
-        
-        <!-- Modal Content -->
-        <div class="relative bg-white w-full max-w-lg rounded p-12 shadow-2xl border border-white/20 animate-fade-up text-center">
-            <div class="relative mb-10">
-                <div class="w-24 h-24 bg-rose-50 rounded flex items-center justify-center mx-auto border border-rose-100 shadow-xl shadow-rose-100/50">
-                    <i class="ri-error-warning-fill text-5xl text-rose-500 animate-pulse"></i>
+    <!-- Mandatory Zoho Connection - Full Screen Takeover (No blur, no glass, no scroll) -->
+    {% if user.is_authenticated and not request.zoho_connected and not request.is_setup_page %}
+    <div class="fixed inset-0 z-[200] bg-white overflow-hidden" style="overflow:hidden">
+        <div class="w-full h-full flex items-center justify-center">
+            <div class="text-center space-y-10 max-w-lg px-8">
+                <!-- Icon -->
+                <div class="relative inline-block">
+                    <div class="w-24 h-24 bg-gradient-to-tr from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center mx-auto shadow-xl">
+                        <i class="ri-link-m text-4xl text-white"></i>
+                    </div>
+                    <div class="absolute -top-1.5 -right-1.5 w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-md border border-slate-100">
+                        <i class="ri-lock-2-line text-indigo-600 text-sm"></i>
+                    </div>
                 </div>
-                <div class="absolute -top-4 -right-4 w-12 h-12 bg-indigo-50 rounded blur-3xl opacity-60"></div>
-            </div>
 
-            <div class="space-y-4">
-                <span class="px-5 py-2 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-[3px] rounded-full border border-indigo-100">
-                    Security Handshake Required
-                </span>
-                <h2 class="text-4xl font-black text-slate-900 tracking-tight leading-none">Connect CRM</h2>
-                <p class="text-sm font-medium text-slate-500 max-w-sm mx-auto leading-relaxed">
-                    Integration services are currently suspended. You must initialize the <span class="text-indigo-600 font-bold">Zoho CRM Bi-directional Bridge</span> to continue using the orchestration engine.
-                </p>
-            </div>
+                <!-- Text -->
+                <div class="space-y-4">
+                    <div class="inline-flex items-center px-4 py-1.5 bg-indigo-50 border border-indigo-100 rounded-full">
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-2 animate-pulse"></span>
+                        <span class="text-[9px] font-black text-indigo-600 uppercase tracking-[0.25em]">Connection Required</span>
+                    </div>
+                    <h2 class="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">Connect Your<br/><span class="text-indigo-600">Zoho CRM</span></h2>
+                    <p class="text-base font-medium text-slate-400 max-w-md mx-auto leading-relaxed">
+                        To use the dashboard, please connect your <span class="font-bold text-slate-700">Zoho CRM</span> account first. This is a one-time setup.
+                    </p>
+                </div>
 
-            <div class="mt-12 flex flex-col space-y-4">
-                <a href="{% url 'zoho_auth' %}" class="w-full py-5 bg-slate-900 text-white font-black rounded shadow-2xl shadow-slate-200 hover:bg-slate-800 transition-all hover:-translate-y-1 active:scale-95 group uppercase tracking-widest text-[11px] flex items-center justify-center">
-                    Initialize Secure Bridge
-                    <i class="ri-arrow-right-up-line ml-2 text-lg"></i>
-                </a>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    Need Help? <a href="#" class="text-indigo-600 hover:underline">Contact System Admin</a>
+                <!-- CTA -->
+                <div class="space-y-6 pt-2">
+                    <a href="{% url 'zoho_auth' %}" class="inline-flex items-center justify-center w-full max-w-sm mx-auto py-5 bg-slate-950 text-white font-black rounded-xl hover:bg-indigo-600 transition-all active:scale-95 uppercase tracking-[0.2em] text-[11px] shadow-lg">
+                        <i class="ri-shield-flash-line mr-3 text-lg"></i>
+                        Connect Zoho CRM
+                    </a>
+                    <div class="flex items-center justify-center gap-6">
+                        <div class="flex items-center gap-1.5">
+                            <i class="ri-shield-check-line text-emerald-500 text-sm"></i>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">OAuth 2.0</span>
+                        </div>
+                        <div class="w-1 h-1 rounded-full bg-slate-200"></div>
+                        <div class="flex items-center gap-1.5">
+                            <i class="ri-pulse-line text-indigo-500 text-sm"></i>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Real-time Sync</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer link -->
+                <p class="text-xs text-slate-300 pt-6">
+                    Need to manage credentials first? <a href="{% url 'list_credentials' %}" class="text-indigo-500 font-bold hover:underline">Go to Settings →</a>
                 </p>
             </div>
         </div>
     </div>
+    <script>document.body.style.overflow='hidden';</script>
     {% endif %}
 
     <!-- Scripts -->
@@ -658,5 +693,101 @@
             });
         });
     </script>
+
+<!-- Global Loading Overlay -->
+<div id="global-loader" class="fixed inset-0 z-[9999] hidden">
+    <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"></div>
+    <div class="relative w-full h-full flex flex-col items-center justify-center">
+        <div class="bg-white rounded-xl p-10 shadow-2xl flex flex-col items-center gap-6 max-w-sm mx-4">
+            <!-- Spinner -->
+            <div class="relative w-14 h-14">
+                <div class="absolute inset-0 border-[3px] border-slate-100 rounded-full"></div>
+                <div class="absolute inset-0 border-[3px] border-transparent border-t-indigo-600 rounded-full animate-spin"></div>
+            </div>
+            <!-- Text -->
+            <div class="text-center">
+                <p id="loader-title" class="text-sm font-black text-slate-900 uppercase tracking-wider">Processing</p>
+                <p id="loader-subtitle" class="text-xs text-slate-400 mt-1.5">Please wait while we complete this action...</p>
+            </div>
+            <!-- Progress dots -->
+            <div class="flex items-center gap-1.5">
+                <div class="w-2 h-2 rounded-full bg-indigo-600 animate-bounce" style="animation-delay:0ms"></div>
+                <div class="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style="animation-delay:150ms"></div>
+                <div class="w-2 h-2 rounded-full bg-indigo-300 animate-bounce" style="animation-delay:300ms"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // === Global Loading Overlay System ===
+    const globalLoader = document.getElementById('global-loader');
+    const loaderTitle = document.getElementById('loader-title');
+    const loaderSubtitle = document.getElementById('loader-subtitle');
+
+    function showLoader(title, subtitle) {
+        loaderTitle.textContent = title || 'Processing';
+        loaderSubtitle.textContent = subtitle || 'Please wait while we complete this action...';
+        globalLoader.classList.remove('hidden');
+    }
+
+    function hideLoader() {
+        globalLoader.classList.add('hidden');
+    }
+
+    // Auto-attach to ALL form submissions
+    document.addEventListener('submit', function(e) {
+        const form = e.target;
+        // Skip forms that explicitly opt out
+        if (form.dataset.noLoader) return;
+
+        const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+        const actionText = submitBtn ? (submitBtn.textContent.trim() || 'Processing') : 'Processing';
+
+        showLoader(actionText, 'Saving your changes...');
+
+        // Disable submit button to prevent double clicks
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.6';
+            submitBtn.style.pointerEvents = 'none';
+        }
+    });
+
+    // Auto-attach to links that navigate away (all internal pages + OAuth)
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a[href]');
+        if (!link) return;
+        
+        const href = link.getAttribute('href');
+        // Exclude empty links, hashes, js links, and new tabs
+        if (!href || href.startsWith('#') || href.startsWith('javascript:') || link.getAttribute('target') === '_blank') return;
+        // Exclude explicitly opted-out links or logout which might use form POST
+        if (link.dataset.noLoader || link.classList.contains('no-loader')) return;
+        
+        // Show loader for OAuth vs normal navigation
+        if (href.includes('/oauth/') || href.includes('/authorize')) {
+            showLoader('Connecting', 'Redirecting to authorization gateway...');
+        } else {
+            // For normal navigation, we show the loader
+            showLoader('Loading', 'Preparing page...');
+        }
+    });
+
+    // Also allow manual trigger via button class
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-loader');
+        if (!btn) return;
+        const title = btn.dataset.loaderTitle || btn.textContent.trim();
+        const subtitle = btn.dataset.loaderSubtitle || 'Please wait...';
+        showLoader(title, subtitle);
+    });
+
+    // Hide loader when page finishes loading (back/forward navigation)
+    window.addEventListener('pageshow', function() {
+        hideLoader();
+    });
+</script>
+
 </body>
 </html>

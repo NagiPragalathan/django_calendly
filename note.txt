@@ -281,3 +281,186 @@ tailwind-merge
 tailwindcss
 tailwind-merge
 [nextapp (20)] [kaling@server nextapp]$
+
+
+
+
+
+
+
+Name- Nagipragalathan Nagimani 
+Age- 23
+Email- nagipragalathan@gmail.com 
+Phone number - 7401268091
+Current salary in hand per month - 70k 
+Expected salary - 90-95k
+Notice period - 1 month
+Prior experience in Web 3?if yes then how many years?- 1 years
+Any highest  deal closed in any company (figure)- 100k
+Proof of work - 
+    web3 - [ https://github.com/NagiPragalathan/alith - (opensource contribution), https://github.com/NagiPragalathan/X3 (programming language), https://devfolio.co/projects/zkblock-build-play-own-06cd (web3, gamming), https://devfolio.co/projects/chainshunter-08f3 (web3, gamming), https://devfolio.co/projects/cryptopyar-discover-your-perfect-match-in-web-2e1c (web3, AI), https://devfolio.co/projects/suzuka-ai-speak-it-into-reality-5be8 (web3, AI), https://devfolio.co/projects/matic-name-service-22d2 (web3), https://devfolio.co/projects/immovables-ca4d (web3, gamming), https://devfolio.co/projects/nft-craft-1196 (web3, gamming), https://github.com/NagiPragalathan/ava_strike (web3, gamming, AI), https://github.com/NagiPragalathan/EnigmaShield ]
+    Ai & backend - [https://kalingauniversity.ac.in/ (backend, chatbot), https://remo.dupebox.com/chatbot_v1/ (chatbot), https://spiher.ac.in/ (chatbot), https://github.com/NagiPragalathan/ZkConnect(web3, AI)]
+X link - https://x.com/nagipragalathan
+Cv link - https://drive.google.com/file/d/1FkAydJ5S15EYqsgyTkMqJZEPQw31C8S2/view?usp=sharing
+LinkedIn link - https://www.linkedin.com/in/nagi-pragalathan/
+Viral post or anything related to your work link - https://www.youtube.com/watch?v=qQM6cAkNYa4&t=2338s (starknet hackthon title winners), https://x.com/i/status/1774336239409496111, https://x.com/i/status/1846826720524960052, https://x.com/i/status/1837787508132008020,
+
+
+
+
+
+
+open source projects (Go lang & python):
+https://github.com/NagiPragalathan/alith
+i have contributed in GoLang Intridued the GO sdk for go lang for alith agents like [vector db, diffrent providers connections, embeddings and vectordb]. in python craeted new ai function in rag models, embedddings models, vectorDB models. also created documantations and test scripts for user friendly.
+
+---
+
+Live projects (AI with fullstack):
+
+kalingauniversity:
+the bot is for kalingauniversity which is given upto date data  to the user and give the details abou the college from the links to the images it will also doing the brinwash from asking the goal and suggest the course in there colgere and give the complete data of this 
+https://kalingauniversity.ac.in/
+ in this project i have worked on frontend some pages and i have covered full backed and the AI related thing here you can check my work. [nextjs, langchain and langgraph, django, mysql]
+spiher college :
+the bot is for spiher college which is given upto date data  to the user and give the details abou the college from the links to the images it will also doing the brinwash from asking the goal and suggest the course in there colgere and give the complete data of this 
+https://spiher.ac.in/
+in this project i have worked on backend and the chatbot [nextjs, langchain and langgraph, django, mysql]
+remo college:
+the bot is for remo college which is given upto date data  to the user and give the details abou the college from the links to the images it will also doing the brinwash from asking the goal and suggest the course in there colgere and give the complete data of this
+https://remo.dupebox.com/chatbot_v1/
+in this project i have worked on backend and the frontend with the chatbot [nextjs, langchain and langgraph, django, mysql]
+Truliv whatsapp chatbot:
+https://github.com/NagiPragalathan/Truliv_bot - craeted whatsapp chatbot to increase the qulity leads for the truliv company its a automation process that will be brain wash the user to taken to the site visite also give the etails of truliv including created the complete dashboard too. you can start the convverstation by text this number [+91 73581 03357
+zoho crm agent:
+this is the zoho crm agen which is used to make that crm complete automate from check the leds and tooking the report it will be done automatically.. by giveng the text that the  agen will auto followup and sening the mail, generating the reports managing the data ect. it can do any of the work by texting and automatically.
+https://github.com/NagiPragalathan/zoho_coql_bot:
+
+---
+
+Freelanche fullstack:
+just try:
+https://just-try-site.vercel.app/ - a shopping site for a just try shop like a ecommerse site -  [nextjs, django]
+
+
+---
+
+live plugin fullstack apps (fullstack):
+
+Calendly–Zoho:
+https://marketplace.zoho.com/app/crm/calendly-for-zoho-crm
+The Calendly–Zoho CRM integration allows you to schedule and manage meetings, sync agents with CRM users, and view appointments and client details directly within Zoho CRM.
+Acuity Scheduling zoho:
+https://marketplace.zoho.com/app/crm/acuity-scheduling
+This extension integrates Acuity Scheduling with Zoho CRM, allowing you to book, manage, and sync appointments while automatically linking them to contacts or leads and creating new contacts for new bookings.
+ActiveCampaign zoho:
+https://marketplace.zoho.com/app/crm/activecampaign-for-zoho-crm
+The ActiveCampaign extension for Zoho CRM syncs contacts or leads, tracks campaign activity and sales signals, and lets you manage and monitor marketing campaign data directly within Zoho CRM.
+
+---
+
+
+
+
+
+
+Hi,
+
+I’m sharing some of my work below for your reference.
+
+---
+
+*Open Source Contributions (Go & Python)*
+https://github.com/NagiPragalathan/alith
+
+I contributed to the Alith project in *Go and Python*.
+
+* Introduced the *Go SDK for Alith Agents*, including integrations for *Vector DBs, multiple providers, embeddings, and vector databases*.
+* In *Python*, I developed new AI functions for *RAG models, embedding models, and vector DB integrations*.
+* I also created *documentation and test scripts* to make the framework more user-friendly.
+
+---
+
+*Live AI Full-Stack Projects*
+
+*1. Kalinga University AI Assistant*
+https://kalingauniversity.ac.in/
+
+This AI chatbot provides *up-to-date information about the university*, including courses, facilities, images, and website resources. It also interacts with students by understanding their goals and recommending suitable courses.
+
+My contribution: *Frontend pages, full backend development, and AI system integration.*
+Tech stack: *Next.js, LangChain, LangGraph, Django, MySQL*
+
+---
+
+*2. SPIHER College AI Assistant*
+https://spiher.ac.in/
+
+This chatbot helps students explore *college information, courses, and resources*, and guides them based on their interests and goals.
+
+My contribution: *Backend development and chatbot system.*
+Tech stack: *Next.js, LangChain, LangGraph, Django, MySQL*
+
+---
+
+*3. REMO College AI Assistant*
+https://remo.dupebox.com/chatbot_v1/
+
+An AI assistant that provides *complete college information, course guidance, and interactive responses for prospective students*.
+
+My contribution: *Frontend, backend, and chatbot development.*
+Tech stack: *Next.js, LangChain, LangGraph, Django, MySQL*
+
+---
+
+*WhatsApp AI Chatbot – Truliv*
+https://github.com/NagiPragalathan/Truliv_bot
+
+I built a *WhatsApp automation chatbot* to generate *high-quality leads for Truliv*.
+The bot guides users through a conversation, explains property details, and encourages them to schedule *site visits*. It also includes a *custom dashboard for managing leads and interactions*.
+
+You can test it by sending a message to:
++91 73581 03357
+
+---
+
+*Zoho CRM AI Agent*
+https://github.com/NagiPragalathan/zoho_coql_bot
+
+An AI automation agent for *Zoho CRM* that can:
+
+* Analyze leads
+* Send automated follow-ups and emails
+* Generate reports
+* Manage CRM data
+* Perform CRM operations through simple text commands
+
+---
+
+*Freelance Full-Stack Project*
+
+*Just Try – E-commerce Website*
+https://just-try-site.vercel.app/
+
+An e-commerce website built for a retail shop.
+Tech stack: *Next.js + Django*
+
+---
+
+*Live Zoho CRM Marketplace Plugins*
+
+Calendly – Zoho CRM
+https://marketplace.zoho.com/app/crm/calendly-for-zoho-crm
+Enables meeting scheduling, agent syncing, and viewing appointment details directly inside Zoho CRM.
+
+Acuity Scheduling – Zoho CRM
+https://marketplace.zoho.com/app/crm/acuity-scheduling
+Allows booking and managing appointments while automatically linking them with CRM contacts or leads.
+
+ActiveCampaign – Zoho CRM
+https://marketplace.zoho.com/app/crm/activecampaign-for-zoho-crm
+Syncs contacts/leads, tracks marketing campaigns, and provides campaign insights directly inside Zoho CRM.
+
+---
+
+Please feel free to review my work. I’d be happy to discuss it further.

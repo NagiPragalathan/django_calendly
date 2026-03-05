@@ -100,8 +100,8 @@ def calendly_callback(request):
                     except Exception as fe:
                         print(f"⚠️ Field Orchestration Warning: {str(fe)}")
 
-                # Define webhook configurations
-                base_url = getattr(settings, 'BASE_WEBHOOK_URL', 'https://django-acuity-scheduling.vercel.app/').rstrip('/')
+                # Define webhook configurations - Capture the current browser base URL
+                base_url = request.build_absolute_uri('/')[:-1]
                 
                 credential = CalendlyCredentials.objects.filter(unique_id=credential_id).first()
 

@@ -6,8 +6,8 @@ from datetime import datetime, timedelta
 class CalendlyCredentials(models.Model):
     unique_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     email = models.EmailField(unique=True)
-    access_token = models.CharField(max_length=400)
-    refresh_token = models.CharField(max_length=400)
+    access_token = models.TextField(null=True, blank=True)
+    refresh_token = models.TextField(null=True, blank=True)
     token_expires_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     base_url = models.URLField(blank=True, null=True)

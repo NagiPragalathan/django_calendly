@@ -37,7 +37,7 @@ class UserDataMiddleware:
                 if credentials:
                     # Attach the image URL to the request
                     if credentials.image_id:
-                        request.image_url = f"http://{request.get_host()}/image/{credentials.image_id}/"
+                        request.image_url = credentials.image_id
                     else:
                         request.image_url = "https://avatars.githubusercontent.com/u/150781803?s=200&v=4"
 
@@ -71,8 +71,24 @@ class UserDataMiddleware:
             except Exception:
                 request.image_url = "https://avatars.githubusercontent.com/u/150781803?s=200&v=4"
                 request.company_name = 'susanoox'
+            # Define pages that are exempt from the mandatory sync modal (setup/config pages)
+            setup_url_names = [
+                'list_credentials',
+                'create_credentials',
+                'edit_credentials',
+                'delete_credentials',
+                'settings_form',
+                'appointment_types',
+                'zoho_auth',
+                'zoho_callback',
+                'logout'
+            ]
+            current_url_name = resolve(request.path_info).url_name
+            request.is_setup_page = current_url_name in setup_url_names
+
         else:
             request.zoho_connected = False
+            request.is_setup_page = False
             request.image_url = "https://avatars.githubusercontent.com/u/150781803?s=200&v=4"
             request.company_name = 'susanoox'
             public_url_names = [

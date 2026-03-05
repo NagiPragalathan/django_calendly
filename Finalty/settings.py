@@ -78,17 +78,14 @@ TEMPLATES = [
 WSGI_APPLICATION = "Finalty.wsgi.application"
 
 
+import dj_database_url
+
 DATABASES = {
-   'default': {
-       'ENGINE': 'djongo',
-       'CLIENT': {
-           
-        #    'host': "mongodb+srv://nagi:nagi@cluster0.ohv5gsc.mongodb.net/LogManagement",
-           'host': "mongodb+srv://ciddarth:applexc@cluster0.mg1di.mongodb.net/CalendlyDjango",
-           'name':'CalendlyDjango',
-           'authMechanism': "SCRAM-SHA-1",
-        }
-   }
+    'default': dj_database_url.config(
+        default='postgresql://neondb_owner:npg_4CEzSJeK8ZpP@ep-delicate-king-aimgb3xj-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
 
 # Database

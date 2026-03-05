@@ -1863,5 +1863,81 @@ video {
         
     </script>
 
+<!-- Global Loading Overlay -->
+<div id="global-loader" class="fixed inset-0 z-[9999] hidden">
+    <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"></div>
+    <div class="relative w-full h-full flex flex-col items-center justify-center">
+        <div class="bg-white rounded-xl p-10 shadow-2xl flex flex-col items-center gap-6 max-w-sm mx-4">
+            <!-- Spinner -->
+            <div class="relative w-14 h-14">
+                <div class="absolute inset-0 border-[3px] border-slate-100 rounded-full"></div>
+                <div class="absolute inset-0 border-[3px] border-transparent border-t-indigo-600 rounded-full animate-spin"></div>
+            </div>
+            <!-- Text -->
+            <div class="text-center">
+                <p id="loader-title" class="text-sm font-black text-slate-900 uppercase tracking-wider">Processing</p>
+                <p id="loader-subtitle" class="text-xs text-slate-400 mt-1.5">Please wait while we complete this action...</p>
+            </div>
+            <!-- Progress dots -->
+            <div class="flex items-center gap-1.5">
+                <div class="w-2 h-2 rounded-full bg-indigo-600 animate-bounce" style="animation-delay:0ms"></div>
+                <div class="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style="animation-delay:150ms"></div>
+                <div class="w-2 h-2 rounded-full bg-indigo-300 animate-bounce" style="animation-delay:300ms"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // === Global Loading Overlay System ===
+    const globalLoader = document.getElementById('global-loader');
+    const loaderTitle = document.getElementById('loader-title');
+    const loaderSubtitle = document.getElementById('loader-subtitle');
+
+    function showLoader(title, subtitle) {
+        if (!globalLoader) return;
+        loaderTitle.textContent = title || 'Processing';
+        loaderSubtitle.textContent = subtitle || 'Please wait while we complete this action...';
+        globalLoader.classList.remove('hidden');
+    }
+
+    function hideLoader() {
+        if (globalLoader) globalLoader.classList.add('hidden');
+    }
+
+    // Auto-attach to ALL form submissions
+    document.addEventListener('submit', function(e) {
+        const form = e.target;
+        if (form.dataset.noLoader) return;
+
+        const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+        const actionText = submitBtn ? (submitBtn.textContent.trim() || 'Processing') : 'Processing';
+
+        showLoader(actionText, 'Saving your changes...');
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.6';
+            submitBtn.style.pointerEvents = 'none';
+        }
+    });
+
+    // Auto-attach to links that navigate away (sidebar navigation, etc)
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a[href]');
+        if (!link) return;
+        
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('javascript:') || link.getAttribute('target') === '_blank') return;
+        if (link.dataset.noLoader || link.classList.contains('no-loader')) return;
+        
+        showLoader('Loading', 'Preparing page...');
+    });
+
+    // Hide loader on pageshow (e.g., user hits back button)
+    window.addEventListener('pageshow', function() {
+        hideLoader();
+    });
+</script>
 </body>
 </html>

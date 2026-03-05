@@ -14,7 +14,6 @@ from base.routes.tool_kit.calendly_tool import setup_calendly_webhooks, cleanup_
 from django.http import JsonResponse
 import json
 
-base_webhook_events = "https://django-acuity-scheduling.vercel.app/"
 
 @login_required
 def list_credentials(request):
@@ -95,8 +94,9 @@ def edit_credentials(request, credential_id):
     if request.method == 'POST':
         try:
             # Get form data
-            image = request.FILES.get('image')
+            image_url = request.POST.get('image_url', '').strip() or credential.image_id
             company_name = request.POST.get('company_name')
+            email_template = request.POST.get('email_template')
             
             # Handle Pre-fill Mappings (Dynamic Logic)
             PreFillMapping.objects.filter(user=request.user, calendly_account=credential).delete()
@@ -130,18 +130,14 @@ def edit_credentials(request, credential_id):
                         zoho_module=m or 'Leads'
                     )
 
-            if image:
-                image_id = store_image_in_mongodb(image, request.user.email)
-            else:
-                image_id = credential.image_id
-
             # Update credentials in the database
             CalendlyCredentials.objects.filter(
                 unique_id=credential_id, 
                 email=request.user.email
             ).update(
                 company_name=company_name,
-                image_id=image_id
+                image_id=image_url,
+                email_template=email_template
             )
 
             messages.success(request, f"Orchestration for '{company_name or credential.email}' updated successfully!")
@@ -171,29 +167,21 @@ def edit_credentials(request, credential_id):
 def create_credentials(request):
     if request.method == 'POST':
         try:
-            image = request.FILES.get('image')
+            image_url = request.POST.get('image_url', '').strip() or None
             company_name = request.POST.get('company_name')
             email_template = request.POST.get('email_template')
-            access_token = request.POST.get('access_token')  # Get from OAuth flow
-            refresh_token = request.POST.get('refresh_token')  # Get from OAuth flow
+            email = request.POST.get('email', '').strip() or request.user.email
             
             #########################################################################################
-            # Save image to MongoDB if provided
+            # Save credentials to the database - tokens are set later via OAuth callback
             #########################################################################################
-            image_id = None
-            if image:
-                image_id = store_image_in_mongodb(image, request.user.email)
-            
-            #########################################################################################
-            # Save credentials to the database
-            #########################################################################################
-            get_id = CalendlyCredentials.objects.create(
-                email=request.user.email,
-                image_id=image_id,
-                company_name=company_name,
-                email_template=email_template,
-                access_token=access_token,
-                refresh_token=refresh_token
+            get_id, created = CalendlyCredentials.objects.update_or_create(
+                email=email,
+                defaults={
+                    'image_id': image_url,
+                    'company_name': company_name,
+                    'email_template': email_template,
+                }
             )
 
             messages.success(request, "Credentials created successfully!")
@@ -209,16 +197,21 @@ def create_credentials(request):
 
 @login_required
 def delete_credentials(request, credential_id):
-    credential = get_object_or_404(CalendlyCredentials, unique_id=credential_id, email=request.user.email)
-    credential.delete()
-    messages.success(request, "Credentials deleted successfully!")
+    # Performance & Reliability: Direct QuerySet deletion avoids instance-level primary key checks
+    # and ensures consistent cleanup even in complex relationship scenarios.
+    deleted_count, _ = CalendlyCredentials.objects.filter(unique_id=credential_id, email=request.user.email).delete()
+    if deleted_count > 0:
+        messages.success(request, "Hub Orchestrator Protocol safely disconnected.")
+    else:
+        messages.warning(request, "Target protocol node not found or unauthorized access attempt.")
     return redirect('list_credentials')
 
 def setup_webhook_view(request, credential_id):
     """View to handle webhook setup."""
     try:
-        # Get base webhook URL from settings
-        base_webhook_url = settings.BASE_WEBHOOK_URL
+        # Dynamically determine the base URL from the current request to ensure 
+        # that webhooks are registered with the correct public-facing address.
+        base_webhook_url = request.build_absolute_uri('/')[:-1]
 
         # First cleanup any existing webhooks
         cleanup_result = cleanup_webhooks(credential_id, request.user.email)
