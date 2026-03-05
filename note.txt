@@ -583,3 +583,9 @@ UTM Term
 
 
 but why the utms and other dats are not created here solve that isue.. make sure all of the fields are filled here and filling based on the settings only make it much more good..! also add the new field of mail "send status", "calendly account", "providernale": shuldbe nanotom_calendly_sync.. also give the field mapping into the settings page for this too
+
+
+
+
+
+

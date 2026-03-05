@@ -2,6 +2,7 @@ import requests
 from django.shortcuts import redirect
 from django.http import JsonResponse
 from django.conf import settings
+from django.urls import reverse
 from base.models import CalendlyCredentials
 from uuid import UUID
 from base.routes.tool_kit.calendly_tool import CalendlyWebhookManager
@@ -15,15 +16,19 @@ def calendly_auth(request, credential_id):
     if isinstance(credential_id, UUID):
         credential_id = str(credential_id)
 
+    # Dynamically build the redirect URI based on the current request domain
+    redirect_uri = request.build_absolute_uri(reverse('calendly_callback'))
+    
     # Include credential_id in the state parameter
     auth_url = "https://auth.calendly.com/oauth/authorize"
-    redirect_url = (
-        f"{auth_url}?"
+    auth_params = (
         f"client_id={settings.CALENDLY_CLIENT_ID}&"
         f"response_type=code&"
-        f"redirect_uri={settings.CALENDLY_REDIRECT_URI}&"
-        f"state={credential_id}"  # Pass credential_id in state parameter
+        f"redirect_uri={redirect_uri}&"
+        f"state={credential_id}"
     )
+    
+    redirect_url = f"{auth_url}?{auth_params}"
     
     print(f"✅ Redirecting to: {redirect_url}")
     return redirect(redirect_url)
@@ -48,6 +53,9 @@ def calendly_callback(request):
         except ValueError:
             return JsonResponse({'error': 'Invalid credential ID format.'}, status=400)
 
+        # Dynamically build the same redirect URI for token exchange
+        redirect_uri = request.build_absolute_uri(reverse('calendly_callback'))
+        
         # Exchange code for tokens
         token_url = 'https://auth.calendly.com/oauth/token'
         token_data = {
@@ -55,7 +63,7 @@ def calendly_callback(request):
             'client_id': settings.CALENDLY_CLIENT_ID,
             'client_secret': settings.CALENDLY_CLIENT_SECRET,
             'code': code,
-            'redirect_uri': settings.CALENDLY_REDIRECT_URI,
+            'redirect_uri': redirect_uri,
         }
 
         token_response = requests.post(token_url, data=token_data)
