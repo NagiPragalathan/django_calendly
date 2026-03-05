@@ -72,74 +72,139 @@ def settings_form(request):
     # Get SMTP Settings
     smtp_settings = SmtpSettings.objects.filter(user=user).first()
     
-    # Retrieve Webhook Intelligence for Active Hub
+    # Retrieve Webhook Intelligence for ALL Hubs
     webhook_status = []
-    if active_hub and active_hub.access_token:
-        try:
-            from base.routes.tool_kit.calendly_tool import CalendlyWebhookManager
-            wh_manager = CalendlyWebhookManager(active_hub.access_token)
-            
-            # Fetch User Scoped Webhooks
-            user_wh = wh_manager.list_webhooks(scope="user")
-            if user_wh.get('success'):
-                webhook_status.extend(user_wh.get('data', []))
+    print(f"\n--- [DEBUG] Global Webhook Fetch Start ---")
+    print(f"User: {user.email}")
+    
+    try:
+        from base.routes.tool_kit.calendly_tool import CalendlyWebhookManager, CalendlyTokenManager
+        token_manager = CalendlyTokenManager()
+        all_hubs = CalendlyCredentials.objects.filter(email=request.user.email)
+        
+        for hub in all_hubs:
+            print(f"Processing Hub: {hub.email} (ID: {hub.unique_id})")
+            if not hub.access_token:
+                print(f"Skipping {hub.email}: No access token.")
+                continue
                 
-            # Fetch Organization Scoped Webhooks
-            if wh_manager.organization_url:
-                org_wh = wh_manager.list_webhooks(scope="organization")
-                if org_wh.get('success'):
-                    # Avoid duplicates if any, though likely distinct
-                    existing_uris = {w['uri'] for w in webhook_status}
-                    for w in org_wh.get('data', []):
-                        if w['uri'] not in existing_uris:
-                            webhook_status.append(w)
-        except Exception as e:
-            print(f"Webhook List Error: {e}")
+            valid_token, err = token_manager.get_valid_access_token(hub.unique_id, hub.email)
+            if not valid_token:
+                print(f"Skipping {hub.email}: Token validation failed: {err}")
+                continue
+                
+            try:
+                wh_manager = CalendlyWebhookManager(valid_token)
+                hub_display_name = wh_manager.user_name or hub.company_name or hub.email
+                
+                # Fetch User Scoped Webhooks
+                user_wh = wh_manager.list_webhooks(scope="user")
+                if user_wh.get('success'):
+                    data = user_wh.get('data', [])
+                    print(f"Fetched {len(data)} user hooks for {hub.email}")
+                    for w in data:
+                        w['hub_name'] = hub_display_name
+                        w['hub_id'] = str(hub.unique_id)
+                        webhook_status.append(w)
+                        
+                # Fetch Organization Scoped Webhooks
+                if wh_manager.organization_url:
+                    org_wh = wh_manager.list_webhooks(scope="organization")
+                    if org_wh.get('success'):
+                        data = org_wh.get('data', [])
+                        print(f"Fetched {len(data)} org hooks for {hub.email}")
+                        existing_uris = {w['uri'] for w in webhook_status}
+                        for w in data:
+                            if w['uri'] not in existing_uris:
+                                w['hub_name'] = hub_display_name
+                                w['hub_id'] = str(hub.unique_id)
+                                webhook_status.append(w)
+            except Exception as e:
+                print(f"Webhook Manager Error for {hub.email}: {repr(e)}")
+    except Exception as e:
+        print(f"Global Webhook Fetch Fatal Error: {repr(e)}")
+    print(f"--- [DEBUG] Global Webhook Fetch End. Total: {len(webhook_status)} ---\n")
 
     if request.method == "POST":
         action = request.POST.get('webhook_action')
         global_action = request.POST.get('global_action')
         webhook_id = request.POST.get('webhook_id')
+        webhook_hub_id = request.POST.get('webhook_hub_id')
+
+        # Find target hub for operations
+        target_hub = active_hub
+        if webhook_hub_id:
+            target_hub = CalendlyCredentials.objects.filter(unique_id=webhook_hub_id, email=request.user.email).first()
 
         # 1. Action: Webhook Decommissioning
-        if action == 'delete' and webhook_id and active_hub:
+        if action == 'delete' and webhook_id and target_hub:
             try:
-                from base.routes.tool_kit.calendly_tool import CalendlyWebhookManager
-                wh_manager = CalendlyWebhookManager(active_hub.access_token)
-                res = wh_manager.delete_webhook(webhook_id.split('/')[-1])
-                if res.get('success'): 
-                    messages.success(request, "Real-time data stream decommissioned successfully.")
-                else: 
-                    messages.error(request, f"Gateway Rejection: {res.get('error')}")
+                from base.routes.tool_kit.calendly_tool import CalendlyWebhookManager, CalendlyTokenManager
+                token_manager = CalendlyTokenManager()
+                valid_token, err = token_manager.get_valid_access_token(target_hub.unique_id, target_hub.email)
+                if valid_token:
+                    wh_manager = CalendlyWebhookManager(valid_token)
+                    res = wh_manager.delete_webhook(webhook_id.split('/')[-1])
+                    if res.get('success'): 
+                        messages.success(request, "Real-time data stream decommissioned successfully.")
+                    else: 
+                        messages.error(request, f"Gateway Rejection: {res.get('error')}")
                 return redirect('settings_form')
             except Exception as e:
                 messages.error(request, f"Webhook Operational Failure: {str(e)}")
 
         # 2. Action: Force Webhook Synchronization (Manual Trigger)
-        if action == 'refresh' and active_hub:
-            try:
-                from base.routes.tool_kit.calendly_tool import CalendlyWebhookManager
-                wh_manager = CalendlyWebhookManager(active_hub.access_token)
-                # Determine effective base URL (User Override > Current Browser URL > Settings Config)
-                effective_base = settings_instance.webhook_base_url if settings_instance and settings_instance.webhook_base_url else request.build_absolute_uri('/')[:-1]
-                
-                # Webhook creation via manager (automatically handles user/org URIs)
-                target_url = f"{effective_base.rstrip('/')}/calendly-webhook/meeting/{active_hub.unique_id}/{request.user.id}/"
-                events = ["invitee.created", "invitee.canceled", "invitee_no_show.created", "invitee_no_show.deleted"]
-                
-                # Try organizational scope first
-                res = wh_manager.create_webhook(target_url, events, scope="organization")
-                if not res.get('success'):
-                    # Fallback to user scope
-                    res = wh_manager.create_webhook(target_url, events, scope="user")
-                
-                if res.get('success'):
-                    messages.success(request, f"Automated data streams initialized for node {active_hub.email}")
-                else:
-                    messages.error(request, f"Gateway synchronization failed: {res.get('error')}")
-                return redirect('settings_form')
-            except Exception as e:
-                messages.error(request, f"Sync Hub Failure: {str(e)}")
+        if action == 'refresh':
+            # Target ONLY the active hub by default as per user request
+            target_hubs = [target_hub] if target_hub else []
+            
+            for hub in target_hubs:
+                if not hub or not hub.access_token: continue
+                try:
+                    from base.routes.tool_kit.calendly_tool import CalendlyWebhookManager, CalendlyTokenManager
+                    token_manager = CalendlyTokenManager()
+                    valid_token, err = token_manager.get_valid_access_token(hub.unique_id, hub.email)
+                    if not valid_token: continue
+
+                    wh_manager = CalendlyWebhookManager(valid_token)
+                    
+                    # 1. Prioritize active POST submission over saved settings over default host
+                    form_url = request.POST.get('webhook_base_url', '').strip()
+                    if form_url:
+                        effective_base = form_url
+                    elif settings_instance and settings_instance.webhook_base_url:
+                        effective_base = settings_instance.webhook_base_url
+                    else:
+                        effective_base = request.build_absolute_uri('/')[:-1]
+                    
+                    # 2. Calendly strictly forbids localhost or non-HTTPS domains. Catch this before calling Calendly.
+                    if not effective_base.startswith('https://'):
+                        messages.error(request, f"Gateway Rejection for {hub.company_name or hub.email}: Calendly strictly requires a public HTTPS Tunnel URL (e.g., ngrok/Vercel). Please enter a valid HTTPS URL in the 'Public Tunnel URL' field above.")
+                        continue
+                        
+                    target_url = f"{effective_base.rstrip('/')}/calendly-webhook/meeting/{hub.unique_id}/{request.user.id}/"
+                    events = ["invitee.created", "invitee.canceled", "invitee_no_show.created", "invitee_no_show.deleted"]
+                    
+                    # 3. Try to establish organization-wide scope (requires admin logic)
+                    res = wh_manager.create_webhook(target_url, events, scope="organization")
+                    
+                    # If organization fails (e.g., unauthorized scope), fallback to user scope
+                    if not res.get('success'):
+                        user_res = wh_manager.create_webhook(target_url, events, scope="user")
+                        if user_res.get('success'):
+                            res = user_res
+                        else:
+                            # Append user error onto organization error to show the complete failure context
+                            res['error'] = f"Org Scope Failed: {res.get('error')} | User Scope Failed: {user_res.get('error')}"
+                    
+                    hub_display_name = wh_manager.user_name or hub.company_name or hub.email
+                    if res.get('success'):
+                        messages.success(request, f"Automated data streams initialized for node: {hub_display_name}")
+                    else:
+                        messages.error(request, f"Gateway synchronization failed for {hub_display_name}: {res.get('error')}")
+                except Exception as e:
+                    messages.error(request, f"Sync Hub Failure: {str(e)}")
+            return redirect('settings_form')
 
         # 3. Action: Save Global Directives
         if global_action == "save" or not action: # Default fallback to save

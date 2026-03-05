@@ -17,10 +17,11 @@ class CalendlyWebhookManager:
         }
         self.organization_url = None
         self.user_url = None
+        self.user_name = None
         self._set_organization_and_user()
 
     def _set_organization_and_user(self):
-        """Fetch and set the organization and user URLs."""
+        """Fetch and set the organization and user URLs and Name."""
         try:
             response = requests.get(
                 "https://api.calendly.com/users/me",
@@ -30,6 +31,7 @@ class CalendlyWebhookManager:
                 user_data = response.json().get('resource', {})
                 self.organization_url = user_data.get('current_organization')
                 self.user_url = user_data.get('uri')
+                self.user_name = user_data.get('name')
         except requests.RequestException as e:
             print(f"Error fetching organization and user: {e}")
 
@@ -100,6 +102,12 @@ class CalendlyWebhookManager:
                 headers=self.headers,
                 params=params
             )
+            
+            # RAW DEBUG PRINT
+            print(f"[RAW CALENDLY API List - Scope: {scope}] Status: {response.status_code}")
+            try:
+                print(f"Response Body: {response.text}")
+            except: pass
 
             if response.status_code == 200:
                 return {

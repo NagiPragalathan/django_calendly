@@ -166,12 +166,31 @@ def edit_credentials(request, credential_id):
 @login_required
 def create_credentials(request):
     if request.method == 'POST':
+        image_url = request.POST.get('image_url', '').strip() or None
+        company_name = request.POST.get('company_name', '').strip()
+        email_template = request.POST.get('email_template', '').strip()
+        email = request.POST.get('email', '').strip() or request.user.email
+
+        field_errors = {}
+        
+        # Validate lengths based on model max_lengths
+        if image_url and len(image_url) > 500:
+            field_errors['image_url'] = f"Image URL is too long (Max 500 characters, currently {len(image_url)})."
+        if company_name and len(company_name) > 100:
+            field_errors['company_name'] = f"Hub Name is too long (Max 100 characters, currently {len(company_name)})."
+        if email_template and len(email_template) > 700:
+            field_errors['email_template'] = f"Email Template is too long (Max 700 characters, currently {len(email_template)})."
+        if email and len(email) > 254:
+            field_errors['email'] = f"Email address is too long (Max 254 characters, currently {len(email)})."
+
+        if field_errors:
+            messages.error(request, "Please correct the errors in the highlighted fields below.")
+            return render(request, 'acuityscheduling/create_credentials.html', {
+                'field_errors': field_errors,
+                'form_data': request.POST
+            })
+
         try:
-            image_url = request.POST.get('image_url', '').strip() or None
-            company_name = request.POST.get('company_name')
-            email_template = request.POST.get('email_template')
-            email = request.POST.get('email', '').strip() or request.user.email
-            
             #########################################################################################
             # Save credentials to the database - tokens are set later via OAuth callback
             #########################################################################################
@@ -190,7 +209,10 @@ def create_credentials(request):
         except Exception as e:
             print(f"Error creating credentials: {str(e)}")
             messages.error(request, f"Error creating credentials: {str(e)}")
-            return render(request, 'acuityscheduling/create_credentials.html', {'error': str(e)})
+            return render(request, 'acuityscheduling/create_credentials.html', {
+                'error': str(e),
+                'form_data': request.POST
+            })
 
     return render(request, 'acuityscheduling/create_credentials.html')
 

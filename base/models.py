@@ -14,7 +14,7 @@ class CalendlyCredentials(models.Model):
     embedCode = models.CharField(max_length=400, blank=True, null=True)
     email_template = models.CharField(max_length=700, blank=True, null=True)
     company_name = models.CharField(max_length=100, blank=True, null=True)
-    image_id = models.CharField(max_length=50, blank=True, null=True)  # Updated field
+    image_id = models.CharField(max_length=500, blank=True, null=True)  # Updated field to store full URLs
     is_primary = models.BooleanField(default=False)
 
     def __str__(self):

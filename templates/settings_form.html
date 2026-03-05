@@ -145,12 +145,22 @@
                                 </div>
                                 <div>
                                     <h2 class="text-2xl font-black text-slate-900 tracking-tight">Payload Strategy Management</h2>
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] mt-1.5">Real-time Data Stream Control</p>
+                                    <div class="flex items-center gap-3 mt-1.5">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em]">Real-time Data Stream Control</p>
+                                        <span class="w-1 h-1 rounded-full bg-slate-200"></span>
+                                        <label class="flex items-center gap-2 cursor-pointer group/dev">
+                                            <input type="checkbox" id="dev-mode-toggle" class="hidden peer">
+                                            <div class="w-7 h-4 bg-slate-200 rounded-full peer-checked:bg-indigo-600 transition-colors relative">
+                                                <div class="absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-3"></div>
+                                            </div>
+                                            <span class="text-[9px] font-black text-slate-400 peer-checked:text-indigo-600 uppercase tracking-widest transition-colors">Developer Mode</span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                             <div class="flex items-center gap-6">
-                                <button type="submit" name="webhook_action" value="refresh" 
-                                        class="px-6 py-3 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
+                                <button type="submit" name="webhook_action" value="refresh" id="sync-streams-btn" formnovalidate
+                                        class="hidden px-6 py-3 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
                                     <i class="ri-refresh-line mr-2"></i> Sync Streams
                                 </button>
                                 <div class="flex items-center gap-4 bg-slate-900 px-6 py-3 rounded-2xl shadow-2xl">
@@ -160,7 +170,7 @@
                             </div>
                         </div>
 
-                        <div class="p-10 bg-indigo-50 border border-indigo-100 rounded-2xl mb-12 space-y-6 shadow-xl shadow-indigo-100/50">
+                        <div id="dev-tunnel-box" class="hidden p-10 bg-indigo-50 border border-indigo-100 rounded-2xl mb-12 space-y-6 shadow-xl shadow-indigo-100/50">
                             <div class="flex items-center justify-between px-1">
                                 <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Public Tunnel URL (Network Gateway)</label>
                                 <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-indigo-600 shadow-lg">
@@ -184,12 +194,16 @@
                                         <div class="px-4 py-1.5 {% if webhook.state == 'active' %}bg-emerald-100 text-emerald-700{% else %}bg-amber-100 text-amber-700{% endif %} rounded-full text-[9px] font-black uppercase tracking-widest border border-emerald-200">
                                             {{ webhook.state|default:'Active'|upper }} Loop
                                         </div>
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ webhook.scope }} Level Access</span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ webhook.scope }} Level Access</span>
+                                            <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                            <span class="text-[10px] font-black text-indigo-500 uppercase tracking-widest flex items-center gap-1.5"><i class="ri-settings-4-line"></i> {{ webhook.hub_name }}</span>
+                                        </div>
                                     </div>
                                     <div class="space-y-3">
-                                        <div class="flex items-center gap-3">
+                                        <div class="flex items-start gap-3">
                                             <i class="ri-link text-slate-400"></i>
-                                            <code class="text-[13px] font-black text-slate-700 bg-white px-4 py-2 rounded-xl border border-slate-100 shadow-sm">{{ webhook.callback_url }}</code>
+                                            <code class="text-[13px] font-black text-slate-700 bg-white px-4 py-2 rounded-xl border border-slate-100 shadow-sm break-all whitespace-normal leading-relaxed">{{ webhook.callback_url }}</code>
                                         </div>
                                         <div class="flex flex-wrap gap-2 pt-2">
                                             {% for event in webhook.events %}
@@ -220,9 +234,9 @@
                                         <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1.5">Established</p>
                                         <p class="text-md font-black text-slate-900 tracking-tighter">{{ webhook.created_at|slice:":10" }}</p>
                                     </div>
-                                    <button type="submit" name="webhook_action" value="delete"
-                                            onclick="event.stopPropagation(); document.getElementById('wh-id-input').value='{{ webhook.uri }}'; return confirm('WARNING: Decommissioning this link will stop real-time synchronization. Continue?')"
-                                            class="w-16 h-16 bg-rose-50 text-rose-500 rounded-[1.5rem] flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all duration-500 shadow-xl shadow-rose-500/10 hover:shadow-rose-600/30">
+                                    <button type="submit" name="webhook_action" value="delete" id="delete-webhook-{{ forloop.counter }}" formnovalidate
+                                            onclick="event.stopPropagation(); document.getElementById('wh-id-input').value='{{ webhook.uri }}'; document.getElementById('wh-hub-input').value='{{ webhook.hub_id }}'; return confirm('WARNING: Decommissioning this link will stop real-time synchronization. Continue?')"
+                                            class="dev-delete-btn hidden w-16 h-16 bg-rose-50 text-rose-500 rounded-[1.5rem] flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all duration-500 shadow-xl shadow-rose-500/10 hover:shadow-rose-600/30">
                                         <i class="ri-delete-bin-line text-2xl"></i>
                                     </button>
                                 </div>
@@ -238,6 +252,7 @@
                             {% endfor %}
                         </div>
                         <input type="hidden" name="webhook_id" id="wh-id-input">
+                        <input type="hidden" name="webhook_hub_id" id="wh-hub-input">
 
                         <div class="p-8 bg-amber-50 rounded-[2.5rem] border border-amber-100/50 flex items-start gap-6 group/alert">
                             <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-amber-500 shadow-sm group-hover/alert:rotate-12 transition-transform">
@@ -455,6 +470,37 @@
             selectEl.name = 'map_' + key;
             inputEl.name = 'ignore_' + key;
         }
+    }
+
+    // Developer Mode Logic
+    const devToggle = document.getElementById('dev-mode-toggle');
+    const tunnelBox = document.getElementById('dev-tunnel-box');
+    const syncBtn = document.getElementById('sync-streams-btn');
+    const deleteBtns = document.querySelectorAll('.dev-delete-btn');
+
+    function updateDevVisibility() {
+        const isDev = devToggle.checked;
+        localStorage.setItem('calendly_dev_mode', isDev);
+        
+        if (isDev) {
+            tunnelBox.classList.remove('hidden');
+            tunnelBox.classList.add('animate-fade-in-up');
+            syncBtn.classList.remove('hidden');
+            syncBtn.classList.add('animate-zoom-in');
+            deleteBtns.forEach(btn => btn.classList.remove('hidden'));
+        } else {
+            tunnelBox.classList.add('hidden');
+            syncBtn.classList.add('hidden');
+            deleteBtns.forEach(btn => btn.classList.add('hidden'));
+        }
+    }
+
+    devToggle.addEventListener('change', updateDevVisibility);
+    
+    // Persistent state
+    if (localStorage.getItem('calendly_dev_mode') === 'true') {
+        devToggle.checked = true;
+        updateDevVisibility();
     }
 </script>
 {% endblock %}
