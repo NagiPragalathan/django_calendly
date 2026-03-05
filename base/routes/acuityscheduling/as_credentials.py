@@ -57,25 +57,19 @@ def switch_active_account(request, credential_id):
     
     return redirect(request.META.get('HTTP_REFERER', 'list_appointments'))
 
-@login_required
-def edit_credentials(request, credential_id):
-    try:
-        credential = CalendlyCredentials.objects.get(unique_id=credential_id, email=request.user.email)
-    except CalendlyCredentials.DoesNotExist:
-        return JsonResponse({'error': 'Credential not found.'}, status=404)
-
+def _get_crm_fields_for_user(user):
     # Fetch modules from settings
-    settings_obj = Settings.objects.filter(user=request.user).first()
+    settings_obj = Settings.objects.filter(user=user).first()
     target_modules = [settings_obj.leads_to_store] if settings_obj else ["Leads", "Contacts"]
     
     # Fetch fields for pre-fill mapping
     module_fields = {m: [] for m in target_modules}
-    zoho_token = ZohoToken.objects.filter(user=request.user).first()
+    zoho_token = ZohoToken.objects.filter(user=user).first()
     if zoho_token:
         access_token = zoho_token.access_token
         if not check_access_token_validity(access_token):
             access_token = get_access_token(CLIENT_ID, CLIENT_SECRET, zoho_token.refresh_token)
-            ZohoToken.objects.filter(user=request.user).update(access_token=access_token)
+            ZohoToken.objects.filter(user=user).update(access_token=access_token)
         
         for module in target_modules:
             try:
@@ -87,6 +81,16 @@ def edit_credentials(request, credential_id):
                     fields.sort(key=lambda x: x["label"])
                     module_fields[module] = fields
             except: pass
+    return module_fields, target_modules
+
+@login_required
+def edit_credentials(request, credential_id):
+    try:
+        credential = CalendlyCredentials.objects.get(unique_id=credential_id, email=request.user.email)
+    except CalendlyCredentials.DoesNotExist:
+        return JsonResponse({'error': 'Credential not found.'}, status=404)
+
+    module_fields, target_modules = _get_crm_fields_for_user(request.user)
 
     # Fetch templates
     templates = BookingEmailTemplate.objects.filter(credential=credential)
@@ -165,6 +169,8 @@ def edit_credentials(request, credential_id):
 
 @login_required
 def create_credentials(request):
+    module_fields, target_modules = _get_crm_fields_for_user(request.user)
+    
     if request.method == 'POST':
         image_url = request.POST.get('image_url', '').strip() or None
         company_name = request.POST.get('company_name', '').strip()
@@ -187,7 +193,9 @@ def create_credentials(request):
             messages.error(request, "Please correct the errors in the highlighted fields below.")
             return render(request, 'acuityscheduling/create_credentials.html', {
                 'field_errors': field_errors,
-                'form_data': request.POST
+                'form_data': request.POST,
+                'module_fields': module_fields,
+                'module_fields_json': json.dumps(module_fields),
             })
 
         try:
@@ -211,10 +219,15 @@ def create_credentials(request):
             messages.error(request, f"Error creating credentials: {str(e)}")
             return render(request, 'acuityscheduling/create_credentials.html', {
                 'error': str(e),
-                'form_data': request.POST
+                'form_data': request.POST,
+                'module_fields': module_fields,
+                'module_fields_json': json.dumps(module_fields),
             })
 
-    return render(request, 'acuityscheduling/create_credentials.html')
+    return render(request, 'acuityscheduling/create_credentials.html', {
+        'module_fields': module_fields,
+        'module_fields_json': json.dumps(module_fields),
+    })
 
 
 @login_required
