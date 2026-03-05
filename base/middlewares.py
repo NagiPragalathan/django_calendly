@@ -83,7 +83,12 @@ class UserDataMiddleware:
                 'zoho_callback',
                 'logout'
             ]
-            current_url_name = resolve(request.path_info).url_name
+            from django.urls import resolve, Resolver404
+            try:
+                current_url_name = resolve(request.path_info).url_name
+            except Resolver404:
+                current_url_name = None
+                
             request.is_setup_page = current_url_name in setup_url_names
 
         else:
@@ -102,10 +107,18 @@ class UserDataMiddleware:
                 'edit_credentials',
                 'delete_credentials'
             ]
-            current_url_name = resolve(request.path_info).url_name
+            
+            from django.urls import resolve, Resolver404
+            try:
+                current_url_name = resolve(request.path_info).url_name
+            except Resolver404:
+                current_url_name = None
+                
             print(f"Current URL name: {current_url_name}", request.path_info)
 
-            if not request.user.is_authenticated and current_url_name not in public_url_names:
+            # Let static files and undefined routes pass through to standard 404/static handling
+            # Only redirect if it's a known URL that requires auth
+            if not request.user.is_authenticated and current_url_name and current_url_name not in public_url_names:
                 return redirect('login')
 
         response = self.get_response(request)

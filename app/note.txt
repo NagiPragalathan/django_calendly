@@ -1,0 +1,72 @@
+Sample data for the widget:
+
+{
+  "EntityId": [
+    "6441920000000503415"
+  ],
+  "Entity": "Leads",
+  "ButtonPosition": "DetailView"
+}
+
+---------------------------------------
+
+                ZOHO.CRM.CONFIG.getOrgInfo().then(function(data){
+                    console.log(data);
+                });
+
+
+{
+    "org": [
+        {
+            "max_per_page": 100,
+            "country": null,
+            "photo_id": null,
+            "city": null,
+            "description": null,
+            "mc_status": false,
+            "gapps_enabled": false,
+            "domain_name": "org875503842",
+            "translation_enabled": false,
+            "street": null,
+            "alias": null,
+            "currency": "US Dollar - USD",
+            "id": "6441920000000495980",
+            "state": null,
+            "fax": null,
+            "employee_count": "0",
+            "zip": null,
+            "website": null,
+            "ezgid": "71bc27d90bff2976e4513c72121e007faf7876b08cbfd35b662d72d17873e9d4",
+            "currency_symbol": "$",
+            "oauth_presence": true,
+            "mobile": null,
+            "currency_locale": "en_US",
+            "primary_zuid": "875507746",
+            "zia_portal_id": null,
+            "time_zone": "America/Los_Angeles",
+            "zgid": "875503842",
+            "country_code": "US",
+            "license_details": {
+                "paid_expiry": null,
+                "users_license_purchased": 3,
+                "trial_type": "enterprise",
+                "trial_expiry": "2025-01-23T00:47:16-08:00",
+                "paid": false,
+                "paid_type": "free",
+                "portal_users_license_purchased": 0,
+                "trial_action": "Update Evaluation"
+            },
+            "phone": "7401268091",
+            "company_name": "Nanotom",
+            "privacy_settings": false,
+            "primary_email": "nagipragalathan@gmail.com",
+            "hipaa_compliance_enabled": false,
+            "iso_code": "USD"
+        }
+    ],
+    "$responseHeaders": {
+        "x-ratelimit-remaining": null,
+        "x-ratelimit-limit": null,
+        "x-ratelimit-reset": null
+    }
+}

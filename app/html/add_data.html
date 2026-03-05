@@ -1,0 +1,56 @@
+<html>
+	<head>
+		<script type="text/javascript" src="../js/lib/jquery-3.3.1.min.js"></script>
+		<script src="../js/lib/ZohoEmbededAppSDK.min.js"></script>
+		<style>
+			html, body, #iframeContainer {
+				margin: 0;
+				padding: 0;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="iframeContainer"></div>
+		<script type="text/javascript">
+			$(document).ready(function() {
+				ZOHO.embeddedApp.on("PageLoad", function(data) {
+					console.log("Page loaded:", data);
+
+                    var user_id = data.EntityId[0];
+                    var module_name = data.Entity;
+                    var domain_name = '';
+					
+                    ZOHO.CRM.CONFIG.getOrgInfo().then(function(data){
+                        console.log(data);
+                        domain_name = data.org[0].domain_name;
+                        console.log("Domain Name:", domain_name);
+                        if (!domain_name) {
+                            console.error("Domain name not found in org data");
+                            return;
+                        }
+						// Create iframe element
+						var iframe_link = 'https://zoho-syncer.vercel.app/add_data_to_zoho/' + domain_name + '/' + module_name + '/' + user_id;
+						console.log(iframe_link);
+						var iframe = document.createElement('iframe');
+						iframe.src = iframe_link;
+						iframe.style.width = '100%';
+						iframe.style.height = '100%';
+						iframe.style.border = 'none';
+						iframe.style.position = 'absolute';
+						iframe.style.top = '0';
+						iframe.style.left = '0';
+						
+						// Add iframe to container
+						var container = document.getElementById('iframeContainer');
+						container.appendChild(iframe);
+                    });
+				});
+
+				ZOHO.embeddedApp.init();
+			});
+		</script>
+	</body>
+</html>
