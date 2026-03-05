@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import requests
 import json
 import logging
-from base.models import CalendlyCredentials, Settings
+from base.models import CalendlyCredentials, Settings, PreFillMapping
 from base.routes.tool_kit.zoho_tool import check_and_add_email, add_meeting_to_zoho_crm, update_meeting_in_zoho_crm, delete_meeting_from_zoho_crm
 
 
