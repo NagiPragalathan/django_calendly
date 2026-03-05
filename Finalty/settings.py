@@ -203,11 +203,17 @@ REDIRECT_URI = "http://127.0.0.1:8000/zoho-callback/"
 SCOPE = "ZohoCRM.settings.fields.ALL,ZohoCRM.settings.fields.CREATE,ZohoCRM.users.READ,ZohoCRM.settings.fields.READ,ZohoCRM.org.READ,ZohoCRM.modules.READ,ZohoCRM.modules.CREATE,ZohoCRM.modules.UPDATE,ZohoSearch.securesearch.READ,ZohoCRM.settings.custom_views.READ,ZohoCRM.settings.modules.READ,ZohoCRM.modules.ALL,ZohoCRM.signals.ALL"
 
 
+# for local
+# CALENDLY_CLIENT_ID = 'mmgzH3MGHOl4XxSo_S2Rd88NHkQXNtp2BB1oBcHue_s'
+# CALENDLY_CLIENT_SECRET = 'QHe1XUACtSPN_QGEgr7oMfn5xDspp6nBZ-A3YCpawtY'
+# CALENDLY_REDIRECT_URI = 'http://localhost:8000/oauth/callback/'
+
+
 # Calendly OAuth settings
 HOSTED_CALENDLY_CLIENT_ID = 'https://calendly-iota-ten.vercel.app/'
-CALENDLY_CLIENT_ID = 'mmgzH3MGHOl4XxSo_S2Rd88NHkQXNtp2BB1oBcHue_s'
-CALENDLY_CLIENT_SECRET = 'QHe1XUACtSPN_QGEgr7oMfn5xDspp6nBZ-A3YCpawtY'
-CALENDLY_REDIRECT_URI = 'http://localhost:8000/oauth/callback/'
+CALENDLY_CLIENT_ID = 'tUW3rlE2X3uncyLXvu2A3Pi8jL3jtDEi7QRK-YwaOAw'
+CALENDLY_CLIENT_SECRET = 'PkgOG4FOfizBIQ4mcgbHSOOKvmyJmPnoc67L-b9CNh0'
+CALENDLY_REDIRECT_URI = 'https://django-acuity-scheduling.vercel.app/oauth/callback/'
 CALENDLY_WEBHOOK_URI="x-im4xCjbY-adPbU8CvMF088AdwhA-GQeMlAR7MI3RE"
 
 # Session settings
