@@ -464,3 +464,122 @@ Syncs contacts/leads, tracks marketing campaigns, and provides campaign insights
 ---
 
 Please feel free to review my work. I’d be happy to discuss it further.
+
+
+
+
+
+
+
+
+2026-03-05 12:51:40.790 [info] Current URL name: calendly_webhook_create_meeting /calendly-webhook/meeting/f5e993d3-6633-4a83-b438-7f2560b3ff4f/1/
+2026-03-05 12:51:40.790 [info] user_id None
+2026-03-05 12:51:40.790 [info] about to create meeting
+2026-03-05 12:51:40.819 [info] No settings found for the user
+2026-03-05 12:51:40.819 [info] Search the data in CRM of Contacts
+2026-03-05 12:51:40.819 [info] description ☢ Meeting with nagi_sample  on 2026-03-06T03:30:00.000000Z
+            ↦ Name: nagi_sample 
+            ↦ Email: nagisample@gmail.com
+            ↦ Location: custom
+            ↦ Join URL:
+2026-03-05 12:51:40.822 [info] {'email': 'nagisample@gmail.com', 'firstName': 'nagi_sample', 'lastName': ''} user_data
+2026-03-05 12:51:41.149 [info] Access token is valid ✅
+2026-03-05 12:51:41.921 [info] ⚠️ Email 'nagisample@gmail.com' not found in Contacts. Creating new record...
+2026-03-05 12:51:42.392 [info] ❌ Failed to create record. Response: {'data': [{'code': 'MANDATORY_NOT_FOUND', 'details': {'api_name': 'Last_Name'}, 'message': 'required field not found', 'status': 'error'}]}
+2026-03-05 12:51:42.393 [info] {'Event_Title': 'Meeting: 30 Minute Meeting with nagi_sample None', 'Subject': 'Meeting: 30 Minute Meeting with nagi_sample None', 'Start_DateTime': '2026-03-06T03:30:00+00:00', 'End_DateTime': '2026-03-06T04:00:00+00:00', 'Participants': [{'participant': 'nagisample@gmail.com', 'type': 'email'}], 'Location': 'custom', 'Description': '☢ Meeting with nagi_sample  on 2026-03-06T03:30:00.000000Z\n            ↦ Name: nagi_sample \n            ↦ Email: nagisample@gmail.com\n            ↦ Location: custom\n            ↦ Join URL: \n            ', 'Who_Id': None, 'Calendly_Event_URI': 'https://api.calendly.com/scheduled_events/06ae339d-e607-4a3b-b3c7-a983cf32a85d', 'Calendly_Invitee_URI': 'https://api.calendly.com/scheduled_events/06ae339d-e607-4a3b-b3c7-a983cf32a85d/invitees/05c3a846-c7f0-40fa-858f-a5531b24b9d5', 'Calendly_Cancel_URL': 'https://calendly.com/cancellations/05c3a846-c7f0-40fa-858f-a5531b24b9d5', 'Calendly_Reschedule_URL': 'https://calendly.com/reschedulings/05c3a846-c7f0-40fa-858f-a5531b24b9d5', 'Timezone': 'Asia/Calcutta'} invitee.created
+2026-03-05 12:51:42.393 [info] Creating new appointment in Zoho CRM...
+2026-03-05 12:51:42.393 [info] Orchestrating High-Fidelity Sync...
+2026-03-05 12:51:42.695 [info] Access token is valid ✅
+2026-03-05 12:51:43.067 [info] 🆕 Creation Protocol: Launching new record in Zoho CRM...
+2026-03-05 12:51:43.545 [info] Event created successfully: {'data': [{'code': 'SUCCESS', 'details': {'Modified_Time': '2026-03-05T18:21:43+05:30', 'Modified_By': {'name': 'Ciddarth RM', 'id': '2681636000010777001'}, 'Created_Time': '2026-03-05T18:21:43+05:30', 'id': '2681636000037183001', 'Created_By': {'name': 'Ciddarth RM', 'id': '2681636000010777001'}}, 'message': 'record added', 'status': 'success'}]}
+2026-03-05 12:51:43.547 [info] 127.0.0.1 - - [05/Mar/2026 12:51:43] "POST /calendly-webhook/meeting/f5e993d3-6633-4a83-b438-7f2560b3ff4f/1/ HTTP/1.1" 200 -
+
+Hide Details
+Meeting Information
+Title
+30 Minute Meeting to nagi_sample
+Meeting Venue
+Client location
+Location
+All day
+From
+Mar 6, 2026 09:00 AM
+To
+Mar 6, 2026 09:30 AM
+Host
+Prem Anand
+Description
+╔==================================================================╗
+                         Meeting Details                          
+╚==================================================================╝
+
+⨳  Meeting Overview
+─────────────────────
+• Organizer    : nagi_sample
+• Host Name    : raghul xtracut
+• Host Email   : raghul@xtracut.com
+• Host User ID : https://api.calendly.com/users/4debec19-4bb7-4312-a4d0-3f43d2c86ea2
+
+♧  Guests Attending
+─────────────────────
+• No guests attending
+
+♕  Summary
+─────────────
+• Total Guests       : 0
+• Total Participants : 1
+• Guests Present     : No
+• Created Time       : 2026-03-05 12:51:45
+
+======================================================================
+Show More
+Contact Name
+Reminder
+Participants Reminder
+Related To
+nagi_sample
+-
+Leads
+Other Information
+Created By
+Prem Anand
+Thu, 5 Mar 2026 06:21 PM
+Modified By
+Prem Anand
+Thu, 5 Mar 2026 06:21 PM
+Acuity Client Link
+Acuity Agent Link
+Acuity Calendar Email
+Meeting Notes (Custom)
+MeetBridge Invitee URI
+MeetBridge Cancel URL
+MeetBridge Canceled By
+MeetBridge Meeting Notes
+MeetBridge Timezone
+Event Source
+Calendyid
+05c3a846-c7f0-40fa-858f-a5531b24b9d5
+Calendly Reschedule Url
+https://calendly.com/reschedulings/05c3a846-c7f0-40fa-858f-a5531b24b9d5
+Calendly Event Uri
+https://api.calendly.com/scheduled_events/06ae339d-e607-4a3b-b3c7-a983cf32a85d/invitees/05c3a846-c7f0-40fa-858f-a5531b24b9d5
+Calendly Question Answer
+Q1: Please share anything that will help prepare for our meeting.
+A1: ---
+
+Q2: test question
+A2: test
+
+Q3: test 2 question
+A3: sample
+Show More
+Event URI
+Cancel URL
+Event Status
+External Event ID (Google/Outlook)
+UTM Source
+UTM Campaign
+UTM Term
+
+
+but why the utms and other dats are not created here solve that isue.. make sure all of the fields are filled here and filling based on the settings only make it much more good..! also add the new field of mail "send status", "calendly account", "providernale": shuldbe nanotom_calendly_sync.. also give the field mapping into the settings page for this too

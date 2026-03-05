@@ -16,6 +16,10 @@ INTEGRATION_FIELDS = [
     {'key': 'Calendly_Question_Answer', 'label': 'Questions & Answers'},
     {'key': 'External_Event_ID', 'label': 'External Event ID (Google/Outlook)'},
     {'key': 'Meeting_Venue', 'label': 'Meeting Venue (Virtual/In-Person)'},
+    # Sync Metadata Tracking
+    {'key': 'send_status', 'label': 'Send Status'},
+    {'key': 'calendly_account', 'label': 'Calendly Account (Email)'},
+    {'key': 'provider_name', 'label': 'Sync Provider Name'},
     # UTM Intelligence Parameters
     {'key': 'utm_source', 'label': 'UTM Source'},
     {'key': 'utm_medium', 'label': 'UTM Medium'},
