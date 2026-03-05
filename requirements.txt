@@ -19,4 +19,3 @@ google-auth-oauthlib
 google-auth-httplib2
 
 pymongo
-gridfs
