@@ -691,13 +691,24 @@ def zoho_record_booking(request, module, record_id):
                 'body': 'Hi [[name]],\n\nI would like to invite you to schedule a meeting at your earliest convenience.\n\nYou can pick a time that works best for you here: [[link]]\n\nLooking forward to connecting!'
             }]
 
-        # 5. Build Pre-fill Data for the Generator
+        # 5. Build Pre-fill Data for the Generator (Module-Aware)
         prefill = {'name': name, 'email': email}
+        # Fetch mappings for this account
         mappings = PreFillMapping.objects.filter(user=request.user, calendly_account=credentials)
+        
+        # We only want to show mappings relevant to the current module or common fields
         for mapping in mappings:
-            zoho_val = record.get(mapping.zoho_field_api_name, '')
-            if zoho_val:
-                prefill[mapping.question_key] = zoho_val
+            # If the mapping belongs to the current module, or if it's a common field
+            # (In Zoho, Email/Phone often share names across Leads/Contacts)
+            zoho_val = record.get(mapping.zoho_field_api_name)
+            
+            # Key fix: only populate if the field actually exists in this record's module data
+            if mapping.zoho_field_api_name in record:
+                # If value is null/empty, show a placeholder in the Data Bank for awareness
+                prefill[mapping.question_key] = zoho_val if zoho_val not in [None, ''] else '[EMPTY_FIELD]'
+            elif mapping.zoho_module == module:
+                 # It's our module but field is missing from get_record (unlikely but possible)
+                 prefill[mapping.question_key] = '[FIELD_NOT_FOUND]'
 
         return render(request, 'acuityscheduling/zoho_record_booking.html', {
             'module': module,

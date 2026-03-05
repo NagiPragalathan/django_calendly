@@ -149,7 +149,7 @@ def calendly_webhook_create_meeting(request, credential_id, user_id):
                 "Participants": [{"participant": email, "type": "email"}],
                 "Location": join_url if join_url else location_type,
                 "Description": plain_description,
-                "Notes_Data": rich_details, # Custom key for tool handling
+                "Notes_Data": rich_details,
                 "Who_Id": None,
                 "Calendly_Event_URI": scheduled_event.get("uri"),
                 "Calendly_Invitee_URI": payload.get("uri"),
@@ -158,7 +158,28 @@ def calendly_webhook_create_meeting(request, credential_id, user_id):
                 "Timezone": payload.get("timezone"),
             }
 
-            # Apply Dynamic Field Mappings from User Settings
+            # 5. Dynamic Vector Orchestration (PreFill Mapping)
+            # Resolve all localized aliases (a1, a2, a3) defined for this specific Hub
+            vector_mappings = PreFillMapping.objects.filter(calendly_account__unique_id=credential_id)
+            
+            # Map QA to Aliases
+            qa_map = {qa.get('question'): qa.get('answer') for qa in qa_raw}
+            
+            for mapping in vector_mappings:
+                alias = mapping.question_key # e.g. "a1"
+                target_crm_field = mapping.zoho_field_api_name
+                
+                # Check mapping via Calendly's QA list
+                # Calendly sends 'question' which usually matches the label or alias if set correctly
+                # We also check for 'answer' by index if alias is effectively a question sequence
+                for qa_item in qa_raw:
+                    q_text = qa_item.get('question', '')
+                    # If the question label matches our alias OR if it contains the alias
+                    if alias.lower() == q_text.lower() or f"({alias})" in q_text:
+                        event_data[target_crm_field] = qa_item.get('answer')
+                        break
+            
+            # Apply Legacy Global Field Mappings from Settings
             mapping_blueprint = {
                 'Calendly_Event_Uri': scheduled_event.get('uri'),
                 'Calendly_Invitee_Uri': payload.get('uri'),
@@ -166,11 +187,6 @@ def calendly_webhook_create_meeting(request, credential_id, user_id):
                 'Calendly_Reschedule_Url': payload.get('reschedule_url'),
                 'Calendly_Event_Status': payload.get('status', 'active'),
                 'Calendly_Question_Answer': qa_text,
-                'External_Event_ID': scheduled_event.get('external_id'),
-                'Meeting_Venue': location_type,
-                'send_status': 'Initial Sync Complete',
-                'calendly_account': hub_email,
-                'provider_name': 'nanotom_calendly_sync',
                 'utm_source': tracking.get('utm_source'),
                 'utm_medium': tracking.get('utm_medium'),
                 'utm_campaign': tracking.get('utm_campaign'),
@@ -183,7 +199,7 @@ def calendly_webhook_create_meeting(request, credential_id, user_id):
                 if target_field and value:
                     event_data[target_field] = value
 
-            # 5. Execute Record Lifecycle
+            # 6. Execute Record Lifecycle
             who_id = check_and_add_email({"email": email, "firstName": first_name, "lastName": last_name, "app_user_id": user_id}, Module, user_id, only_contact=True)
             event_data["Who_Id"] = who_id
 

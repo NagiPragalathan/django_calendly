@@ -52,7 +52,13 @@
             {% for key, val in prefill.items %}
             <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100">
                 <span class="text-[10px] font-black text-slate-400 uppercase">{{ key }}</span>
-                <span class="text-[10px] font-bold text-slate-900 truncate max-w-[150px]">{{ val }}</span>
+                {% if val == '[EMPTY_FIELD]' %}
+                    <span class="text-[9px] font-bold text-slate-300 italic">No Zoho Data</span>
+                {% elif val == '[FIELD_NOT_FOUND]' %}
+                    <span class="text-[9px] font-bold text-rose-300 italic uppercase">Field Missing</span>
+                {% else %}
+                    <span class="text-[10px] font-bold text-slate-900 truncate max-w-[150px]">{{ val }}</span>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
