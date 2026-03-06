@@ -169,10 +169,10 @@ GOOGLE_REDIRECT_URI = 'https://django-acuity-scheduling.vercel.app/google/callba
 CORS_ALLOW_ALL_ORIGINS = True
 
 X_FRAME_OPTIONS = 'ALLOWALL'
-CSRF_COOKIE_SAMESITE = 'None'  # Allow the CSRF cookie to be sent in cross-origin requests
-CSRF_COOKIE_SECURE = True      # Set this to True if you're using HTTPS
-SESSION_COOKIE_SAMESITE = 'None'  # SameSite for session cookies
-SESSION_COOKIE_SECURE = True   # Secure the session cookie if using HTTPS
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
 
 
 # Acuity Scheduling
@@ -216,13 +216,10 @@ CALENDLY_CLIENT_SECRET = 'PkgOG4FOfizBIQ4mcgbHSOOKvmyJmPnoc67L-b9CNh0'
 CALENDLY_REDIRECT_URI = 'https://django-acuity-scheduling.vercel.app/oauth/callback/'
 CALENDLY_WEBHOOK_URI="x-im4xCjbY-adPbU8CvMF088AdwhA-GQeMlAR7MI3RE"
 
-# Session settings
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 3600  # 1 hour in seconds
 SESSION_SAVE_EVERY_REQUEST = True
-SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax' 
 
 # Webhook Infrastructure
 # IMPORTANT: Calendly requires a PUBLIC HTTPS URL for webhooks. 
